@@ -25,8 +25,10 @@ export interface Asset {
     description: string;
     status: string;
     statusText: string;
+    connectionMode: 'direct' | 'gateway' | 'proxy';
     owner: string;
     gatewayChain: GatewayHop[];
+    proxyId?: string;
     tags?: string[];
     attrs?: Record<string, any>;
     createdAt: number;
@@ -60,22 +62,32 @@ export type AICommandPolicy = '' | 'auto' | 'balanced' | 'always';
 export interface BatchUpdateAssetRequest {
     assetIds: string[];
     changes: {
+        terminal?: {
+            restrictedShell?: boolean;
+            enableAliveCheck?: boolean;
+            enableDetectOS?: boolean;
+            sftpDirectoryFollow?: boolean;
+            connectTimeout?: number;
+            backspaceMode?: 'del' | 'bs';
+            env?: string;
+        };
         ai?: {
             enabled?: boolean;
-            restrictedShell?: boolean;
             commandPolicy?: AICommandPolicy;
         };
-        gateway?: {
+        connection?: {
+            connectionMode: Asset['connectionMode'];
             gatewayChain: GatewayHop[];
+            proxyId?: string;
         };
     };
 }
 
 export interface BatchUpdateAssetResult {
     selectedCount: number;
-    aiUpdatedCount: number;
-    aiSkippedCount: number;
-    gatewayUpdatedCount: number;
+    sshUpdatedCount: number;
+    sshSkippedCount: number;
+    connectionUpdatedCount: number;
 }
 
 class AssetApi extends Api<Asset> {

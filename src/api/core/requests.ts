@@ -16,6 +16,20 @@ export const baseWebSocketUrl = () => {
 // 清理 localStorage 中的残留 token
 localStorage.removeItem('X-Auth-Token');
 
+const accessControlErrorCodes = new Set([10010, 10011, 10025, 10026]);
+let accessControlRedirecting = false;
+
+const redirectToAccessDenied = (errorCode: number) => {
+    if (accessControlRedirecting || window.location.pathname === '/access-denied') {
+        return;
+    }
+    accessControlRedirecting = true;
+    const target = new URL('/access-denied', window.location.origin);
+    target.searchParams.set('code', String(errorCode));
+    target.searchParams.set('from', window.location.pathname);
+    window.location.replace(`${target.pathname}${target.search}`);
+};
+
 const handleError = async (error: any, url?: string) => {
     if (error instanceof TypeError) {
         switch (error.message) {
@@ -52,9 +66,19 @@ const handleError = async (error: any, url?: string) => {
     if (response?.headers.get('Content-Type')?.includes('application/json')) {
         let data = await response?.json();
         msg = data['message'];
-        errorCode = data['code'];
+        errorCode = Number(data['code']) || 0;
     } else {
         msg = error.response?.text();
+    }
+
+    if (accessControlErrorCodes.has(errorCode)) {
+        redirectToAccessDenied(errorCode);
+        return Promise.reject({
+            status: error.status,
+            statusText: error.statusText,
+            message: msg,
+            code: errorCode,
+        });
     }
 
     if (!noerr) {

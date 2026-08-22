@@ -8,6 +8,7 @@ export interface CommandFilterRule {
     priority: number;
     enabled: boolean;
     action: string;
+    remark: string;
 }
 
 class CommandFilterRuleApi extends Api<CommandFilterRule>{

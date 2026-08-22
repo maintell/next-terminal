@@ -55,6 +55,22 @@
     "selected_items": "已選擇 {{count}} 項",
     "toggle_theme": "切換主題"
   },
+  "access_control_denied": {
+    "titles": {
+      "account": "帳號存取受限"
+    },
+    "reasons": {
+      "ip": "目前的 IP 位址不允許存取系統。",
+      "time": "目前時段不允許存取系統。",
+      "geo": "目前所在位置不允許存取系統。",
+      "policy": "目前的存取不符合系統的存取控制策略。"
+    },
+    "hints": {
+      "account": "目前帳號的使用者或部門存取策略組拒絕了本次存取。如果你認為這是誤判，請聯絡系統管理員。"
+    },
+    "retry": "重新檢查",
+    "logout": "登出並返回登入"
+  },
   "actions": {
     "new": "新增",
     "add": "新增",
@@ -160,7 +176,8 @@
       "submenus": {
         "ssh_gateway": "SSH 網關",
         "agent_gateway": "安全網關",
-        "gateway_group": "網關分組"
+        "gateway_group": "網關分組",
+        "network_proxy": "代理伺服器"
       }
     },
     "log_audit": {
@@ -192,7 +209,7 @@
         "user": "使用者",
         "department": "部門",
         "role": "角色",
-        "login_policy": "登入策略",
+        "access_policy": "存取控制",
         "login_locked": "登入鎖定",
         "oidc_client": "OIDC 用戶端"
       }
@@ -254,17 +271,23 @@
     "transmission": {
       "progress": "進度",
       "speed": "速度",
+      "client_stage": "上傳到平台",
+      "remote_stage": "傳送到伺服器",
+      "completed_summary": "已完成 {{completed}}/{{total}}",
+      "failed_summary": "（失敗 {{failed}}）",
       "options": {
         "preparing": "準備中",
         "uploading": "上傳中",
         "transmitting": "傳輸中",
         "upload_failed": "上傳失敗",
         "upload_success": "上傳成功",
-        "cancelled": "已取消"
+        "cancelled": "已取消",
+        "interrupted": "已中斷"
       }
     },
     "drag_upload_hint": "拖曳檔案到此處上傳",
-    "drag_upload_disabled": "目前策略不允許上傳"
+    "drag_upload_disabled": "目前策略不允許上傳",
+    "upload_initializing": "正在初始化使用者資訊，請稍後再試"
   },
   "guacamole": {
     "state": {
@@ -280,7 +303,6 @@
       "connecting": "隧道正在連線中...",
       "open": "隧道連線成功",
       "closed": "隧道連線已關閉",
-      "unstable": "隧道連線不穩定",
       "unknown": "未知隧道狀態"
     }
   },
@@ -294,17 +316,63 @@
       "already_done_subtitle": "系統已完成初始化，請前往登入頁面。"
     },
     "policy": {
-      "ip_group": "IP 組",
-      "ip_group_extra": "格式為逗號分隔的字串（如：192.168.0.1, 192.168.1.0/24, 192.168.2.0-192.168.2.20），0.0.0.0/0 表示匹配所有 IP。",
+      "groups": "存取策略組",
+      "super_admin_bypass_tip": "超級管理員不受存取策略限制。",
+      "new_group": "新增策略組",
+      "edit_group": "編輯策略組",
+      "rules": "規則",
+      "new_rule": "新增規則",
+      "edit_rule": "編輯規則",
+      "mode": {
+        "label": "策略模式",
+        "extra": "白名單模式未匹配任何規則時拒絕存取；黑名單模式未匹配任何規則時允許存取。",
+        "whitelist": "白名單模式",
+        "blacklist": "黑名單模式"
+      },
+      "group_evaluation_tip": "規則按優先級由小到大匹配，第一條匹配的規則決定本組結果。白名單模式下未匹配任何規則將拒絕存取；黑名單模式下未匹配任何規則將允許存取。使用者和部門的所有有效策略組都必須允許存取。",
+      "enable_group": "啟用此策略組",
+      "group_enabled_extra": "新建策略組預設停用；啟用後才會對已綁定的使用者和部門生效。",
+      "rule_match_tip": "已填寫的來源 IP、國家、省/州、城市和生效時段條件之間為「並且」關係；每個欄位內的多個值為「或者」關係；未填寫的條件不限制匹配。",
+      "rule_match_all_warning": "目前未設定任何匹配條件，此規則將匹配所有存取請求。",
+      "enable_rule": "啟用此規則",
+      "rule_enabled_extra": "停用的規則不會參與組內匹配。",
+      "ip_group": "來源 IP",
+      "ip_group_extra": "支援單一 IP、CIDR 和 IP 範圍；多個值可用換行或逗號分隔，0.0.0.0/0 表示匹配所有 IP。",
+      "ip_group_placeholder": "每行一個來源 IP，也可使用逗號分隔\n例如：192.168.0.1\n192.168.1.0/24",
       "action": {
-        "label": "動作",
+        "label": "匹配後動作",
+        "extra": "當來源 IP、地區和策略生效時段均匹配時，執行此動作。",
         "options": {},
-        "allow": "允許",
-        "reject": "拒絕"
+        "allow": "允許存取",
+        "reject": "拒絕存取"
       },
       "priority": "優先級",
       "priority_extra": "數字越小優先級越高",
-      "time_period": "時間區間"
+      "time_period": "策略生效時段",
+      "time_period_extra": "規則僅在選取的時段內匹配；未選取任何時段表示全天匹配。",
+      "enabled": "啟用此存取策略",
+      "enabled_extra": "關閉後，此策略不參與存取判定。",
+      "expiration_at": "策略有效期限至",
+      "geo": "地區限制",
+      "country": "國家限制",
+      "country_extra": "限制存取使用者僅允許來自指定國家，支援中文或英文名稱。",
+      "country_placeholder": "例如：中國或 China",
+      "province": "省份/州限制",
+      "province_extra": "限制存取使用者僅允許來自指定省/州，支援中文或英文名稱。",
+      "province_placeholder": "例如：廣東或 California",
+      "city": "城市限制",
+      "city_extra": "限制存取使用者僅允許來自指定城市，支援中文或英文名稱。",
+      "city_placeholder": "例如：深圳或 San Francisco",
+      "binding_targets": "綁定對象",
+      "bound_users": "綁定使用者",
+      "bound_departments": "綁定部門",
+      "effective_policies": "最終生效策略組",
+      "direct_bindings": "直接綁定",
+      "direct_binding": "使用者直接綁定",
+      "source": "來源",
+      "reset_binding": "重設選擇",
+      "expired": "已過期",
+      "department_binding_tip": "綁定策略組將對該部門目前和之後加入的直接成員生效，不包含子部門成員。"
     },
     "role": {
       "type": "角色類型",
@@ -404,7 +472,7 @@
       }
     },
     "options": {
-      "login_policy": "登入策略"
+        "access_policy": "存取控制"
     },
     "oidc_client": {
       "created_success": "OIDC 用戶端建立成功",
@@ -718,6 +786,14 @@
       "statusCode": "狀態碼",
       "responseSize": "回應大小",
       "responseTime": "回應時間",
+      "clientStatusCode": "用戶端狀態",
+      "upstreamStatusCode": "源站狀態",
+      "downstreamResponseSize": "下行大小",
+      "upstreamContentLength": "源站聲明大小",
+      "totalResponseTime": "總耗時",
+      "noUpstreamResponse": "未回源",
+      "upstreamFailed": "回源失敗",
+      "responseProcessingFailed": "回應處理失敗",
       "userAgent": "User-Agent",
       "createdAt": "請求時間",
       "anonymous": "匿名",
@@ -838,7 +914,7 @@
         "access_token": "存取權杖",
         "role": "角色",
         "department": "部門",
-        "login_policy": "登入策略",
+        "access_policy": "存取控制",
         "login_lock": "登入鎖定",
         "login_log": "登入日誌",
         "oidc_client": "OIDC 用戶端",
@@ -906,6 +982,17 @@
       "start": "轉碼",
       "retry": "重新轉碼",
       "trigger_failed": "提交轉碼失敗"
+    },
+    "recording_upload_status": {
+      "pending": "等待上傳",
+      "uploading": "上傳中",
+      "failed": "上傳到 {{target}} 失敗",
+      "retry": "重新上傳",
+      "retry_submitted": "已提交錄影重新上傳",
+      "retry_failed": "提交錄影重新上傳失敗",
+      "retry_all": "重試全部上傳失敗（{{count}}）",
+      "retry_all_confirm": "確認重新上傳全部 {{count}} 筆失敗錄影嗎？",
+      "retry_all_submitted": "已提交 {{accepted}} 筆錄影重新上傳，略過 {{skipped}} 筆"
     }
   },
   "access": {
@@ -1219,6 +1306,19 @@
     "private_key": "私鑰",
     "password": "密碼",
     "gateway": "網關",
+    "connection": "連線方式",
+    "connection_mode": "連線方式",
+    "connection_direct": "直接連線",
+    "connection_direct_tip": "由伺服器直接連線目標位址。",
+    "connection_gateway": "網關存取",
+    "connection_proxy": "代理存取",
+    "gateway_source": "網關來源",
+    "gateway_custom": "自訂網關鏈路",
+    "proxy_tcp_tip": "透過代理伺服器建立到目標位址的 TCP 連線。",
+    "proxy_protocol_tip": "代理存取僅支援 SSH 和 Telnet 協議。",
+    "proxy_required": "請選擇代理伺服器",
+    "change_connection": "修改連線方式",
+    "advanced_settings": "進階設定",
     "gateway_type": "網關類型",
     "display_settings": "顯示設定",
     "color_depth": "色彩深度",
@@ -1258,22 +1358,25 @@
     "origin_host_custom_name": "自訂回源主機名",
     "origin_timeout": "回源逾時時間",
     "origin_timeout_tip": "代理等待源站回應的最長時間，逾時後返回錯誤。",
+    "insecure_skip_verify": "忽略憑證驗證",
+    "insecure_skip_verify_tip": "啟用後將不驗證 HTTPS 源站憑證，僅建議用於自簽憑證等可信環境。",
     "entrance": "入口路徑",
     "entrance_tip": "入口路徑是首次訪問自動開啟的位址",
     "change_group": "修改分組",
     "change_gateway": "設定網關",
     "batch_edit": {
       "title": "批量編輯",
-      "scope_tip": "AI 設定僅修改所選 SSH 資產，其他協議資產會自動略過；網關設定將修改全部所選資產。未勾選的設定不會發生變化。",
-      "update_gateway": "修改網關",
-      "gateway_mode": "網關設定",
-      "gateway_inherit": "使用分組預設網關",
-      "gateway_custom": "自訂網關鏈路",
-      "gateway_required": "請至少添加一個網關，或選擇使用分組預設網關",
-      "success_ai": "已修改 {{count}} 個 SSH 資產的 AI 設定，略過 {{skippedCount}} 個非 SSH 資產",
-      "success_gateway": "已修改 {{count}} 個資產的網關設定",
-      "success_ai_gateway": "已修改 {{aiCount}} 個 SSH 資產的 AI 設定，略過 {{skippedCount}} 個非 SSH 資產；已修改 {{gatewayCount}} 個資產的網關設定",
-      "no_ssh_asset": "所選資產中沒有 SSH 資產，未修改任何 AI 設定"
+      "scope_tip": "SSH 終端與 AI 設定僅修改所選 SSH 資產，其他協議資產會自動略過；連線方式將修改全部所選資產。未勾選的設定不會發生變化。",
+      "update_connection": "修改連線方式",
+      "success_ssh": "已修改 {{count}} 個 SSH 資產的終端或 AI 設定，略過 {{skippedCount}} 個非 SSH 資產",
+      "success_connection": "已修改 {{count}} 個資產的連線方式",
+      "success_ssh_connection": "已修改 {{sshCount}} 個 SSH 資產的終端或 AI 設定，略過 {{skippedCount}} 個非 SSH 資產；已修改 {{connectionCount}} 個資產的連線方式",
+      "no_ssh_asset": "所選資產中沒有 SSH 資產，未修改任何 SSH 設定"
+    },
+    "website_batch_edit": {
+      "title": "批量編輯",
+      "scope_tip": "僅修改已勾選的 Web 資產設定，未勾選的設定保持不變。連線方式和回源設定將套用至全部所選 Web 資產。",
+      "success": "已修改 {{count}} 個 Web 資產"
     },
     "group_default_gateway": "分組預設網關",
     "ssh_gateway_required_after_first_hop": "第二跳及之後只能選擇 SSH 網關",
@@ -1289,6 +1392,7 @@
     "import": "匯入資產",
     "copy": "複製資產",
     "import_asset_tip": "匯入資產時，帳號、密碼和金鑰、密碼屬於二選一，都填寫時優先選擇私鑰和密碼。",
+    "import_asset_group_tip": "匯入時會按名稱比對現有分組，並自動建立缺少的分組；多層分組使用 / 分隔，例如：生產環境/華東區。",
     "import_asset_success": "匯入資產成功",
     "import_asset_error": "匯入資產失敗",
     "import_asset_error_title": "請檢查匯入的檔案，以下資產匯入失敗：",
@@ -1302,23 +1406,26 @@
     "cert": "證書",
     "public": "公開訪問",
     "temp_allow": "臨時白名單",
-    "public_tip": "限制只針對匿名使用者生效。",
-    "limit_ip": "IP 訪問限制",
-    "limit_ip_tip": "限制使用者只能從指定的 IP 位址訪問資產。支援 CIDR 格式的 IP 位址，例如：192.168.1.0/24。支援 - 號分隔的 IP 位址，例如：192.168.1.0-192.168.1.255。多個 IP 位址可換行輸入，也可用逗號或分號分隔。",
-    "limit_country": "國家限制",
-    "limit_country_tip": "限制匿名使用者僅允許來自指定國家訪問，支援中文或英文名稱。",
+    "public_access_switch": "允許匿名公開訪問",
+    "public_validity": "公開訪問有效期",
+    "public_validity_tip": "到期後，直接放行和口令訪問均失效。",
+    "public_rule_relation_tip": "來源 IP、地區、請求頭、公開路徑任意一項命中即放行。",
+    "public_access_rules": "直接放行規則",
+    "public_geo_rules": "地區規則",
+    "public_geo_rules_tip": "欄位之間為「與」，欄位內多個值為「或」；留空不限制。輸入後按 Enter 新增。",
+    "public_password_access": "口令訪問",
+    "public_password_access_tip": "未設定直接放行規則時，以口令驗證訪問。",
+    "limit_ip": "來源 IP",
+    "limit_ip_tip": "支援單個 IP、CIDR 和 IP 範圍；多個值可用換行、逗號或分號分隔。",
+    "limit_country": "國家",
     "limit_country_placeholder": "如：中國 或 China",
-    "limit_province": "省份/州限制",
-    "limit_province_tip": "限制匿名使用者僅允許來自指定省/州訪問，支援中文或英文名稱。",
+    "limit_province": "省份/州",
     "limit_province_placeholder": "如：廣東 或 California",
-    "limit_city": "城市限制",
-    "limit_city_tip": "限制匿名使用者僅允許來自指定城市訪問，支援中文或英文名稱。",
+    "limit_city": "城市",
     "limit_city_placeholder": "如：深圳 或 San Francisco",
-    "limit_geo_input_tip": "輸入後按 Enter 生成標籤，可多次輸入。",
-    "limit_time_enabled": "失效時間限制",
+    "limit_time_enabled": "設定失效時間",
     "limit_time": "失效時間",
-    "limit_password": "口令訪問限制",
-    "limit_password_tip": "使用正確的口令才能訪問資產。",
+    "limit_password": "訪問口令",
     "temp_allow_duration": "有效期（分鐘）",
     "temp_allow_duration_tip": "使用者點擊按鈕後，當前 IP 將在有效期內可訪問。",
     "temp_allow_auto_renew": "自動續期",
@@ -1387,6 +1494,10 @@
     },
     "dns_provider_config": "DNS 供應商設定",
     "terminal_settings": "終端設定",
+    "restricted_shell": "網路設備 / 受限 Shell",
+    "restricted_shell_extra": "適用於交換機、路由器、防火牆、RouterOS 等非標準 Linux SSH 環境。此類環境不支援開啟 SSH 子工作階段，啟用後將無法使用檔案系統（SFTP）、執行指標（Stats）等功能。",
+    "sftp_directory_follow": "SFTP 目錄自動跟隨",
+    "sftp_directory_follow_extra": "啟用後，SFTP 檔案系統目錄將自動跟隨終端目前目錄。",
     "enable_alive_check": "存活檢查",
     "enable_alive_check_extra": "連線期間會定時檢測目標資產是否在線，用於及時發現連線異常。部分硬體交換機可能不支援該檢測，若連線失敗或頻繁中斷，可關閉此項。",
     "enable_detect_os": "自動識別作業系統",
@@ -1483,11 +1594,11 @@
     "auto_fetch_favicon": "自動獲取圖示",
     "auto_fetch_favicon_failed": "獲取圖示失敗，請檢查目標地址是否正確",
     "public_header_whitelist": "請求頭白名單",
-    "public_header_whitelist_tip": "攜帶任一指定請求頭即放行，大小寫不敏感。",
-    "public_header_whitelist_placeholder": "如：X-Bypass-Token",
-    "public_path_whitelist": "路徑白名單",
-    "public_path_whitelist_tip": "匹配任一路径即放行，支援正則表示式。",
-    "public_path_whitelist_placeholder": "例如：^/public/.* 或 /health",
+    "public_header_whitelist_tip": "每行一個請求頭名稱，大小寫不敏感。",
+    "public_header_whitelist_placeholder": "X-Bypass-Token\nX-Internal-Request",
+    "public_path_whitelist": "公開路徑",
+    "public_path_whitelist_tip": "每行一個路徑；* 匹配任意長度內容，? 匹配單個字元；不含萬用字元時精確匹配。",
+    "public_path_whitelist_placeholder": "/public/*\n/health",
     "detect_os_success": "作業系統偵測成功，圖示已更新",
     "detect_os_failed": "作業系統偵測失敗",
     "wol_send": "傳送 WOL",
@@ -1497,9 +1608,6 @@
       "settings": "AI 設定",
       "enabled": "啟用 AI",
       "enabled_extra": "啟用後，全域 AI 才能搜尋和操作該 SSH 資產。",
-      "restricted_shell": "受限 Shell",
-      "restricted_shell_extra": "適用於網路設備、防火牆、交換機等需要更嚴格命令確認的環境。",
-      "restricted_shell_tip": "受限 Shell 會強制每條 AI 命令都經過確認。",
       "command_policy": "AI 執行命令策略",
       "command_policy_extra": "為空時跟隨全域 AI 設定。",
       "follow_global": "跟隨全域設定"
@@ -1515,6 +1623,22 @@
     "name_required": "分組名稱不能為空",
     "parent": "上級分組",
     "parent_placeholder": "請選擇上級分組"
+  },
+  "network_proxy": {
+    "setting": "代理伺服器",
+    "protocol": "代理協議",
+    "address": "代理位址",
+    "host": "主機",
+    "port": "連接埠",
+    "username": "帳號",
+    "password": "密碼",
+    "connection_test": "連線測試",
+    "target_address": "目標位址",
+    "target_required": "請輸入測試目標位址和連接埠",
+    "test": "測試連線",
+    "test_success": "代理連線測試成功",
+    "test_failed": "代理連線測試失敗",
+    "delete_referenced_title": "代理伺服器正在使用中，無法刪除"
   },
   "gateway_group": {
     "name": "分組名稱",
@@ -1652,7 +1776,11 @@
       "disable_password_login": "停用密碼登入",
       "devices": "裝置",
       "session": {
+        "login_session": "登入會話",
+        "session_count": "會話數量",
+        "client_certificate": "用戶端憑證",
         "duration": "登入會話有效時長",
+        "browser_close_logout": "關閉瀏覽器後登出",
         "count_custom": "自訂登入會話有效數量",
         "count_limit": "登入會話有效數量"
       },
@@ -1951,6 +2079,8 @@
       "wecom_app_to_user_required": "請輸入接收訊息的使用者",
       "wecom_app_to_user_placeholder": "輸入接收告警訊息的使用者，全部可填 @all",
       "recipients_required": "請輸入收件人",
+      "access_document": "接入文件",
+      "enable_to_configure": "目前渠道未啟用，啟用後才能編輯設定。",
       "test": "測試",
       "test_success": "測試通知已發送",
       "event_types_label": "事件類型",
@@ -2168,6 +2298,7 @@
     "ai": {
       "setting": "AI 助手",
       "enabled": "啟用 AI 助手",
+      "asset_enable_tip": "啟用全域 AI 後，還需在 SSH 資產的「AI 設定」中手動開啟「啟用 AI」，終端才能使用 AI 助手。",
       "disclaimer_title": "AI 助手免責聲明",
       "disclaimer_description": "AI 助手生成的內容和命令可能存在錯誤、遺漏、誤導或危險操作，啟用後請自行評估輸出結果，並在執行任何命令前確認其意圖和影響。因使用 AI 助手產生的任何風險和後果由使用者自行承擔。",
       "disclaimer_accepted": "我已了解風險",

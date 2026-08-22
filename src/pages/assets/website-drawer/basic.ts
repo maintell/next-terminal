@@ -11,6 +11,8 @@ export const getDefaultWebsiteData = (): Partial<WebsiteBasicFormData> => ({
     enabled: true,
     scheme: 'http',
     port: 80,
+    connectionMode: 'direct',
+    gatewaySource: 'inherit',
     gatewayChain: [],
     cert: {
         enabled: false
@@ -31,7 +33,8 @@ export const getDefaultWebsiteData = (): Partial<WebsiteBasicFormData> => ({
     },
     originHostMode: 'origin',
     originHostCustom: '',
-    originTimeout: DEFAULT_ORIGIN_TIMEOUT
+    originTimeout: DEFAULT_ORIGIN_TIMEOUT,
+    insecureSkipVerify: false
 });
 
 export const normalizeOriginHostMode = (originHostMode?: string): WebsiteOriginHostMode => {
@@ -46,12 +49,4 @@ export const normalizeOriginTimeout = (originTimeout?: number): number => {
         return originTimeout;
     }
     return DEFAULT_ORIGIN_TIMEOUT;
-};
-
-export const getWebsiteHeaders = (
-    websiteData: Partial<WebsiteFormData> | undefined,
-    values: WebsiteBasicFormData
-) => {
-    const sourceHeaders = websiteData?.headers || values.headers || [];
-    return sourceHeaders.filter(item => item.name?.toLowerCase() !== 'host');
 };

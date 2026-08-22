@@ -1,6 +1,6 @@
 import QuerySelect from "@/components/QuerySelect";
-import React from 'react';
-import {Alert, Form, Input, InputNumber, Select, Space, Switch, Tabs, type TabsProps} from "antd";
+import React, {useEffect} from 'react';
+import {Form, Input, InputNumber, Select, Space, Switch, Tabs, type TabsProps} from "antd";
 import {useTranslation} from "react-i18next";
 import DisplaySettings from './DisplaySettings';
 import SecuritySettings from './SecuritySettings';
@@ -99,18 +99,52 @@ const RdpDriveSettings = () => {
 
 const SshTerminalSettings = () => {
     const {t} = useTranslation();
+    const form = Form.useFormInstance();
+    const restrictedShell = Form.useWatch(['attrs', 'restricted-shell'], form);
+
+    useEffect(() => {
+        if (!restrictedShell) {
+            return;
+        }
+        form.setFieldValue(['attrs', 'enableAliveCheck'], false);
+        form.setFieldValue(['attrs', 'enableDetectOS'], false);
+    }, [form, restrictedShell]);
 
     return <div>
+        <Form.Item
+            name={['attrs', 'restricted-shell']}
+            label={t('assets.restricted_shell')}
+            valuePropName="checked"
+            extra={t('assets.restricted_shell_extra')}
+        >
+            <Switch checkedChildren={t('general.enabled')} unCheckedChildren={t('general.disabled')}/>
+        </Form.Item>
         <Form.Item name={['attrs', 'enableAliveCheck']}
                    extra={t('assets.enable_alive_check_extra')}
                    label={t('assets.enable_alive_check')}
                    valuePropName="checked">
-            <Switch checkedChildren={t('general.enabled')} unCheckedChildren={t('general.disabled')}/>
+            <Switch
+                disabled={restrictedShell}
+                checkedChildren={t('general.enabled')}
+                unCheckedChildren={t('general.disabled')}
+            />
         </Form.Item>
         <Form.Item name={['attrs', 'enableDetectOS']}
                    extra={t('assets.enable_detect_os_extra')}
                    valuePropName="checked"
                    label={t('assets.enable_detect_os')}
+        >
+            <Switch
+                disabled={restrictedShell}
+                checkedChildren={t('general.enabled')}
+                unCheckedChildren={t('general.disabled')}
+            />
+        </Form.Item>
+        <Form.Item
+            name={['attrs', 'sftp-directory-follow']}
+            label={t('assets.sftp_directory_follow')}
+            valuePropName="checked"
+            extra={t('assets.sftp_directory_follow_extra')}
         >
             <Switch checkedChildren={t('general.enabled')} unCheckedChildren={t('general.disabled')}/>
         </Form.Item>
@@ -163,27 +197,6 @@ const SshAISettings = () => {
             extra={t('assets.ai.enabled_extra')}
         >
             <Switch checkedChildren={t('general.enabled')} unCheckedChildren={t('general.disabled')}/>
-        </Form.Item>
-        <Form.Item
-            name={['attrs', 'ai-restricted-shell']}
-            label={t('assets.ai.restricted_shell')}
-            valuePropName="checked"
-            extra={t('assets.ai.restricted_shell_extra')}
-        >
-            <Switch checkedChildren={t('general.enabled')} unCheckedChildren={t('general.disabled')}/>
-        </Form.Item>
-        <Form.Item noStyle shouldUpdate>
-            {({getFieldValue}) => {
-                const restrictedShell = getFieldValue(['attrs', 'ai-restricted-shell']);
-                return restrictedShell ? (
-                    <Alert
-                        className="mb-4"
-                        type="info"
-                        showIcon
-                        message={t('assets.ai.restricted_shell_tip')}
-                    />
-                ) : null;
-            }}
         </Form.Item>
         <Form.Item
             name={['attrs', 'ai-command-policy']}

@@ -23,6 +23,7 @@ const PUBLIC_PATHS = [
     '/oidc/callback',
     '/oidc/server/consent',
     '/oauth/consent',
+	'/asset-authorization',
 ];
 
 /**

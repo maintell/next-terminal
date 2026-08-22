@@ -14,6 +14,7 @@ const booleanKeys = [
     'reverse-proxy-server-auto-tls',
     'reverse-proxy-server-http-redirect-to-https',
     'login-session-count-custom',
+    'login-session-browser-close-logout',
     'ssh-server-port-forwarding-enabled',
     'access-require-mfa',
     'access-request-enabled',

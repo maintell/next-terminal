@@ -14,12 +14,15 @@ export function useBreadcrumb(breadcrumbNameMap: Map<string, string>) {
     useEffect(() => {
         // 解析路径生成面包屑
         const pathSnippets = location.pathname.split('/').filter(i => i);
-        const extraBreadcrumbItems = pathSnippets.map((_, index) => {
+        const extraBreadcrumbItems = pathSnippets.flatMap((_, index) => {
             const url = `/${pathSnippets.slice(0, index + 1).join('/')}`;
-            const label = breadcrumbNameMap.get(url) || '';
-            return {
+            const label = breadcrumbNameMap.get(url);
+            if (!label) {
+                return [];
+            }
+            return [{
                 title: <Link to={url}>{label}</Link>
-            };
+            }];
         });
 
         // 添加首页面包屑

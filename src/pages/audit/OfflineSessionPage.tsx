@@ -6,18 +6,26 @@ import NTable,{ type NColumn,type NTableActionType } from "@/components/NTable";
 import { getProtocolColor } from "@/helper/asset-helper";
 import { getSort } from "@/utils/sort";
 import { browserDownload,renderSize } from "@/utils/utils";
-import { useMutation } from "@tanstack/react-query";
-import { App,Button,Popconfirm,Progress,Space,Table,Tag,Tooltip,Typography } from "antd";
+import { useMutation,useQuery } from "@tanstack/react-query";
+import { App,Button,Popconfirm,Progress,Select,Space,Table,Tag,Tooltip,Typography } from "antd";
 import clsx from "clsx";
 import {Download, PlayCircle} from "lucide-react";
-import { useRef,useState } from 'react';
+import {type ReactNode,useRef,useState } from 'react';
 import { useTranslation } from "react-i18next";
+
+const protocolOptions = [
+    {label: 'SSH', value: 'ssh'},
+    {label: 'RDP', value: 'rdp'},
+    {label: 'VNC', value: 'vnc'},
+    {label: 'Telnet', value: 'telnet'},
+];
 
 const OfflineSessionPage = () => {
     const { t } = useTranslation();
     const actionRef = useRef<NTableActionType>(null);
 
     const [convertingIds, setConvertingIds] = useState<Set<string>>(new Set());
+    const [protocol, setProtocol] = useState<string>();
 
     const { modal, message } = App.useApp();
 
@@ -52,8 +60,40 @@ const OfflineSessionPage = () => {
         onSuccess: () => actionRef.current?.reload(),
     });
 
+    const recordingUploadFailedCountQuery = useQuery({
+        queryKey: ['recording-upload-failed-count'],
+        queryFn: sessionApi.getRecordingUploadFailedCount,
+        refetchInterval: 5000,
+    });
+
+    const retryRecordingUploadMutation = useMutation({
+        mutationFn: sessionApi.retryRecordingUpload,
+        onSuccess: () => {
+            message.success(t('audit.recording_upload_status.retry_submitted'));
+            actionRef.current?.reload();
+            recordingUploadFailedCountQuery.refetch();
+        },
+        onError: () => message.error(t('audit.recording_upload_status.retry_failed')),
+    });
+
+    const retryAllFailedRecordingUploadsMutation = useMutation({
+        mutationFn: sessionApi.retryAllFailedRecordingUploads,
+        onSuccess: result => {
+            message.success(t('audit.recording_upload_status.retry_all_submitted', {
+                accepted: result.acceptedCount,
+                skipped: result.skippedCount,
+            }));
+            actionRef.current?.reload();
+            recordingUploadFailedCountQuery.refetch();
+        },
+        onError: () => message.error(t('audit.recording_upload_status.retry_failed')),
+    });
+
     const isRecordingConvertProcessing = (record: Session) =>
         record.recordingConvertStatus === 'processing';
+
+    const isRecordingConvertActive = (record: Session) =>
+        record.recordingConvertStatus === 'pending' || record.recordingConvertStatus === 'processing';
 
     const hasVideoRecording = (record: Session) =>
         (record.videoSize || 0) > 0;
@@ -65,7 +105,8 @@ const OfflineSessionPage = () => {
         const accessMode = getSessionAccessMode(record);
         const convertibleAccessMode = accessMode === 'terminal' || accessMode === 'guacd' || accessMode === 'rdp_proxy';
         const convertibleStatus = !record.recordingConvertStatus || record.recordingConvertStatus === 'pending' || record.recordingConvertStatus === 'failed';
-        return record.recordingSize > 0 && convertibleAccessMode && convertibleStatus && !hasVideoRecording(record);
+        const uploadIdle = record.recordingUploadStatus !== 'pending' && record.recordingUploadStatus !== 'uploading';
+        return record.recordingSize > 0 && convertibleAccessMode && convertibleStatus && uploadIdle && !hasVideoRecording(record);
     };
 
     const openOriginalPlayback = (record: Session) => {
@@ -159,12 +200,47 @@ const OfflineSessionPage = () => {
         }
     };
 
+    const renderRecordingUploadStatus = (record: Session) => {
+        const target = record.recordingUploadTarget === 'webdav' ? 'WebDAV' : 'S3';
+        switch (record.recordingUploadStatus) {
+            case 'pending':
+                return <Tag color="processing">{t('audit.recording_upload_status.pending')}</Tag>;
+            case 'uploading':
+                return <Tag color="processing">{t('audit.recording_upload_status.uploading')}</Tag>;
+            case 'failed':
+                return (
+                    <Space size={6} wrap>
+                        <Tooltip title={record.recordingUploadError || undefined}>
+                            <Tag color="error" className="!mr-0">
+                                {t('audit.recording_upload_status.failed', {target})}
+                            </Tag>
+                        </Tooltip>
+                        {!isRecordingConvertActive(record) && (
+                            <Button
+                                type="link"
+                                size="small"
+                                loading={retryRecordingUploadMutation.isPending && retryRecordingUploadMutation.variables === record.id}
+                                disabled={retryRecordingUploadMutation.isPending && retryRecordingUploadMutation.variables !== record.id}
+                                style={{padding: 0}}
+                                onClick={() => retryRecordingUploadMutation.mutate(record.id)}
+                            >
+                                {t('audit.recording_upload_status.retry')}
+                            </Button>
+                        )}
+                    </Space>
+                );
+            default:
+                return null;
+        }
+    };
+
     const renderRecordingCell = (record: Session) => {
         const showOriginal = record.recordingSize > 0;
         const showVideo = hasVideoRecording(record) && !isRecordingConvertProcessing(record);
         const convertStatus = renderRecordingConvertStatus(record);
+        const uploadStatus = renderRecordingUploadStatus(record);
 
-        if (!showOriginal && !showVideo && !convertStatus) {
+        if (!showOriginal && !showVideo && !convertStatus && !uploadStatus) {
             return '-';
         }
 
@@ -189,6 +265,7 @@ const OfflineSessionPage = () => {
                     </div>
                 )}
                 {convertStatus && <div>{convertStatus}</div>}
+                {uploadStatus && <div>{uploadStatus}</div>}
             </div>
         );
     };
@@ -292,6 +369,7 @@ const OfflineSessionPage = () => {
                         sortField,
                         status: 'disconnected',
                         keyword: params.keyword,
+                        protocol: params.protocol,
                     });
                     return {
                         data: result['items'],
@@ -299,6 +377,17 @@ const OfflineSessionPage = () => {
                         total: result['total'],
                     };
                 }}
+                params={{protocol}}
+                searchPrefix={(
+                    <Select
+                        allowClear
+                        placeholder={t('assets.protocol')}
+                        options={protocolOptions}
+                        value={protocol}
+                        onChange={setProtocol}
+                        style={{width: 120}}
+                    />
+                )}
                 rowKey="id"
                 options={{
                     search: true,
@@ -321,16 +410,34 @@ const OfflineSessionPage = () => {
                         </NButton>
                     </Space>
                 )}
-                toolBarRender={() => [
-                    <Button key="clear" type="primary" danger onClick={() => {
-                        modal.confirm({
-                            title: t('general.clear_confirm'),
-                            onOk: () => clearMutation.mutate(),
-                        });
-                    }}>
-                        {t('actions.clear')}
-                    </Button>,
-                ]}
+                toolBarRender={() => {
+                    const buttons: ReactNode[] = [];
+                    const failedCount = recordingUploadFailedCountQuery.data?.count || 0;
+                    if (failedCount > 0) {
+                        buttons.push(
+                            <Popconfirm
+                                key="retry-all-recording-uploads"
+                                title={t('audit.recording_upload_status.retry_all_confirm', {count: failedCount})}
+                                onConfirm={() => retryAllFailedRecordingUploadsMutation.mutate()}
+                            >
+                                <Button loading={retryAllFailedRecordingUploadsMutation.isPending}>
+                                    {t('audit.recording_upload_status.retry_all', {count: failedCount})}
+                                </Button>
+                            </Popconfirm>,
+                        );
+                    }
+                    buttons.push(
+                        <Button key="clear" type="primary" danger onClick={() => {
+                            modal.confirm({
+                                title: t('general.clear_confirm'),
+                                onOk: () => clearMutation.mutate(),
+                            });
+                        }}>
+                            {t('actions.clear')}
+                        </Button>,
+                    );
+                    return buttons;
+                }}
                 polling={5000}
             />
         </div>

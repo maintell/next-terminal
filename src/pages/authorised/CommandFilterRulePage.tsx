@@ -1,6 +1,5 @@
 import NButton from "@/components/NButton";
 import NTable,{ type NColumn,type NTableActionType } from "@/components/NTable";
-import { getSort } from "@/utils/sort";
 import { useMutation } from "@tanstack/react-query";
 import {
 App,
@@ -67,7 +66,6 @@ const CommandFilterRulePage = ({id}: Props) => {
             title: t('identity.policy.priority'),
             key: 'priority',
             dataIndex: 'priority',
-            sorter: true,
             hideInSearch: true,
         },
         {
@@ -87,7 +85,7 @@ const CommandFilterRulePage = ({id}: Props) => {
             title: t('authorised.command_filter.rule.match_content'),
             key: 'command',
             dataIndex: 'command',
-            sorter: true,
+            ellipsis: true,
         },
         {
             title: t('identity.policy.action.label'),
@@ -102,6 +100,13 @@ const CommandFilterRulePage = ({id}: Props) => {
                         return <Tag color={'red'}>{t('identity.policy.action.reject')}</Tag>
                 }
             })
+        },
+        {
+            title: t('general.remark'),
+            key: 'remark',
+            dataIndex: 'remark',
+            hideInSearch: true,
+            ellipsis: true,
         },
         {
             title: t('general.status'),
@@ -151,14 +156,10 @@ const CommandFilterRulePage = ({id}: Props) => {
             <NTable
                 columns={columns}
                 actionRef={actionRef}
-                request={async (params = {}, sort, _filter) => {
-                    let [sortOrder, sortField] = getSort(sort);
-                    
+                request={async (params = {}) => {
                     let queryParams = {
                         pageIndex: params.current,
                         pageSize: params.pageSize,
-                        sortOrder: sortOrder,
-                        sortField: sortField,
                         name: params.name,
                         commandFilterId: id,
                     }

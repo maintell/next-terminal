@@ -55,6 +55,22 @@
     "selected_items": "已选择 {{count}} 项",
     "toggle_theme": "切换主题"
   },
+  "access_control_denied": {
+    "titles": {
+      "account": "账号访问受限"
+    },
+    "reasons": {
+      "ip": "当前 IP 地址不允许访问系统。",
+      "time": "当前时间段不允许访问系统。",
+      "geo": "当前所在地区不允许访问系统。",
+      "policy": "当前访问不符合系统的访问控制策略。"
+    },
+    "hints": {
+      "account": "当前账号的用户或部门访问策略组拒绝了本次访问。如果你认为这是误判，请联系系统管理员。"
+    },
+    "retry": "重新检查",
+    "logout": "退出并返回登录"
+  },
   "actions": {
     "new": "新建",
     "add": "添加",
@@ -163,7 +179,8 @@
       "submenus": {
         "ssh_gateway": "SSH网关",
         "agent_gateway": "安全网关",
-        "gateway_group": "网关分组"
+        "gateway_group": "网关分组",
+        "network_proxy": "代理服务器"
       }
     },
     "log_audit": {
@@ -195,7 +212,7 @@
         "user": "用户",
         "department": "部门",
         "role": "角色",
-        "login_policy": "登录策略",
+        "access_policy": "访问控制",
         "login_locked": "登录锁定",
         "oidc_client": "OIDC 客户端"
       }
@@ -254,17 +271,23 @@
     "transmission": {
       "progress": "进度",
       "speed": "速度",
+      "client_stage": "上传到平台",
+      "remote_stage": "发送到服务器",
+      "completed_summary": "已完成 {{completed}}/{{total}}",
+      "failed_summary": "（失败 {{failed}}）",
       "options": {
         "preparing": "准备中",
         "uploading": "上传中",
         "transmitting": "传输中",
         "upload_failed": "上传失败",
         "upload_success": "上传成功",
-        "cancelled": "已取消"
+        "cancelled": "已取消",
+        "interrupted": "已中断"
       }
     },
     "drag_upload_hint": "拖拽文件到此处上传",
-    "drag_upload_disabled": "当前策略不允许上传"
+    "drag_upload_disabled": "当前策略不允许上传",
+    "upload_initializing": "正在初始化用户信息，请稍后重试"
   },
   "guacamole": {
     "state": {
@@ -280,7 +303,6 @@
       "connecting": "隧道正在连接中...",
       "open": "隧道连接成功",
       "closed": "隧道连接已关闭",
-      "unstable": "隧道连接不稳定",
       "unknown": "未知隧道状态"
     }
   },
@@ -294,17 +316,63 @@
       "already_done_subtitle": "系统已完成初始化，请前往登录页面。"
     },
     "policy": {
-      "ip_group": "IP 组",
-      "ip_group_extra": "格式为逗号分隔的字符串（如：192.168.0.1, 192.168.1.0/24, 192.168.2.0-192.168.2.20），0.0.0.0/0表示匹配所有IP。",
+      "groups": "访问策略组",
+      "super_admin_bypass_tip": "超级管理员不受访问策略限制。",
+      "new_group": "新建策略组",
+      "edit_group": "编辑策略组",
+      "rules": "规则",
+      "new_rule": "新建规则",
+      "edit_rule": "编辑规则",
+      "mode": {
+        "label": "策略模式",
+        "extra": "白名单模式未命中任何规则时拒绝访问；黑名单模式未命中任何规则时允许访问。",
+        "whitelist": "白名单模式",
+        "blacklist": "黑名单模式"
+      },
+      "group_evaluation_tip": "规则按优先级从小到大匹配，第一条命中的规则决定本组结果。白名单模式下未命中任何规则将拒绝访问；黑名单模式下未命中任何规则将允许访问。用户和部门的所有有效策略组都必须允许访问。",
+      "enable_group": "启用此策略组",
+      "group_enabled_extra": "新建策略组默认停用；启用后才会对已绑定的用户和部门生效。",
+      "rule_match_tip": "已填写的来源 IP、国家、省/州、城市和生效时段条件之间为“并且”关系；每个字段内的多个值为“或者”关系；未填写的条件不限制匹配。",
+      "rule_match_all_warning": "当前未设置任何匹配条件，此规则将匹配所有访问请求。",
+      "enable_rule": "启用此规则",
+      "rule_enabled_extra": "停用的规则不会参与组内匹配。",
+      "ip_group": "来源 IP",
+      "ip_group_extra": "支持单个 IP、CIDR 和 IP 范围；多个值可用换行或逗号分隔，0.0.0.0/0 表示匹配所有 IP。",
+      "ip_group_placeholder": "每行一个来源 IP，也可使用逗号分隔\n例如：192.168.0.1\n192.168.1.0/24",
       "action": {
-        "label": "动作",
+        "label": "匹配后动作",
+        "extra": "当来源 IP、地区和策略生效时段均匹配时，执行此动作。",
         "options": {},
-        "allow": "允许",
-        "reject": "拒绝"
+        "allow": "允许访问",
+        "reject": "拒绝访问"
       },
       "priority": "优先级",
       "priority_extra": "数字越小优先级越高",
-      "time_period": "时间区间"
+      "time_period": "策略生效时段",
+      "time_period_extra": "规则仅在选中的时段内匹配；未选择任何时段表示全天匹配。",
+      "enabled": "启用此访问策略",
+      "enabled_extra": "关闭后，此策略不参与访问判定。",
+      "expiration_at": "策略有效期至",
+      "geo": "地区限制",
+      "country": "国家限制",
+      "country_extra": "限制访问用户仅允许来自指定国家访问，支持中文或英文名称。",
+      "country_placeholder": "如：中国 或 China",
+      "province": "省份/州限制",
+      "province_extra": "限制访问用户仅允许来自指定省/州访问，支持中文或英文名称。",
+      "province_placeholder": "如：广东 或 California",
+      "city": "城市限制",
+      "city_extra": "限制访问用户仅允许来自指定城市访问，支持中文或英文名称。",
+      "city_placeholder": "如：深圳 或 San Francisco",
+      "binding_targets": "绑定对象",
+      "bound_users": "绑定用户",
+      "bound_departments": "绑定部门",
+      "effective_policies": "最终生效策略组",
+      "direct_bindings": "直接绑定",
+      "direct_binding": "用户直接绑定",
+      "source": "来源",
+      "reset_binding": "重置选择",
+      "expired": "已过期",
+      "department_binding_tip": "绑定策略组将对该部门当前和以后加入的直接成员生效，不包含子部门成员。"
     },
     "role": {
       "type": "角色类型",
@@ -404,7 +472,7 @@
       }
     },
     "options": {
-      "login_policy": "登陆策略"
+        "access_policy": "访问控制"
     },
     "oidc_client": {
       "created_success": "OIDC 客户端创建成功",
@@ -718,6 +786,14 @@
       "statusCode": "状态码",
       "responseSize": "响应大小",
       "responseTime": "响应时间",
+      "clientStatusCode": "客户端状态",
+      "upstreamStatusCode": "源站状态",
+      "downstreamResponseSize": "下行大小",
+      "upstreamContentLength": "源站声明大小",
+      "totalResponseTime": "总耗时",
+      "noUpstreamResponse": "未回源",
+      "upstreamFailed": "回源失败",
+      "responseProcessingFailed": "响应处理失败",
       "userAgent": "User-Agent",
       "createdAt": "请求时间",
       "anonymous": "匿名",
@@ -838,7 +914,7 @@
         "access_token": "访问令牌",
         "role": "角色",
         "department": "部门",
-        "login_policy": "登录策略",
+        "access_policy": "访问控制",
         "login_lock": "登录锁定",
         "login_log": "登录日志",
         "oidc_client": "OIDC 客户端",
@@ -906,6 +982,17 @@
       "start": "转码",
       "retry": "重新转码",
       "trigger_failed": "提交转码失败"
+    },
+    "recording_upload_status": {
+      "pending": "等待上传",
+      "uploading": "上传中",
+      "failed": "上传到 {{target}} 失败",
+      "retry": "重新上传",
+      "retry_submitted": "已提交录像重新上传",
+      "retry_failed": "提交录像重新上传失败",
+      "retry_all": "重试全部上传失败（{{count}}）",
+      "retry_all_confirm": "确认重新上传全部 {{count}} 条失败录像吗？",
+      "retry_all_submitted": "已提交 {{accepted}} 条录像重新上传，跳过 {{skipped}} 条"
     }
   },
   "access": {
@@ -981,7 +1068,22 @@
       "clear": "清屏",
       "connecting": "连接中...",
       "close_title": "关闭终端",
-      "close_confirm": "确定要关闭此终端吗？"
+      "close_confirm": "确定要关闭此终端吗？",
+      "zmodem": {
+        "save_dialog_title": "保存 ZMODEM 文件",
+        "upload_skipped_title": "已跳过 ZMODEM 上传",
+        "upload_skipped_description": "{{fileName}}：远端已存在同名文件",
+        "download_complete_title": "下载完成",
+        "progress_uploading_title": "ZMODEM 正在上传",
+        "progress_downloading_title": "ZMODEM 正在下载",
+        "upload_no_rz_response": "ZMODEM 上传未启动，请确认远端已安装并运行 rz/lrzsz。",
+        "upload_transfer_active": "已有 ZMODEM 传输正在进行。",
+        "upload_no_files": "未选择要上传的文件。",
+        "upload_file": "ZMODEM 上传文件",
+        "ssh_only": "ZMODEM 仅支持 SSH 终端。",
+        "not_connected": "终端尚未连接，无法开始 ZMODEM 上传。",
+        "start_upload_failed": "启动 ZMODEM 上传失败。"
+      }
     },
     "playback": {
       "shortcut_space": "空格键: 播放/暂停",
@@ -1219,6 +1321,19 @@
     "private_key": "私钥",
     "password": "密码",
     "gateway": "网关",
+    "connection": "连接方式",
+    "connection_mode": "连接方式",
+    "connection_direct": "直接连接",
+    "connection_direct_tip": "由服务端直接连接目标地址。",
+    "connection_gateway": "网关访问",
+    "connection_proxy": "代理访问",
+    "gateway_source": "网关来源",
+    "gateway_custom": "自定义网关链路",
+    "proxy_tcp_tip": "通过代理服务器建立到目标地址的 TCP 连接。",
+    "proxy_protocol_tip": "代理访问仅支持 SSH 和 Telnet 协议。",
+    "proxy_required": "请选择代理服务器",
+    "change_connection": "修改连接方式",
+    "advanced_settings": "高级设置",
     "gateway_type": "网关类型",
     "display_settings": "显示设置",
     "color_depth": "色彩深度",
@@ -1258,22 +1373,25 @@
     "origin_host_custom_name": "自定义回源主机名",
     "origin_timeout": "回源超时时间",
     "origin_timeout_tip": "代理等待源站响应的最长时间，超时后返回错误。",
+    "insecure_skip_verify": "忽略证书校验",
+    "insecure_skip_verify_tip": "开启后将不校验 HTTPS 源站证书，仅建议用于自签名证书等可信环境。",
     "entrance": "入口路径",
     "entrance_tip": "入口路径是首次访问自动打开的地址",
     "change_group": "修改分组",
     "change_gateway": "配置网关",
     "batch_edit": {
       "title": "批量编辑",
-      "scope_tip": "AI 设置仅修改所选 SSH 资产，其他协议资产会自动跳过；网关设置将修改全部所选资产。未勾选的设置不会发生变化。",
-      "update_gateway": "修改网关",
-      "gateway_mode": "网关设置",
-      "gateway_inherit": "使用分组默认网关",
-      "gateway_custom": "自定义网关链路",
-      "gateway_required": "请至少添加一个网关，或选择使用分组默认网关",
-      "success_ai": "已修改 {{count}} 个 SSH 资产的 AI 设置，跳过 {{skippedCount}} 个非 SSH 资产",
-      "success_gateway": "已修改 {{count}} 个资产的网关设置",
-      "success_ai_gateway": "已修改 {{aiCount}} 个 SSH 资产的 AI 设置，跳过 {{skippedCount}} 个非 SSH 资产；已修改 {{gatewayCount}} 个资产的网关设置",
-      "no_ssh_asset": "所选资产中没有 SSH 资产，未修改任何 AI 设置"
+      "scope_tip": "SSH 终端与 AI 设置仅修改所选 SSH 资产，其他协议资产会自动跳过；连接方式将修改全部所选资产。未勾选的设置不会发生变化。",
+      "update_connection": "修改连接方式",
+      "success_ssh": "已修改 {{count}} 个 SSH 资产的终端或 AI 设置，跳过 {{skippedCount}} 个非 SSH 资产",
+      "success_connection": "已修改 {{count}} 个资产的连接方式",
+      "success_ssh_connection": "已修改 {{sshCount}} 个 SSH 资产的终端或 AI 设置，跳过 {{skippedCount}} 个非 SSH 资产；已修改 {{connectionCount}} 个资产的连接方式",
+      "no_ssh_asset": "所选资产中没有 SSH 资产，未修改任何 SSH 设置"
+    },
+    "website_batch_edit": {
+      "title": "批量编辑",
+      "scope_tip": "仅修改已勾选的 Web 资产设置，未勾选的设置保持不变。连接方式和回源设置将应用于全部所选 Web 资产。",
+      "success": "已修改 {{count}} 个 Web 资产"
     },
     "group_default_gateway": "分组默认网关",
     "ssh_gateway_required_after_first_hop": "第二跳及之后只能选择 SSH 网关",
@@ -1289,6 +1407,7 @@
     "import": "导入资产",
     "copy": "复制资产",
     "import_asset_tip": "导入资产时，账号、密码和密钥、密码属于二选一，都填写时优先选择私钥和密码。",
+    "import_asset_group_tip": "导入时会按名称匹配已有分组，并自动创建缺失分组；多级分组使用 / 分隔，例如：生产环境/华东区。",
     "import_asset_success": "导入资产成功",
     "import_asset_error": "导入资产失败",
     "import_asset_error_title": "请检查导入的文件，以下资产导入失败：",
@@ -1302,23 +1421,26 @@
     "cert": "证书",
     "public": "公开访问",
     "temp_allow": "临时白名单",
-    "public_tip": "限制只针对匿名用户生效。",
-    "limit_ip": "IP访问限制",
-    "limit_ip_tip": "限制用户只能从指定的IP地址访问资产。支持CIDR格式的IP地址，例如：192.168.1.0/24。支持-号分隔的IP地址，例如：192.168.1.0-192.168.1.255。多个IP地址可换行输入，也可用逗号或分号分隔。",
-    "limit_country": "国家限制",
-    "limit_country_tip": "限制匿名用户仅允许来自指定国家访问，支持中文或英文名称。",
+    "public_access_switch": "允许匿名公开访问",
+    "public_validity": "公开访问有效期",
+    "public_validity_tip": "到期后，直接放行和口令访问均失效。",
+    "public_rule_relation_tip": "来源 IP、地区、请求头、公开路径任意一项命中即放行。",
+    "public_access_rules": "直接放行规则",
+    "public_geo_rules": "地区规则",
+    "public_geo_rules_tip": "字段之间为“与”，字段内多个值为“或”；留空不限制。输入后按回车添加。",
+    "public_password_access": "口令访问",
+    "public_password_access_tip": "未配置直接放行规则时，以口令验证访问。",
+    "limit_ip": "来源 IP",
+    "limit_ip_tip": "支持单个 IP、CIDR 和 IP 范围；多个值可用换行、逗号或分号分隔。",
+    "limit_country": "国家",
     "limit_country_placeholder": "如：中国 或 China",
-    "limit_province": "省份/州限制",
-    "limit_province_tip": "限制匿名用户仅允许来自指定省/州访问，支持中文或英文名称。",
+    "limit_province": "省份/州",
     "limit_province_placeholder": "如：广东 或 California",
-    "limit_city": "城市限制",
-    "limit_city_tip": "限制匿名用户仅允许来自指定城市访问，支持中文或英文名称。",
+    "limit_city": "城市",
     "limit_city_placeholder": "如：深圳 或 San Francisco",
-    "limit_geo_input_tip": "输入后按回车生成标签，可多次输入。",
-    "limit_time_enabled": "失效时间限制",
+    "limit_time_enabled": "设置失效时间",
     "limit_time": "失效时间",
-    "limit_password": "口令访问限制",
-    "limit_password_tip": "使用正确的口令才能访问资产。",
+    "limit_password": "访问口令",
     "temp_allow_duration": "有效期（分钟）",
     "temp_allow_duration_tip": "用户点击按钮后，当前 IP 将在有效期内可访问。",
     "temp_allow_auto_renew": "自动续期",
@@ -1387,6 +1509,10 @@
     },
     "dns_provider_config": "DNS 供应商配置",
     "terminal_settings": "终端设置",
+    "restricted_shell": "网络设备 / 受限 Shell",
+    "restricted_shell_extra": "适用于交换机、路由器、防火墙、RouterOS 等非标准 Linux SSH 环境。此类环境不支持开启 SSH 子会话，启用后将无法使用文件系统（SFTP）、运行指标（Stats）等功能。",
+    "sftp_directory_follow": "SFTP 目录自动跟随",
+    "sftp_directory_follow_extra": "启用后，SFTP 文件系统目录将自动跟随终端当前目录。",
     "enable_alive_check": "存活检查",
     "enable_alive_check_extra": "连接期间会定时检测目标资产是否在线，用于及时发现连接异常。部分硬件交换机可能不支持该检测，若连接失败或频繁断开，可关闭此项。",
     "enable_detect_os": "自动识别操作系统",
@@ -1401,9 +1527,6 @@
       "settings": "AI 设置",
       "enabled": "启用 AI",
       "enabled_extra": "启用后，全局 AI 才能搜索和操作该 SSH 资产。",
-      "restricted_shell": "受限 Shell",
-      "restricted_shell_extra": "适用于网络设备、防火墙、交换机等需要更严格命令确认的环境。",
-      "restricted_shell_tip": "受限 Shell 会强制每条 AI 命令都经过确认。",
       "command_policy": "AI 执行命令策略",
       "command_policy_extra": "为空时跟随全局 AI 设置。",
       "follow_global": "跟随全局设置"
@@ -1494,11 +1617,11 @@
     "auto_fetch_favicon": "自动获取图标",
     "auto_fetch_favicon_failed": "获取图标失败，请检查目标地址是否正确",
     "public_header_whitelist": "请求头白名单",
-    "public_header_whitelist_tip": "携带任一指定请求头即放行，大小写不敏感。",
-    "public_header_whitelist_placeholder": "如：X-Bypass-Token",
-    "public_path_whitelist": "路径白名单",
-    "public_path_whitelist_tip": "匹配任一路径即放行，支持正则表达式。",
-    "public_path_whitelist_placeholder": "如：^/public/.* 或 /health",
+    "public_header_whitelist_tip": "每行一个请求头名称，大小写不敏感。",
+    "public_header_whitelist_placeholder": "X-Bypass-Token\nX-Internal-Request",
+    "public_path_whitelist": "公开路径",
+    "public_path_whitelist_tip": "每行一个路径；* 匹配任意长度内容，? 匹配单个字符；不含通配符时精确匹配。",
+    "public_path_whitelist_placeholder": "/public/*\n/health",
     "detect_os_success": "操作系统检测成功，图标已更新",
     "detect_os_failed": "操作系统检测失败",
     "wol_send": "发送 WOL",
@@ -1515,6 +1638,22 @@
     "name_required": "分组名称不能为空",
     "parent": "上级分组",
     "parent_placeholder": "请选择上级分组"
+  },
+  "network_proxy": {
+    "setting": "代理服务器",
+    "protocol": "代理协议",
+    "address": "代理地址",
+    "host": "主机",
+    "port": "端口",
+    "username": "账号",
+    "password": "密码",
+    "connection_test": "连接测试",
+    "target_address": "目标地址",
+    "target_required": "请输入测试目标地址和端口",
+    "test": "测试连接",
+    "test_success": "代理连接测试成功",
+    "test_failed": "代理连接测试失败",
+    "delete_referenced_title": "代理服务器正在使用中，无法删除"
   },
   "gateway_group": {
     "name": "分组名称",
@@ -1652,7 +1791,11 @@
       "disable_password_login": "禁用密码登陆",
       "devices": "设备",
       "session": {
+        "login_session": "登录会话",
+        "session_count": "会话数量",
+        "client_certificate": "客户端证书",
         "duration": "登录会话有效时长",
+        "browser_close_logout": "关闭浏览器后退出登录",
         "count_custom": "自定义登录会话有效数量",
         "count_limit": "登录会话有效数量"
       },
@@ -1721,6 +1864,7 @@
     "ai": {
       "setting": "AI 助手",
       "enabled": "启用 AI 助手",
+      "asset_enable_tip": "启用全局 AI 后，还需在 SSH 资产的“AI 设置”中手动开启“启用 AI”，终端才能使用 AI 助手。",
       "disclaimer_title": "AI 助手免责声明",
       "disclaimer_description": "AI 助手生成的内容和命令可能存在错误、遗漏、误导或危险操作，启用后请自行评估输出结果，并在执行任何命令前确认其意图和影响。因使用 AI 助手产生的任何风险和后果由使用者自行承担。",
       "disclaimer_accepted": "我已了解风险",
@@ -2020,6 +2164,8 @@
       "wecom_app_to_user_required": "请输入接收消息的用户",
       "wecom_app_to_user_placeholder": "输入接收告警消息的用户，全部可填 @all",
       "recipients_required": "请输入收件人",
+      "access_document": "接入文档",
+      "enable_to_configure": "当前渠道未启用，启用后才能编辑配置。",
       "test": "测试",
       "test_success": "测试通知已发送",
       "event_types_label": "事件类型",

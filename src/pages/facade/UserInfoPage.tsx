@@ -10,7 +10,7 @@ const UserInfoPage = () => {
                     {t('account.profile')}
                 </div>
             </div>
-            <div className={'rounded p-4 pl-0 bg-white'}>
+            <div className={'rounded p-4 pl-0 '}>
                 <InfoPage/>
             </div>
         </div>

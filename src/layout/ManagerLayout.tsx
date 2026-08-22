@@ -1,4 +1,4 @@
-import React, {Suspense, useRef} from 'react';
+import React, {Suspense} from 'react';
 import {App as AntdApp, ConfigProvider, Layout} from "antd";
 import {Outlet, useLocation, useNavigate} from "react-router-dom";
 import {StyleProvider} from '@ant-design/cssinjs';
@@ -40,8 +40,7 @@ const ManagerLayout: React.FC = () => {
     const {isMobile} = useMobile();
 
     // 主题切换
-    const themeToggleRef = useRef<HTMLButtonElement>(null);
-    const {isDarkMode, toggleDarkMode} = useThemeToggle(themeToggleRef);
+    const {isDarkMode, toggleDarkMode} = useThemeToggle();
 
     // 侧边栏状态
     const {
@@ -138,7 +137,6 @@ const ManagerLayout: React.FC = () => {
                                 onMobileMenuOpen={() => setMobileMenuVisible(true)}
                                 isDarkMode={isDarkMode}
                                 onThemeToggle={toggleDarkMode}
-                                themeToggleRef={themeToggleRef}
                                 userInfo={infoQuery.data}
                                 dropMenus={dropMenus}
                             />

@@ -121,16 +121,23 @@ const DatabaseAssetPage = () => {
             dataIndex: 'username',
         },
         {
-            title: t('assets.gateway_type'),
-            dataIndex: 'gatewayChain',
+            title: t('assets.connection_mode'),
+            dataIndex: 'connectionMode',
             render: (_, record) => {
+                if (record.connectionMode === 'direct' || !record.connectionMode) {
+                    return <Tag>{t('assets.connection_direct')}</Tag>;
+                }
+                if (record.connectionMode === 'proxy') {
+                    return <Tag color="purple">{t('assets.connection_proxy')}</Tag>;
+                }
                 const gatewayChain = record.gatewayChain || [];
                 const gatewayHop = firstGatewayHop(gatewayChain);
                 if (!gatewayHop.gatewayType || !gatewayHop.gatewayId) {
-                    return '-';
+                    return <Tag color="blue">{t('assets.connection_gateway')}</Tag>;
                 }
                 return (
                     <Space size={4}>
+                        <Tag color="blue">{t('assets.connection_gateway')}</Tag>
                         <Tag color="blue">{getGatewayTypeName(gatewayHop.gatewayType)}</Tag>
                         {gatewayChain.length > 1 && <Tag>{gatewayChain.length}</Tag>}
                     </Space>

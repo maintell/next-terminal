@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react';
+import {useState} from 'react';
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useQuery} from "@tanstack/react-query";
 import brandingApi from "@/api/branding-api";
@@ -25,8 +25,7 @@ const UserHeader = () => {
 
     let {t} = useTranslation();
     const {isMobile} = useMobile();
-    const themeToggleRef = useRef<HTMLButtonElement>(null);
-    const {isDarkMode, toggleDarkMode} = useThemeToggle(themeToggleRef);
+    const {isDarkMode, toggleDarkMode} = useThemeToggle();
     const isDark = isDarkMode;
 
     let location = useLocation();
@@ -192,7 +191,6 @@ const UserHeader = () => {
                             />
 
                             <button
-                                ref={themeToggleRef}
                                 type="button"
                                 onClick={() => toggleDarkMode(!isDarkMode)}
                                 className="cursor-pointer h-8 w-8 rounded-md border border-white/30 bg-white/10 text-white/90 transition-colors hover:bg-white/20 hover:text-white"

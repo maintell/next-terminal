@@ -126,6 +126,11 @@ export const getMenus = (t: any) => {
                     label: t('menus.gateway.submenus.gateway_group'),
                     icon: <TeamOutlined/>,
                 },
+                {
+                    key: 'network-proxy',
+                    label: t('menus.gateway.submenus.network_proxy'),
+                    icon: <ApiOutlined/>,
+                },
             ]
         },
         {
@@ -228,8 +233,8 @@ export const getMenus = (t: any) => {
                     icon: <ApartmentOutlined/>,
                 },
                 {
-                    key: 'login-policy',
-                    label: t('menus.identity.submenus.login_policy'),
+                    key: 'access-policy',
+                    label: t('menus.identity.submenus.access_policy'),
                     icon: <ForkOutlined/>,
                 },
                 {

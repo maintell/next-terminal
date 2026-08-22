@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {Tabs} from "antd";
 import UserInfo from "./UserInfo";
-import UserLoginPolicy from "./UserLoginPolicy";
+import UserAccessPolicy from "./UserAccessPolicy";
 import UserClientCert from "./UserClientCert";
 import UserExternalIdentity from "./UserExternalIdentity";
 import UserAuthentication from "./UserAuthentication";
@@ -53,9 +53,9 @@ const UserDetailPage = () => {
             children: <UserOidcServerAuthorization active={activeKey === 'oidc-server-authorizations'} userId={id}/>
         },
         {
-            label: t('identity.options.login_policy'),
-            key: 'login-policy',
-            children: <UserLoginPolicy active={activeKey === 'login-policy'} userId={id}/>
+            label: t('identity.options.access_policy'),
+            key: 'access-policy',
+            children: <UserAccessPolicy active={activeKey === 'access-policy'} userId={id}/>
         },
         {
             label: t('account.client_cert'),

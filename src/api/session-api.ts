@@ -28,8 +28,25 @@ export interface Session {
     videoSize?: number;
     recordingConvertStatus?: '' | 'pending' | 'processing' | 'completed' | 'failed';
     recordingConvertProgress?: number;
+    recordingUploadStatus?: '' | 'pending' | 'uploading' | 'completed' | 'failed';
+    recordingUploadKind?: '' | 'original' | 'video';
+    recordingUploadTarget?: '' | 's3' | 'webdav';
+    recordingUploadError?: string;
     message?: string;
     commandCount: number;
+}
+
+export interface RecordingUploadFailedCount {
+    count: number;
+}
+
+export interface RecordingUploadRetryResult {
+    accepted: boolean;
+}
+
+export interface RecordingUploadRetryAllResult {
+    acceptedCount: number;
+    skippedCount: number;
 }
 
 export type SessionAccessMode = '' | 'terminal' | 'guacd' | 'rdp_proxy';
@@ -83,6 +100,18 @@ class SessionApi extends Api<Session> {
 
     triggerRecordingConvert = async (sessionId: string) => {
         await requests.post(`/${this.group}/${sessionId}/recording-convert`);
+    }
+
+    getRecordingUploadFailedCount = async () => {
+        return await requests.get(`/${this.group}/recording-uploads/failed-count`) as RecordingUploadFailedCount;
+    }
+
+    retryRecordingUpload = async (sessionId: string) => {
+        return await requests.post(`/${this.group}/${sessionId}/recording-upload/retry`) as RecordingUploadRetryResult;
+    }
+
+    retryAllFailedRecordingUploads = async () => {
+        return await requests.post(`/${this.group}/recording-uploads/retry-failed`) as RecordingUploadRetryAllResult;
     }
 }
 

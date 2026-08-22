@@ -4,14 +4,22 @@ import NButton from "@/components/NButton";
 import NTable,{ type NColumn,type NTableActionType } from "@/components/NTable";
 import { getProtocolColor } from "@/helper/asset-helper";
 import { getSort } from "@/utils/sort";
-import { App,Popconfirm,Space,Tag,Tooltip,Typography } from "antd";
+import { App,Popconfirm,Select,Space,Tag,Tooltip,Typography } from "antd";
 import clsx from "clsx";
-import { useRef } from 'react';
+import { useRef,useState } from 'react';
 import { useTranslation } from "react-i18next";
+
+const protocolOptions = [
+    {label: 'SSH', value: 'ssh'},
+    {label: 'RDP', value: 'rdp'},
+    {label: 'VNC', value: 'vnc'},
+    {label: 'Telnet', value: 'telnet'},
+];
 
 const OnlineSessionPage = () => {
     const {t} = useTranslation();
     const actionRef = useRef<NTableActionType>(null);
+    const [protocol, setProtocol] = useState<string>();
 
     const {message} = App.useApp();
 
@@ -144,6 +152,7 @@ const OnlineSessionPage = () => {
                         sortField: sortField,
                         status: 'connected',
                         keyword: params.keyword,
+                        protocol: params.protocol,
                     }
                     let result = await sessionApi.getPaging(queryParams);
                     return {
@@ -152,6 +161,17 @@ const OnlineSessionPage = () => {
                         total: result['total']
                     };
                 }}
+                params={{protocol}}
+                searchPrefix={(
+                    <Select
+                        allowClear
+                        placeholder={t('assets.protocol')}
+                        options={protocolOptions}
+                        value={protocol}
+                        onChange={setProtocol}
+                        style={{width: 120}}
+                    />
+                )}
                 rowKey="id"
                 options={{
                     search: true,

@@ -1,13 +1,13 @@
 import {useFormRequest} from "@/hook/use-antd-form-query";
 import {useEffect, useState} from 'react';
-import {App, Button, Col, Form, Input, InputNumber, Modal, Row, Select, Space} from 'antd';
+import {App, Button, Col, Collapse, Form, Input, InputNumber, Modal, Row, Select, Space} from 'antd';
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
 import databaseAssetApi from "@/api/database-asset-api";
 import {EyeInvisibleOutlined, EyeTwoTone} from "@ant-design/icons";
 import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
 import {useLicense} from "@/hook/LicenseContext";
-import GatewayChainEditor from "@/pages/assets/components/GatewayChainEditor";
+import ConnectionModeFields from "@/pages/assets/components/ConnectionModeFields";
 
 const api = databaseAssetApi;
 
@@ -44,19 +44,30 @@ const DatabaseAssetModal = ({
     const get = async () => {
         if (id) {
             const asset = await api.getById(id);
-            return {...asset, gatewayChain: hasPremiumFeatures ? asset.gatewayChain || [] : []};
+            return {
+                ...asset,
+                connectionMode: hasPremiumFeatures || asset.connectionMode !== 'gateway'
+                    ? asset.connectionMode || 'direct'
+                    : 'direct',
+                gatewayChain: hasPremiumFeatures ? asset.gatewayChain || [] : []
+            };
         }
         return {
             type: 'mysql',
             port: 3306,
+            connectionMode: 'direct',
             gatewayChain: [],
             tags: []
         };
     };
     const handleSave = () => {
         form.validateFields().then(async values => {
+            delete values.gatewaySource;
             if (!hasPremiumFeatures) {
-                values.gatewayChain = [];
+                if (values.connectionMode === 'gateway') {
+                    values.connectionMode = 'direct';
+                    values.gatewayChain = [];
+                }
             }
             handleOk(values);
         });
@@ -69,8 +80,12 @@ const DatabaseAssetModal = ({
     });
     const handleTest = () => {
         form.validateFields().then(values => {
+            delete values.gatewaySource;
             if (!hasPremiumFeatures) {
-                values.gatewayChain = [];
+                if (values.connectionMode === 'gateway') {
+                    values.connectionMode = 'direct';
+                    values.gatewayChain = [];
+                }
             }
             testMutation.mutate(values);
         });
@@ -169,7 +184,18 @@ const DatabaseAssetModal = ({
                     </Col>
                 </Row>
 
-                <GatewayChainEditor disabled={!hasPremiumFeatures}/>
+                <Collapse
+                    className="w-full"
+                    bordered={false}
+                    items={[
+                        {
+                            key: 'advanced-settings',
+                            label: t('assets.advanced_settings'),
+                            forceRender: true,
+                            children: <ConnectionModeFields gatewayDisabled={!hasPremiumFeatures}/>
+                        }
+                    ]}
+                />
             </Space>
         </Form>
 

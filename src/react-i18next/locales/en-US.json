@@ -55,6 +55,22 @@
     "selected_items": "{{count}} selected",
     "toggle_theme": "Toggle theme"
   },
+  "access_control_denied": {
+    "titles": {
+      "account": "Account Access Restricted"
+    },
+    "reasons": {
+      "ip": "Your current IP address is not allowed to access the system.",
+      "time": "Access to the system is not allowed during the current time period.",
+      "geo": "Access to the system is not allowed from your current location.",
+      "policy": "This access does not satisfy the system access control policy."
+    },
+    "hints": {
+      "account": "A user or department policy group assigned to this account denied the request. Contact your system administrator if you believe this is a mistake."
+    },
+    "retry": "Check Again",
+    "logout": "Sign Out and Return to Login"
+  },
   "actions": {
     "new": "New",
     "add": "Add",
@@ -163,7 +179,8 @@
       "submenus": {
         "ssh_gateway": "SSH Gateway",
         "agent_gateway": "Security Gateway",
-        "gateway_group": "Gateway Groups"
+        "gateway_group": "Gateway Groups",
+        "network_proxy": "Proxy Servers"
       }
     },
     "log_audit": {
@@ -195,7 +212,7 @@
         "user": "Users",
         "department": "Departments",
         "role": "Roles",
-        "login_policy": "Login Policy",
+        "access_policy": "Access Control",
         "login_locked": "Login Lock",
         "oidc_client": "OIDC Clients"
       }
@@ -254,17 +271,23 @@
     "transmission": {
       "progress": "Progress",
       "speed": "Speed",
+      "client_stage": "Uploading to platform",
+      "remote_stage": "Sending to server",
+      "completed_summary": "Completed {{completed}}/{{total}}",
+      "failed_summary": "({{failed}} failed)",
       "options": {
         "preparing": "Preparing",
         "uploading": "Uploading",
         "transmitting": "Transferring",
         "upload_failed": "Upload failed",
         "upload_success": "Upload successful",
-        "cancelled": "Cancelled"
+        "cancelled": "Cancelled",
+        "interrupted": "Interrupted"
       }
     },
     "drag_upload_hint": "Drag files here to upload",
-    "drag_upload_disabled": "Uploads are not allowed by current policy"
+    "drag_upload_disabled": "Uploads are not allowed by current policy",
+    "upload_initializing": "User information is initializing. Please try again shortly."
   },
   "guacamole": {
     "state": {
@@ -280,7 +303,6 @@
       "connecting": "Tunnel connecting...",
       "open": "Tunnel connected",
       "closed": "Tunnel closed",
-      "unstable": "Tunnel unstable",
       "unknown": "Unknown tunnel status"
     }
   },
@@ -294,17 +316,63 @@
       "already_done_subtitle": "This system has already been initialized. Please go to the login page."
     },
     "policy": {
-      "ip_group": "IP Group",
-      "ip_group_extra": "Format: comma-separated string (e.g., 192.168.0.1, 192.168.1.0/24, 192.168.2.0-192.168.2.20), 0.0.0.0/0 matches all IPs.",
+      "groups": "Access Policy Groups",
+      "super_admin_bypass_tip": "Super administrators are not subject to access policies.",
+      "new_group": "New Policy Group",
+      "edit_group": "Edit Policy Group",
+      "rules": "Rules",
+      "new_rule": "New Rule",
+      "edit_rule": "Edit Rule",
+      "mode": {
+        "label": "Policy Mode",
+        "extra": "Whitelist mode denies access when no rule matches; blacklist mode allows access when no rule matches.",
+        "whitelist": "Whitelist Mode",
+        "blacklist": "Blacklist Mode"
+      },
+      "group_evaluation_tip": "Rules are matched from the smallest priority number to the largest, and the first matching rule decides the group result. Whitelist mode denies access when no rule matches; blacklist mode allows access when no rule matches. Every effective user and department group must allow access.",
+      "enable_group": "Enable This Policy Group",
+      "group_enabled_extra": "New groups are disabled by default and affect bound users and departments only after being enabled.",
+      "rule_match_tip": "Configured source IP, country, province/state, city, and active-hour fields are combined with AND. Multiple values within one field are combined with OR. Empty fields do not restrict matching.",
+      "rule_match_all_warning": "No match conditions are configured. This rule will match every access request.",
+      "enable_rule": "Enable This Rule",
+      "rule_enabled_extra": "Disabled rules are excluded from matching within the group.",
+      "ip_group": "Source IP",
+      "ip_group_extra": "Supports individual IPs, CIDRs, and IP ranges. Separate multiple values with commas or line breaks. 0.0.0.0/0 matches all IPs.",
+      "ip_group_placeholder": "Enter one source IP per line, or separate values with commas\ne.g. 192.168.0.1\n192.168.1.0/24",
       "action": {
-        "label": "Action",
+        "label": "Action on Match",
+        "extra": "This action runs when the source IP, location, and policy active hours all match.",
         "options": {},
-        "allow": "Allow",
-        "reject": "Reject"
+        "allow": "Allow Access",
+        "reject": "Deny Access"
       },
       "priority": "Priority",
       "priority_extra": "Smaller number means higher priority",
-      "time_period": "Time Period"
+      "time_period": "Policy Active Hours",
+      "time_period_extra": "The rule matches only during the selected hours. Selecting no hours means it matches all day.",
+      "enabled": "Enable This Access Policy",
+      "enabled_extra": "When disabled, this policy is excluded from access evaluation.",
+      "expiration_at": "Policy Valid Until",
+      "geo": "Location Restriction",
+      "country": "Country Restriction",
+      "country_extra": "Only allow access users from the specified countries. Chinese and English names are supported.",
+      "country_placeholder": "e.g. China or 中国",
+      "province": "Province/State Restriction",
+      "province_extra": "Only allow access users from the specified provinces or states. Chinese and English names are supported.",
+      "province_placeholder": "e.g. Guangdong or California",
+      "city": "City Restriction",
+      "city_extra": "Only allow access users from the specified cities. Chinese and English names are supported.",
+      "city_placeholder": "e.g. Shenzhen or San Francisco",
+      "binding_targets": "Binding Targets",
+      "bound_users": "Users",
+      "bound_departments": "Departments",
+      "effective_policies": "Effective Policy Groups",
+      "direct_bindings": "Direct Bindings",
+      "direct_binding": "Direct User Binding",
+      "source": "Source",
+      "reset_binding": "Reset Selection",
+      "expired": "Expired",
+      "department_binding_tip": "Bound policy groups apply to current and future direct members of this department, excluding members of child departments."
     },
     "role": {
       "type": "Role Type",
@@ -404,7 +472,7 @@
       }
     },
     "options": {
-      "login_policy": "Login Policy"
+        "access_policy": "Access Control"
     },
     "oidc_client": {
       "created_success": "OIDC client created successfully",
@@ -718,6 +786,14 @@
       "statusCode": "Status Code",
       "responseSize": "Response Size",
       "responseTime": "Response Time",
+      "clientStatusCode": "Client Status",
+      "upstreamStatusCode": "Upstream Status",
+      "downstreamResponseSize": "Downstream Size",
+      "upstreamContentLength": "Upstream Content Length",
+      "totalResponseTime": "Total Time",
+      "noUpstreamResponse": "No Upstream",
+      "upstreamFailed": "Upstream Failed",
+      "responseProcessingFailed": "Response Processing Failed",
       "userAgent": "User-Agent",
       "createdAt": "Request Time",
       "anonymous": "Anonymous",
@@ -838,7 +914,7 @@
         "access_token": "Access Token",
         "role": "Role",
         "department": "Department",
-        "login_policy": "Login Policy",
+        "access_policy": "Access Control",
         "login_lock": "Login Lock",
         "login_log": "Login Log",
         "oidc_client": "OIDC Client",
@@ -906,6 +982,17 @@
       "start": "Transcode",
       "retry": "Retry transcoding",
       "trigger_failed": "Failed to submit transcoding"
+    },
+    "recording_upload_status": {
+      "pending": "Waiting to upload",
+      "uploading": "Uploading",
+      "failed": "Upload to {{target}} failed",
+      "retry": "Retry upload",
+      "retry_submitted": "Recording upload retry submitted",
+      "retry_failed": "Failed to submit recording upload retry",
+      "retry_all": "Retry all failed uploads ({{count}})",
+      "retry_all_confirm": "Retry all {{count}} failed recording uploads?",
+      "retry_all_submitted": "Submitted {{accepted}} recording uploads; skipped {{skipped}}"
     }
   },
   "access": {
@@ -981,7 +1068,22 @@
       "clear": "Clear Screen",
       "connecting": "Connecting...",
       "close_title": "Close terminal",
-      "close_confirm": "Are you sure you want to close this terminal?"
+      "close_confirm": "Are you sure you want to close this terminal?",
+      "zmodem": {
+        "save_dialog_title": "Save ZMODEM file",
+        "upload_skipped_title": "ZMODEM upload skipped",
+        "upload_skipped_description": "{{fileName}}: file already exists on the remote",
+        "download_complete_title": "Download complete",
+        "progress_uploading_title": "ZMODEM uploading",
+        "progress_downloading_title": "ZMODEM downloading",
+        "upload_no_rz_response": "ZMODEM upload did not start. Make sure rz/lrzsz is installed and running on the remote host.",
+        "upload_transfer_active": "A ZMODEM transfer is already running.",
+        "upload_no_files": "No files to upload.",
+        "upload_file": "Upload file with ZMODEM",
+        "ssh_only": "ZMODEM is only supported for SSH terminals.",
+        "not_connected": "The terminal is not connected. ZMODEM upload cannot start.",
+        "start_upload_failed": "Failed to start ZMODEM upload."
+      }
     },
     "playback": {
       "shortcut_space": "Space: Play/Pause",
@@ -1219,6 +1321,19 @@
     "private_key": "Private Key",
     "password": "Password",
     "gateway": "Gateway",
+    "connection": "Connection",
+    "connection_mode": "Connection Mode",
+    "connection_direct": "Direct Connection",
+    "connection_direct_tip": "Connect to the target address directly from the server.",
+    "connection_gateway": "Gateway Access",
+    "connection_proxy": "Proxy Access",
+    "gateway_source": "Gateway Source",
+    "gateway_custom": "Custom Gateway Chain",
+    "proxy_tcp_tip": "Establish a TCP connection to the target through the proxy server.",
+    "proxy_protocol_tip": "Proxy access supports SSH and Telnet only.",
+    "proxy_required": "Please select a proxy server",
+    "change_connection": "Change Connection",
+    "advanced_settings": "Advanced Settings",
     "gateway_type": "Gateway Type",
     "display_settings": "Display Settings",
     "color_depth": "Color Depth",
@@ -1258,22 +1373,25 @@
     "origin_host_custom_name": "Custom Origin Host Header",
     "origin_timeout": "Origin Timeout",
     "origin_timeout_tip": "Maximum time the proxy waits for the origin to respond before returning an error.",
+    "insecure_skip_verify": "Skip Certificate Verification",
+    "insecure_skip_verify_tip": "When enabled, the HTTPS origin certificate is not verified. Use only for trusted environments such as self-signed certificates.",
     "entrance": "Entry Path",
     "entrance_tip": "Entry path is the page opened automatically on first access",
     "change_group": "Change Group",
     "change_gateway": "Configure Gateway",
     "batch_edit": {
       "title": "Batch Edit",
-      "scope_tip": "AI settings apply only to selected SSH assets; assets using other protocols are skipped. Gateway settings apply to all selected assets. Unchecked settings remain unchanged.",
-      "update_gateway": "Change gateway",
-      "gateway_mode": "Gateway settings",
-      "gateway_inherit": "Use group default gateway",
-      "gateway_custom": "Custom gateway chain",
-      "gateway_required": "Add at least one gateway or use the group default gateway",
-      "success_ai": "Updated AI settings for {{count}} SSH assets and skipped {{skippedCount}} non-SSH assets",
-      "success_gateway": "Updated gateway settings for {{count}} assets",
-      "success_ai_gateway": "Updated AI settings for {{aiCount}} SSH assets and skipped {{skippedCount}} non-SSH assets; updated gateway settings for {{gatewayCount}} assets",
-      "no_ssh_asset": "No SSH assets were selected, so no AI settings were changed"
+      "scope_tip": "SSH terminal and AI settings apply only to selected SSH assets; assets using other protocols are skipped. Connection mode applies to all selected assets. Unchecked settings remain unchanged.",
+      "update_connection": "Change connection mode",
+      "success_ssh": "Updated terminal or AI settings for {{count}} SSH assets and skipped {{skippedCount}} non-SSH assets",
+      "success_connection": "Updated connection mode for {{count}} assets",
+      "success_ssh_connection": "Updated terminal or AI settings for {{sshCount}} SSH assets and skipped {{skippedCount}} non-SSH assets; updated connection mode for {{connectionCount}} assets",
+      "no_ssh_asset": "No SSH assets were selected, so no SSH settings were changed"
+    },
+    "website_batch_edit": {
+      "title": "Batch Edit",
+      "scope_tip": "Only checked Web asset settings are updated; unchecked settings remain unchanged. Connection and origin settings apply to all selected Web assets.",
+      "success": "Updated {{count}} Web assets"
     },
     "group_default_gateway": "Group Default Gateway",
     "ssh_gateway_required_after_first_hop": "Only SSH gateway can be used after the first hop",
@@ -1289,6 +1407,7 @@
     "import": "Import Assets",
     "copy": "Copy Asset",
     "import_asset_tip": "When importing assets, account/password and key/passphrase are mutually exclusive; if both are provided, key/passphrase takes precedence.",
+    "import_asset_group_tip": "Existing groups are matched by name and missing groups are created automatically; separate nested groups with /, for example: Production/East.",
     "import_asset_success": "Assets imported successfully",
     "import_asset_error": "Failed to import assets",
     "import_asset_error_title": "Please check the import file; the following assets failed to import:",
@@ -1302,23 +1421,26 @@
     "cert": "Certificate",
     "public": "Public Access",
     "temp_allow": "Temporary IP Allowlist",
-    "public_tip": "Restriction applies only to anonymous users.",
-    "limit_ip": "IP Access Restriction",
-    "limit_ip_tip": "Restrict users to access assets only from specified IPs. CIDR supported, e.g., 192.168.1.0/24. Dash ranges supported, e.g., 192.168.1.0-192.168.1.255. Multiple IPs can be entered on separate lines, or separated by commas or semicolons.",
-    "limit_country": "Country Restriction",
-    "limit_country_tip": "Restrict anonymous access to specified countries; supports Chinese or English names.",
+    "public_access_switch": "Allow anonymous public access",
+    "public_validity": "Public access validity",
+    "public_validity_tip": "After expiry, both direct allow and passcode access stop working.",
+    "public_rule_relation_tip": "A match on source IP, location, request header, or public path allows access.",
+    "public_access_rules": "Direct allow rules",
+    "public_geo_rules": "Location rules",
+    "public_geo_rules_tip": "Fields use AND; multiple values within a field use OR. Empty fields do not restrict access. Press Enter to add a value.",
+    "public_password_access": "Passcode access",
+    "public_password_access_tip": "When no direct allow rule is configured, require a passcode.",
+    "limit_ip": "Source IP",
+    "limit_ip_tip": "Supports individual IPs, CIDR blocks, and IP ranges; separate multiple values with new lines, commas, or semicolons.",
+    "limit_country": "Country",
     "limit_country_placeholder": "E.g., China",
-    "limit_province": "Province/State Restriction",
-    "limit_province_tip": "Restrict anonymous access to specified provinces/states; supports Chinese or English names.",
+    "limit_province": "Province/State",
     "limit_province_placeholder": "E.g., Guangdong or California",
-    "limit_city": "City Restriction",
-    "limit_city_tip": "Restrict anonymous access to specified cities; supports Chinese or English names.",
+    "limit_city": "City",
     "limit_city_placeholder": "E.g., Shenzhen or San Francisco",
-    "limit_geo_input_tip": "Press Enter to add a tag; you can add multiple.",
-    "limit_time_enabled": "Expiry Time Restriction",
+    "limit_time_enabled": "Set an expiry time",
     "limit_time": "Expiry Time",
-    "limit_password": "Passcode Access Restriction",
-    "limit_password_tip": "Access asset only with correct passcode.",
+    "limit_password": "Access passcode",
     "temp_allow_duration": "Validity (minutes)",
     "temp_allow_duration_tip": "After clicking the button, the current IP is allowed for the duration.",
     "temp_allow_auto_renew": "Auto Renew",
@@ -1387,6 +1509,10 @@
     },
     "dns_provider_config": "DNS Provider Config",
     "terminal_settings": "Terminal Settings",
+    "restricted_shell": "Network Device / Restricted Shell",
+    "restricted_shell_extra": "For switches, routers, firewalls, RouterOS, and other non-standard Linux SSH environments. These environments do not support SSH child sessions. Enabling this option disables features such as File System (SFTP) and runtime Stats.",
+    "sftp_directory_follow": "Auto-follow SFTP Directory",
+    "sftp_directory_follow_extra": "When enabled, the SFTP file system directory automatically follows the terminal's current directory.",
     "enable_alive_check": "Keepalive Check",
     "enable_alive_check_extra": "Periodically checks whether the target asset is online during a connection to detect connection issues promptly. Some hardware switches may not support this check; turn it off if connections fail or disconnect frequently.",
     "enable_detect_os": "Auto-detect Operating System",
@@ -1401,9 +1527,6 @@
       "settings": "AI Settings",
       "enabled": "Enable AI",
       "enabled_extra": "When enabled, global AI can search and operate this SSH asset.",
-      "restricted_shell": "Restricted Shell",
-      "restricted_shell_extra": "For network devices, firewalls, switches, and other environments that need stricter command confirmation.",
-      "restricted_shell_tip": "Restricted Shell forces every AI command to require confirmation.",
       "command_policy": "AI command policy",
       "command_policy_extra": "Empty means following the global AI setting.",
       "follow_global": "Follow global setting"
@@ -1494,11 +1617,11 @@
     "auto_fetch_favicon": "Auto Fetch Icon",
     "auto_fetch_favicon_failed": "Failed to fetch icon, please check if the target address is correct",
     "public_header_whitelist": "Request Header Allowlist",
-    "public_header_whitelist_tip": "Allow requests carrying any of the specified headers, case-insensitive.",
-    "public_header_whitelist_placeholder": "For example: X-Bypass-Token",
-    "public_path_whitelist": "Path whitelist",
-    "public_path_whitelist_tip": "Allow traffic if it matches any path; regular expressions are supported.",
-    "public_path_whitelist_placeholder": "For example: ^/public/.* or /health",
+    "public_header_whitelist_tip": "One header name per line; case-insensitive.",
+    "public_header_whitelist_placeholder": "X-Bypass-Token\nX-Internal-Request",
+    "public_path_whitelist": "Public paths",
+    "public_path_whitelist_tip": "One path per line; * matches any sequence, ? matches one character, and paths without wildcards match exactly.",
+    "public_path_whitelist_placeholder": "/public/*\n/health",
     "detect_os_success": "OS detected and icon updated",
     "detect_os_failed": "OS detection failed",
     "wol_send": "Send WOL",
@@ -1515,6 +1638,22 @@
     "name_required": "Group name is required",
     "parent": "Parent Group",
     "parent_placeholder": "Please select a parent group"
+  },
+  "network_proxy": {
+    "setting": "Proxy Server",
+    "protocol": "Proxy Protocol",
+    "address": "Proxy Address",
+    "host": "Host",
+    "port": "Port",
+    "username": "Username",
+    "password": "Password",
+    "connection_test": "Connection Test",
+    "target_address": "Target Address",
+    "target_required": "Enter a target host and port",
+    "test": "Test Connection",
+    "test_success": "Proxy connection test succeeded",
+    "test_failed": "Proxy connection test failed",
+    "delete_referenced_title": "Proxy server is in use and cannot be deleted"
   },
   "gateway_group": {
     "name": "Group Name",
@@ -1652,7 +1791,11 @@
       "disable_password_login": "Disable password login",
       "devices": "Devices",
       "session": {
+        "login_session": "Login Session",
+        "session_count": "Session Limits",
+        "client_certificate": "Client Certificate",
         "duration": "Session duration",
+        "browser_close_logout": "Sign out when the browser closes",
         "count_custom": "Custom max sessions",
         "count_limit": "Session limit"
       },
@@ -1721,6 +1864,7 @@
     "ai": {
       "setting": "AI Assistant",
       "enabled": "Enable AI Assistant",
+      "asset_enable_tip": "After enabling global AI, manually turn on Enable AI under AI Settings for each SSH asset before the AI assistant can be used in its terminal.",
       "disclaimer_title": "AI Assistant Disclaimer",
       "disclaimer_description": "Content and commands generated by the AI assistant may be incorrect, incomplete, misleading, or dangerous. After enabling it, evaluate outputs yourself and confirm the intent and impact before running any command. Any risks and consequences arising from use of the AI assistant are borne by the user.",
       "disclaimer_accepted": "I understand the risk",
@@ -2020,6 +2164,8 @@
       "wecom_app_to_user_required": "Please enter message recipients",
       "wecom_app_to_user_placeholder": "Enter recipients, or @all for everyone",
       "recipients_required": "Please enter recipients",
+      "access_document": "Integration Guide",
+      "enable_to_configure": "This channel is disabled. Enable it to edit its configuration.",
       "test": "Test",
       "test_success": "Test notification sent",
       "event_types_label": "Event Types",

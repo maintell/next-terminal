@@ -13,7 +13,7 @@ import LogoSelector from "@/pages/assets/components/LogoSelector";
 import AccountTypeForm from "./components/AccountTypeForm";
 import {DefaultTerminalConnectTimeout, getAssetAdvancedItems} from "./components/AssetAdvancedSettings";
 import ProFormTreeSelect from "@/components/ProFormTreeSelect";
-import GatewayChainEditor from "@/pages/assets/components/GatewayChainEditor";
+import ConnectionModeFields from "@/pages/assets/components/ConnectionModeFields";
 
 const protocolOptions = [
     {
@@ -58,6 +58,7 @@ const AssetPostDrawer = ({
     const [form] = Form.useForm();
     const protocol = Form.useWatch('protocol', form);
     const accountType = Form.useWatch('accountType', form);
+    const connectionMode = Form.useWatch('connectionMode', form);
     const wolEnabled = Form.useWatch(['attrs', 'wol-enabled'], form);
     let [logo, setLogo] = useState<string>();
     let [decrypted, setDecrypted] = useState(false);
@@ -74,6 +75,7 @@ const AssetPostDrawer = ({
             asset.attrs = {
                 connectTimeout: DefaultTerminalConnectTimeout,
                 backspaceMode: 'del',
+                'sftp-directory-follow': true,
                 ...(asset.attrs || {})
             };
             if (!asset.attrs.connectTimeout) {
@@ -82,7 +84,12 @@ const AssetPostDrawer = ({
             if (!asset.attrs.backspaceMode) {
                 asset.attrs.backspaceMode = 'del';
             }
-            const formAsset = {...asset, gatewayChain: hasPremiumFeatures ? asset.gatewayChain || [] : []};
+            const formAsset = {
+                ...asset,
+                connectionMode: hasPremiumFeatures || asset.connectionMode !== 'gateway' ? asset.connectionMode || 'direct' : 'direct',
+                gatewayChain: hasPremiumFeatures ? asset.gatewayChain || [] : [],
+                gatewaySource: asset.gatewayChain?.length ? 'custom' : 'inherit'
+            };
             setLogo(strings.hasText(asset.logo) ? asset.logo : undefined);
             if (copy === true) {
                 formAsset.password = '';
@@ -97,6 +104,8 @@ const AssetPostDrawer = ({
             protocol: 'ssh',
             port: 22,
             accountType: 'password',
+            connectionMode: 'direct',
+            gatewaySource: 'inherit',
             gatewayChain: [],
             attrs: {
                 "disable-audio": true,
@@ -105,6 +114,7 @@ const AssetPostDrawer = ({
                 "ignore-cert": true,
                 enableAliveCheck: true,
                 enableDetectOS: true,
+                'sftp-directory-follow': true,
                 connectTimeout: DefaultTerminalConnectTimeout,
                 backspaceMode: 'del'
             },
@@ -113,8 +123,12 @@ const AssetPostDrawer = ({
     };
     const saveAsset = async (values: any) => {
         values['logo'] = logo;
+        delete values.gatewaySource;
         if (!hasPremiumFeatures) {
             values.gatewayChain = [];
+            if (values.connectionMode === 'gateway') {
+                values.connectionMode = 'direct';
+            }
         }
         if (!copy && values['id']) {
             await assetsApi.updateById(values['id'], values);
@@ -320,7 +334,11 @@ const AssetPostDrawer = ({
                                         break;
                                 }
                                 form.setFieldsValue({
-                                    port: port
+                                    port: port,
+                                    ...(((value === 'rdp' || value === 'vnc') && connectionMode === 'proxy') ? {
+                                        connectionMode: 'direct',
+                                        proxyId: undefined
+                                    } : {})
                                 });
                             }}
                         />
@@ -351,8 +369,6 @@ const AssetPostDrawer = ({
 
             {renderProtocol(protocol)}
 
-            <GatewayChainEditor disabled={!hasPremiumFeatures}/>
-
             <Form.Item label={t('assets.tags')} name='tags'>
                 <QuerySelect mode={'tags'} showSearch request={async () => {
                     let tags = await assetsApi.getTags();
@@ -368,6 +384,15 @@ const AssetPostDrawer = ({
                 <Input.TextArea rows={4}/>
             </Form.Item>
         </>
+    );
+
+    const connectionFields = (
+        <ConnectionModeFields
+            allowInheritedGateway
+            gatewayDisabled={!hasPremiumFeatures}
+            proxyDisabled={protocol === 'rdp' || protocol === 'vnc'}
+            proxyTip={t('assets.proxy_protocol_tip')}
+        />
     );
 
     const advancedTabs = (getAssetAdvancedItems(protocol || '', t) ?? []).map(item => {
@@ -402,6 +427,12 @@ const AssetPostDrawer = ({
             key: 'basic',
             label: t('assets.general'),
             children: renderPane(basicFields),
+            forceRender: true
+        },
+        {
+            key: 'connection',
+            label: t('assets.connection'),
+            children: renderPane(connectionFields),
             forceRender: true
         },
         ...advancedTabs

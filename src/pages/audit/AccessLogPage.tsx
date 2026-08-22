@@ -5,7 +5,7 @@ import { useMobile } from "@/hook/use-mobile";
 import { getSort } from "@/utils/sort";
 import { renderSize } from "@/utils/utils";
 import { useMutation } from "@tanstack/react-query";
-import { App,Button,Tag,Typography } from "antd";
+import { App,Button,Space,Tag,Tooltip,Typography } from "antd";
 import { useRef } from 'react';
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -142,19 +142,49 @@ const AccessLogPage = () => {
             }
         },
         {
-            title: t('audit.accessLog.statusCode'),
+            title: t('audit.accessLog.clientStatusCode'),
             key: 'statusCode',
             dataIndex: 'statusCode',
             width: 100,
             render: (text: number) => <Tag color={getStatusColor(text)}>{text}</Tag>
         },
         {
-            title: t('audit.accessLog.responseSize'),
+            title: t('audit.accessLog.upstreamStatusCode'),
+            key: 'upstreamStatusCode',
+            dataIndex: 'upstreamStatusCode',
+            width: 200,
+            render: (text: number | null, record) => {
+                const hasStatus = text !== null && text !== undefined;
+                if (hasStatus || record.proxyError) {
+                    return <Space size={4}>
+                        {hasStatus && <Tag color={getStatusColor(text)}>{text}</Tag>}
+                        {record.proxyError && (
+                            <Tooltip title={record.proxyError}>
+                                <Tag color="red">
+                                    {t(hasStatus ? 'audit.accessLog.responseProcessingFailed' : 'audit.accessLog.upstreamFailed')}
+                                </Tag>
+                            </Tooltip>
+                        )}
+                    </Space>;
+                }
+                return <Tag>{t('audit.accessLog.noUpstreamResponse')}</Tag>;
+            }
+        },
+        {
+            title: t('audit.accessLog.downstreamResponseSize'),
             key: 'responseSize',
             dataIndex: 'responseSize',
             hideInSearch: true,
             width: 100,
             render: (text: number) => renderSize(text)
+        },
+        {
+            title: t('audit.accessLog.upstreamContentLength'),
+            key: 'upstreamContentLength',
+            dataIndex: 'upstreamContentLength',
+            hideInSearch: true,
+            width: 120,
+            render: (text: number | null) => text === null || text === undefined ? '-' : renderSize(text)
         },
         {
             title: t('audit.client_ip'),
@@ -165,7 +195,7 @@ const AccessLogPage = () => {
             render: (_, record) => <IPRegion ip={record.clientIp} regionInfo={record.regionInfo}/>,
         },
         {
-            title: t('audit.accessLog.responseTime'),
+            title: t('audit.accessLog.totalResponseTime'),
             key: 'responseTime',
             dataIndex: 'responseTime',
             hideInSearch: true,
@@ -221,6 +251,7 @@ const AccessLogPage = () => {
                         domain: params.domain,
                         method: params.method,
                         statusCode: params.statusCode,
+                        upstreamStatusCode: params.upstreamStatusCode,
                         clientIp: params.clientIp,
                         accountId: params.accountId,
                     }

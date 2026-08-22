@@ -4,6 +4,31 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@keyframes theme-reveal-from-top-left {
+    from {
+        clip-path: circle(0 at 0 0);
+    }
+
+    to {
+        clip-path: circle(142vmax at 0 0);
+    }
+}
+
+::view-transition-group(root),
+::view-transition-image-pair(root),
+::view-transition-old(root) {
+    animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+    animation: theme-reveal-from-top-left 500ms linear both;
+}
+
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);

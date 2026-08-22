@@ -11,6 +11,9 @@ export interface AccessLog {
     uri: string;
     statusCode: number;
     responseSize: number;
+    upstreamStatusCode: number | null;
+    upstreamContentLength: number | null;
+    proxyError: string;
     clientIp: string;
     regionInfo?: RegionInfo;
     userAgent: string;

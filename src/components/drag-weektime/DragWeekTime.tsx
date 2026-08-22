@@ -81,14 +81,6 @@ const DragWeekTime = ({onChange, value}: DragWeekTimeProps) => {
 
     let {t} = useTranslation();
 
-    useEffect(() => {
-        if (value) {
-            renderWeekTime(value)
-        } else {
-            handleClearWeekTime();
-        }
-    }, []);
-
     const weekMapping: WeekMapping = {
         0: t('dw.week.days.sunday'),
         1: t('dw.week.days.monday'),
@@ -254,16 +246,15 @@ const DragWeekTime = ({onChange, value}: DragWeekTimeProps) => {
         if (onChange) {
             onChange(timePeriods);
         }
-        if (timePeriods.length > 0) {
-            setSelected(true);
-        } else {
-            setSelected(false);
-        }
+        setSelected(timePeriods.some(item => strings.hasText(item.value)));
         setTimePeriod(timePeriods);
     }
 
     const renderWeekTime = (timePeriods?: TimePeriod[]) => {
-        handleClearWeekTime();
+        const nextWeekTimeData = weekTimeData.map(day => ({
+            ...day,
+            child: day.child.map(item => ({...item, checked: false})),
+        }));
         for (const timePeriod of timePeriods ?? []) {
             let v = timePeriod.value;
             if (!strings.hasText(v)) {
@@ -271,22 +262,23 @@ const DragWeekTime = ({onChange, value}: DragWeekTimeProps) => {
             }
             let cv = v.split('、');
             for (const value of cv) {
-                renderTimePeriod(timePeriod.key, value);
+                renderTimePeriod(nextWeekTimeData, timePeriod.key, value);
             }
         }
-        dealTimePeriod();
+        setWeekTimeData(nextWeekTimeData);
+        setTimePeriod(timePeriods ?? []);
+        setSelected((timePeriods ?? []).some(item => strings.hasText(item.value)));
     }
 
-    const renderTimePeriod = (key: number, val: string) => {
+    const renderTimePeriod = (data: typeof weekTimeData, key: number, val: string) => {
         let row = key;
         const [start, end] = val.split('~');
         const startVal = countIndex(start);
         const endVal = countIndex(end);
         for (let i = startVal; i < (endVal === 0 ? 48 : endVal); i++) {
-            const curWeek = weekTimeData[row]
+            const curWeek = data[row]
             curWeek.child[i].checked = true;
         }
-        setWeekTimeData(weekTimeData);
     }
 
     const countIndex = (val: string): number => {
@@ -294,6 +286,12 @@ const DragWeekTime = ({onChange, value}: DragWeekTimeProps) => {
         const a2 = /30/.test(val) ? 1 : 0;
         return a1 * 2 + a2;
     };
+
+    useEffect(() => {
+        if (value !== undefined) {
+            renderWeekTime(value);
+        }
+    }, [value]);
 
     return (
         <div className='week-time'>

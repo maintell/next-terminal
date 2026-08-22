@@ -10,13 +10,31 @@ export interface FileInfo {
     isLink: boolean
 }
 
-export interface Progress {
+export type UploadTaskStatus = 'created' | 'receiving' | 'transmitting' | 'success' | 'error' | 'cancelled';
+
+export interface UploadTask {
+    id: string
+    filesystemId: string
+    directory: string
+    filename: string
+    targetPath: string
+    status: UploadTaskStatus
     total: number
     written: number
     percent: number
     speed: number
     elapsedTime: number
-    isCompleted: boolean
+    error: string
+    createdAt: number
+    updatedAt: number
+    finishedAt?: number
+}
+
+export interface UploadTaskCreate {
+    id: string
+    directory: string
+    filename: string
+    size: number
 }
 
 class FileSystemApi {
@@ -49,9 +67,20 @@ class FileSystemApi {
         });
     }
 
-    uploadProgress = async (sessionId: string, id: string) => {
-        let data = await requests.get(`/${this.group}/${sessionId}/upload/progress?id=${id}`);
-        return data as Progress;
+    createUploadTask = async (filesystemId: string, input: UploadTaskCreate) => {
+        return await requests.post(`/${this.group}/${filesystemId}/upload/tasks`, input) as UploadTask;
+    }
+
+    getUploadTask = async (filesystemId: string, taskId: string) => {
+        return await requests.get(`/${this.group}/${filesystemId}/upload/tasks/${taskId}?noerr=true`) as UploadTask;
+    }
+
+    deleteUploadTask = async (filesystemId: string, taskId: string) => {
+        await requests.delete(`/${this.group}/${filesystemId}/upload/tasks/${taskId}?noerr=true`);
+    }
+
+    cancelUploadTask = async (filesystemId: string, taskId: string) => {
+        await requests.post(`/${this.group}/${filesystemId}/upload/tasks/${taskId}/cancel?noerr=true`);
     }
 
     chmod = async (sessionId: string, filename: string, mode: number) => {

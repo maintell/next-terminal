@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React from 'react';
 import {HashLoader} from 'react-spinners';
 import {ErrorAlert, GuacamoleStatus} from '@/pages/access/guacamole/ErrorAlert';
 import {useTranslation} from 'react-i18next';
@@ -27,15 +27,17 @@ interface RenderStateProps {
  * 加载状态组件
  * 显示加载动画和状态文本
  */
-const LoadingState: React.FC<{ stateText: string; tunnelText: string }> = ({stateText, tunnelText}) => (
+const LoadingState: React.FC<{ stateText: string; tunnelText?: string }> = ({stateText, tunnelText}) => (
     <div className="flex flex-col gap-4 p-4 text-center items-center">
         <HashLoader color="#1568DB" size={50}/>
         <div className="text-white text-lg font-medium">
             {stateText}
         </div>
-        <div className="text-sm text-gray-400">
-            {tunnelText}
-        </div>
+        {tunnelText && (
+            <div className="text-sm text-gray-400">
+                {tunnelText}
+            </div>
+        )}
     </div>
 );
 
@@ -49,44 +51,35 @@ const RenderState: React.FC<RenderStateProps> = ({
 }) => {
     const {t} = useTranslation();
 
-    // 使用 useMemo 缓存翻译映射，避免每次渲染都重新创建
-    const stateLabels = useMemo<Record<GuacamoleState, string>>(() => ({
+    const stateLabels: Record<GuacamoleState, string> = {
         [GuacamoleState.IDLE]: t('guacamole.state.idle'),
         [GuacamoleState.CONNECTING]: t('guacamole.state.connecting'),
         [GuacamoleState.WAITING]: t('guacamole.state.waiting'),
         [GuacamoleState.CONNECTED]: t('guacamole.state.connected'),
         [GuacamoleState.DISCONNECTING]: t('guacamole.state.disconnecting'),
         [GuacamoleState.DISCONNECTED]: t('guacamole.state.disconnected'),
-    }), [t]);
+    };
 
-    const tunnelLabels = useMemo<Record<Guacamole.Tunnel.State, string>>(() => ({
+    const tunnelLabels: Partial<Record<Guacamole.Tunnel.State, string>> = {
         [Guacamole.Tunnel.State.CONNECTING]: t('guacamole.tunnel.connecting'),
         [Guacamole.Tunnel.State.OPEN]: t('guacamole.tunnel.open'),
         [Guacamole.Tunnel.State.CLOSED]: t('guacamole.tunnel.closed'),
-        [Guacamole.Tunnel.State.UNSTABLE]: t('guacamole.tunnel.unstable'),
-    }), [t]);
+    };
 
     // 判断是否已成功连接
-    const isConnected = useMemo(() => 
+    const isConnected =
         state === GuacamoleState.CONNECTED && (
             tunnelState === Guacamole.Tunnel.State.OPEN ||
             tunnelState === Guacamole.Tunnel.State.UNSTABLE
-        ),
-        [state, tunnelState]
-    );
+        );
 
     // 判断是否断开连接
-    const isDisconnected = useMemo(() =>
+    const isDisconnected =
         state === GuacamoleState.DISCONNECTED ||
-        tunnelState === Guacamole.Tunnel.State.CLOSED,
-        [state, tunnelState]
-    );
+        tunnelState === Guacamole.Tunnel.State.CLOSED;
 
     // 判断是否需要显示错误
-    const shouldShowError = useMemo(() => 
-        (status?.code && status.code > 0) || isDisconnected,
-        [status, isDisconnected]
-    );
+    const shouldShowError = (status?.code && status.code > 0) || isDisconnected;
 
     // 如果已连接且状态正常，不显示任何内容
     if (isConnected) {
@@ -108,7 +101,9 @@ const RenderState: React.FC<RenderStateProps> = ({
         const stateText = state !== undefined 
             ? stateLabels[state] 
             : t('guacamole.state.unknown');
-        const tunnelText = tunnelLabels[tunnelState] || t('guacamole.tunnel.unknown');
+        const tunnelText = tunnelState === Guacamole.Tunnel.State.UNSTABLE
+            ? undefined
+            : tunnelLabels[tunnelState] || t('guacamole.tunnel.unknown');
 
         return <LoadingState stateText={stateText} tunnelText={tunnelText}/>;
     };

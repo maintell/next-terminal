@@ -12,6 +12,7 @@ import AssetBatchEditDrawer from "@/pages/assets/AssetBatchEditDrawer";
 import AssetPostDrawer from "@/pages/assets/AssetPostDrawer";
 import AssetTree from "@/pages/assets/AssetTree";
 import AssetTreeChoose from "@/pages/assets/AssetTreeChoose";
+import MultiFactorAuthentication from '@/pages/account/MultiFactorAuthentication';
 import {safeEncode} from "@/utils/codec";
 import {getSort} from "@/utils/sort";
 import {browserDownload} from "@/utils/utils";
@@ -68,6 +69,8 @@ const AssetPage = () => {
     let [selectedStatus, setSelectedStatus] = useState<string>('');
     let [groupChooserOpen, setGroupChooserOpen] = useState(false);
     let [batchEditorOpen, setBatchEditorOpen] = useState(false);
+    const [rdpMfaOpen, setRdpMfaOpen] = useState(false);
+    const [pendingRdpAssetId, setPendingRdpAssetId] = useState('');
     let [params, setParams] = useState<PostParams>({
         open: false,
         assetId: undefined,
@@ -120,11 +123,16 @@ const AssetPage = () => {
     });
 
     const createRdpProxyTicketMutation = useMutation({
-        mutationFn: (assetId: string) => portalApi.createRdpProxyTicket(assetId),
+        mutationFn: ({assetId, securityToken}: {assetId: string; securityToken?: string}) =>
+            portalApi.createRdpProxyTicket(assetId, securityToken),
         onSuccess: (ticket) => {
             browserDownload(ticket.rdpFileUrl);
         },
         onError: (error: any) => {
+            if (error?.code === 10027) {
+                setRdpMfaOpen(true);
+                return;
+            }
             message.error(error?.message || t('general.failed'));
         }
     });
@@ -143,6 +151,7 @@ const AssetPage = () => {
     const importExampleContent = <>
         <NButton onClick={downloadImportExampleCsv}>{t('actions.download_import_sample')}</NButton>
         <div>{t('assets.import_asset_tip')}</div>
+        <div>{t('assets.import_asset_group_tip')}</div>
     </>
 
     const openAssetEditor = (assetId?: string, options?: Partial<PostParams>) => {
@@ -171,7 +180,8 @@ const AssetPage = () => {
     };
 
     const handleRdpProxyAccess = (record: Asset) => {
-        createRdpProxyTicketMutation.mutate(record.id);
+        setPendingRdpAssetId(record.id);
+        createRdpProxyTicketMutation.mutate({assetId: record.id});
     };
 
     const handleGroupChange = (newGroupId: string) => {
@@ -415,7 +425,7 @@ const AssetPage = () => {
     const renderAssetActions = (record: Asset, compact = false) => {
         const id = record.id;
         const isRdpAsset = record.protocol?.toLowerCase() === 'rdp';
-        const isCreatingRdpProxyTicket = createRdpProxyTicketMutation.isPending && createRdpProxyTicketMutation.variables === id;
+        const isCreatingRdpProxyTicket = createRdpProxyTicketMutation.isPending && createRdpProxyTicketMutation.variables?.assetId === id;
         return (
             <div className={cn('flex items-center gap-2', compact && 'gap-1')}>
                 <a
@@ -773,6 +783,17 @@ const AssetPage = () => {
             assetId={params.assetId}
             groupId={params.groupId}
             copy={params.copy}
+        />
+        <MultiFactorAuthentication
+            open={rdpMfaOpen}
+            handleOk={(securityToken) => {
+                setRdpMfaOpen(false);
+                createRdpProxyTicketMutation.mutate({assetId: pendingRdpAssetId, securityToken});
+            }}
+            handleCancel={() => {
+                setRdpMfaOpen(false);
+                setPendingRdpAssetId('');
+            }}
         />
     </div>);
 }

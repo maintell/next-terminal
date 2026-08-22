@@ -2,6 +2,7 @@ import type {Dayjs} from "dayjs";
 import type {GatewayHop} from "@/api/gateway-chain";
 
 export type WebsiteOriginHostMode = 'origin' | 'service' | 'custom';
+export type ConnectionMode = 'direct' | 'gateway' | 'proxy';
 
 export interface ParsedURL {
     scheme: string;
@@ -21,10 +22,14 @@ export interface WebsiteFormData {
     targetUrl: string;
     logo?: string;
     groupId?: string;
+    connectionMode: ConnectionMode;
     gatewayChain?: GatewayHop[];
+    proxyId?: string;
+    gatewaySource?: 'inherit' | 'custom';
     originHostMode?: WebsiteOriginHostMode;
     originHostCustom?: string;
     originTimeout?: number;
+    insecureSkipVerify?: boolean;
     disableAccessLog?: boolean;
     headers?: Array<{ name: string; value: string }>;
     basicAuth?: {

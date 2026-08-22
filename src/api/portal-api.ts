@@ -4,6 +4,8 @@ import requests from "./core/requests";
 
 export interface SessionAttrs {
     'ai-enabled'?: boolean;
+    'restricted-shell'?: boolean;
+    'sftp-directory-follow'?: boolean;
     backspaceMode?: string;
     [key: string]: unknown;
 }
@@ -142,6 +144,8 @@ interface Extra {
     status: string;
     network: string;
     wolEnabled: boolean; // 是否启用 WOL 唤醒
+    restrictedShell: boolean;
+    sftpDirectoryFollow: boolean;
 }
 
 export interface WolResponse {
@@ -172,6 +176,17 @@ export interface RdpProxyTicket {
     rdpFileUrl: string;
 }
 
+export interface AssetAuthorization {
+    assetId: string;
+    protocol: 'ssh' | 'rdp';
+    expiresAt: number;
+}
+
+export interface AssetAuthorizationResult {
+    redirectUrl: string;
+    expiresAt?: number;
+}
+
 class PortalApi {
     group = "portal";
 
@@ -198,8 +213,25 @@ class PortalApi {
         return data as AccessPreferences;
     }
 
-    createRdpProxyTicket = async (assetId: string) => {
-        return await requests.post(`/${this.group}/rdp-proxy/tickets`, {assetId}) as RdpProxyTicket;
+    createRdpProxyTicket = async (assetId: string, securityToken?: string) => {
+        return await requests.post(`/${this.group}/rdp-proxy/tickets?noerr`, {
+            assetId,
+            securityToken: securityToken ?? '',
+        }) as RdpProxyTicket;
+    }
+
+    getAssetAuthorization = async (authorizeId: string) => {
+        return await requests.get(`/${this.group}/access-authorizations/${encodeURIComponent(authorizeId)}`) as AssetAuthorization;
+    }
+
+    completeAssetAuthorization = async (authorizeId: string, securityToken: string) => {
+        return await requests.post(`/${this.group}/access-authorizations/${encodeURIComponent(authorizeId)}/complete`, {
+            securityToken,
+        }) as AssetAuthorizationResult;
+    }
+
+    cancelAssetAuthorization = async (authorizeId: string) => {
+        return await requests.post(`/${this.group}/access-authorizations/${encodeURIComponent(authorizeId)}/cancel`) as AssetAuthorizationResult;
     }
 
     getAssetsTree = async (protocol?: string, keyword?: string) => {

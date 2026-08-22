@@ -243,7 +243,7 @@ ${t('assets.password')}: ${result.password}`)
                                 {key: 'view-authorised-website', label: `${t('menus.resource.submenus.website')}${t('actions.authorized')}`},
                                 {key: 'reset-password', label: t('identity.user.reset_password.action')},
                                 {key: 'reset-totp', label: t('identity.user.reset_otp.action')},
-                                {key: 'login-policy', label: t('identity.options.login_policy')},
+                                {key: 'access-policy', label: t('identity.options.access_policy')},
                             ],
                             onClick: ({key}) => {
                                 switch (key) {
@@ -262,8 +262,8 @@ ${t('assets.password')}: ${result.password}`)
                                     case 'reset-totp':
                                         bulkResetTOTP([record['id']])
                                         break;
-                                    case 'login-policy':
-                                        navigate(`/user/${record['id']}?activeKey=login-policy`);
+                                    case 'access-policy':
+                                        navigate(`/user/${record['id']}?activeKey=access-policy`);
                                         break;
                                 }
                             }

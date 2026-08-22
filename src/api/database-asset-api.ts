@@ -14,7 +14,9 @@ export interface DatabaseAsset {
     description: string;
     status: string;
     statusText: string;
+    connectionMode: 'direct' | 'gateway' | 'proxy';
     gatewayChain: GatewayHop[];
+    proxyId?: string;
     tags?: string[];
     attrs?: any;
     createdAt: number;

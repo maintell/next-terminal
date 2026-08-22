@@ -67,6 +67,7 @@ interface NTableProps<T extends object> extends Omit<TableProps<T>, 'columns' | 
     request?: (params: Record<string, any>, sort: Record<string, SortOrder>, filter: Record<string, any>) => Promise<RequestResult<T>>;
     headerTitle?: React.ReactNode | false;
     toolBarRender?: () => React.ReactNode[];
+    searchPrefix?: React.ReactNode;
     toolbar?: {
         menu?: ToolbarMenu;
         actions?: React.ReactNode[];
@@ -201,6 +202,7 @@ const NTable = <T extends object, >({
                                        dataSource,
                                        headerTitle,
                                        toolBarRender,
+                                       searchPrefix,
                                        toolbar,
                                        search,
                                        options,
@@ -400,7 +402,7 @@ const NTable = <T extends object, >({
 
     return (
         <div className="overflow-hidden rounded-md bg-white dark:bg-[#141414]">
-            {(headerTitle !== false || toolbar?.menu || toolbarActions.length > 0 || showKeywordSearch || searchForm) && (
+            {(headerTitle !== false || toolbar?.menu || toolbarActions.length > 0 || showKeywordSearch || searchForm || searchPrefix) && (
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 dark:border-gray-800">
                     <Space orientation="vertical" size={0}>
                         {headerTitle !== false && headerTitle && <div className="font-medium">{headerTitle}</div>}
@@ -415,6 +417,7 @@ const NTable = <T extends object, >({
                         )}
                     </Space>
                     <Space wrap className="justify-end">
+                        {searchPrefix}
                         {searchForm}
                         {showKeywordSearch && search === false && (
                             <Input.Search

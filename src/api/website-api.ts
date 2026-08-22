@@ -1,7 +1,7 @@
 import {Api} from "@/api/core/api";
 import requests from "@/api/core/requests";
 import type { TreeDataNode } from 'antd';
-import type {WebsiteFormData, WebsiteOriginHostMode} from "@/pages/assets/website-drawer/types";
+import type {ConnectionMode, WebsiteFormData, WebsiteOriginHostMode} from "@/pages/assets/website-drawer/types";
 import type {GatewayHop} from "@/api/gateway-chain";
 
 export interface WebsiteGroupNode extends TreeDataNode {
@@ -21,10 +21,13 @@ export interface Website {
     asciiDomain: string;
     entrance: string;
     description: string;
+    connectionMode: ConnectionMode;
     gatewayChain: GatewayHop[];
+    proxyId?: string;
     originHostMode?: WebsiteOriginHostMode;
     originHostCustom?: string;
     originTimeout?: number;
+    insecureSkipVerify?: boolean;
     basicAuth: BasicAuth;
     headers?: any;
     cert: Cert;
@@ -86,21 +89,36 @@ export interface WebsiteBasicUpdateRequest {
     targetUrl: string;
     groupId?: string;
     gatewayChain?: GatewayHop[];
+    connectionMode: ConnectionMode;
+    proxyId?: string;
     originHostMode?: WebsiteOriginHostMode;
     originHostCustom?: string;
     originTimeout?: number;
+    insecureSkipVerify?: boolean;
     headers?: Array<{ name: string; value: string }>;
 }
 
-export interface WebsiteGeoOptions {
-    countries: WebsiteGeoOption[];
-    provinces: WebsiteGeoOption[];
-    cities: WebsiteGeoOption[];
+export interface BatchUpdateWebsiteRequest {
+    websiteIds: string[];
+    changes: {
+        basic?: {
+            enabled?: boolean;
+            originHostMode?: WebsiteOriginHostMode;
+            originHostCustom?: string;
+            originTimeout?: number;
+            insecureSkipVerify?: boolean;
+        };
+        connection?: {
+            connectionMode: ConnectionMode;
+            gatewayChain: GatewayHop[];
+            proxyId?: string;
+        };
+    };
 }
 
-export interface WebsiteGeoOption {
-    label: string;
-    value: string;
+export interface BatchUpdateWebsiteResult {
+    selectedCount: number;
+    updatedCount: number;
 }
 
 class WebsiteApi extends Api<Website> {
@@ -129,19 +147,20 @@ class WebsiteApi extends Api<Website> {
         return await requests.post(`/${this.group}/change-gateway`, data);
     }
 
+    changeConnection = async (data: { websiteIds: string[], connectionMode: ConnectionMode, gatewayChain: GatewayHop[], proxyId?: string }) => {
+        return await requests.post(`/${this.group}/change-connection`, data);
+    }
+
+    batchUpdate = async (data: BatchUpdateWebsiteRequest) => {
+        return await requests.post(`/${this.group}/batch-update`, data) as BatchUpdateWebsiteResult;
+    }
+
     updateSortPosition = async (req: SortPositionRequest) => {
         return await requests.post(`/${this.group}/sort`, req);
     }
 
     getFavicon = async (url: string): Promise<string> => {
         return await requests.get(`/${this.group}/favicon?url=${encodeURIComponent(url)}`);
-    }
-
-    getGeoOptions = async (language: string, countries: string[], provinces: string[]): Promise<WebsiteGeoOptions> => {
-        const params = new URLSearchParams({language, noerr: '1'});
-        countries.forEach(country => params.append('country', country));
-        provinces.forEach(province => params.append('province', province));
-        return await requests.get(`/${this.group}/geo-options?${params.toString()}`) as WebsiteGeoOptions;
     }
 
     updateEnabled = async (id: string, enabled: boolean) => {

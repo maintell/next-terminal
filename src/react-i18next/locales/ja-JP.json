@@ -55,6 +55,22 @@
     "selected_items": "{{count}} 件選択済み",
     "toggle_theme": "テーマ切替"
   },
+  "access_control_denied": {
+    "titles": {
+      "account": "アカウントのアクセスが制限されています"
+    },
+    "reasons": {
+      "ip": "現在の IP アドレスからシステムへアクセスすることは許可されていません。",
+      "time": "現在の時間帯はシステムへのアクセスが許可されていません。",
+      "geo": "現在の地域からシステムへアクセスすることは許可されていません。",
+      "policy": "現在のアクセスはシステムのアクセス制御ポリシーを満たしていません。"
+    },
+    "hints": {
+      "account": "このアカウントに割り当てられたユーザーまたは部門のポリシーグループによって拒否されました。誤判定と思われる場合は、システム管理者に連絡してください。"
+    },
+    "retry": "再確認",
+    "logout": "ログアウトしてログイン画面に戻る"
+  },
   "actions": {
     "new": "新規",
     "add": "追加",
@@ -160,7 +176,8 @@
       "submenus": {
         "ssh_gateway": "SSH ゲートウェイ",
         "agent_gateway": "セキュリティゲートウェイ",
-        "gateway_group": "ゲートウェイグループ"
+        "gateway_group": "ゲートウェイグループ",
+        "network_proxy": "プロキシサーバー"
       }
     },
     "log_audit": {
@@ -192,7 +209,7 @@
         "user": "ユーザー",
         "department": "部門",
         "role": "ロール",
-        "login_policy": "ログインポリシー",
+        "access_policy": "アクセス制御",
         "login_locked": "ログインロック",
         "oidc_client": "OIDC クライアント"
       }
@@ -254,17 +271,23 @@
     "transmission": {
       "progress": "進捗",
       "speed": "速度",
+      "client_stage": "プラットフォームへアップロード",
+      "remote_stage": "サーバーへ転送",
+      "completed_summary": "完了 {{completed}}/{{total}}",
+      "failed_summary": "（失敗 {{failed}}）",
       "options": {
         "preparing": "準備中",
         "uploading": "アップロード中",
         "transmitting": "転送中",
         "upload_failed": "アップロード失敗",
         "upload_success": "アップロード成功",
-        "cancelled": "キャンセル済み"
+        "cancelled": "キャンセル済み",
+        "interrupted": "中断"
       }
     },
     "drag_upload_hint": "ここにファイルをドラッグしてアップロード",
-    "drag_upload_disabled": "現在のポリシーではアップロードできません"
+    "drag_upload_disabled": "現在のポリシーではアップロードできません",
+    "upload_initializing": "ユーザー情報を初期化しています。しばらくしてからもう一度お試しください。"
   },
   "guacamole": {
     "state": {
@@ -280,7 +303,6 @@
       "connecting": "トンネル接続中...",
       "open": "トンネル接続成功",
       "closed": "トンネル接続が閉じられました",
-      "unstable": "トンネル接続が不安定",
       "unknown": "不明なトンネル状態"
     }
   },
@@ -294,17 +316,63 @@
       "already_done_subtitle": "このシステムは既に初期化されています。ログインページへ進んでください。"
     },
     "policy": {
-      "ip_group": "IP グループ",
-      "ip_group_extra": "形式はカンマ区切り（例：192.168.0.1, 192.168.1.0/24, 192.168.2.0-192.168.2.20）。0.0.0.0/0 は全 IP に一致します。",
+      "groups": "アクセスポリシーグループ",
+      "super_admin_bypass_tip": "スーパー管理者はアクセスポリシーの制限を受けません。",
+      "new_group": "ポリシーグループを追加",
+      "edit_group": "ポリシーグループを編集",
+      "rules": "ルール",
+      "new_rule": "ルールを追加",
+      "edit_rule": "ルールを編集",
+      "mode": {
+        "label": "ポリシーモード",
+        "extra": "ホワイトリストモードではどのルールにも一致しない場合はアクセスを拒否し、ブラックリストモードではアクセスを許可します。",
+        "whitelist": "ホワイトリストモード",
+        "blacklist": "ブラックリストモード"
+      },
+      "group_evaluation_tip": "ルールは優先度の小さい順に照合され、最初に一致したルールがグループの結果を決定します。ホワイトリストモードではどのルールにも一致しない場合はアクセスを拒否し、ブラックリストモードではアクセスを許可します。ユーザーと部門のすべての有効なグループがアクセスを許可する必要があります。",
+      "enable_group": "このポリシーグループを有効にする",
+      "group_enabled_extra": "新しいグループはデフォルトで無効です。有効にすると、紐付けられたユーザーと部門に適用されます。",
+      "rule_match_tip": "設定した送信元 IP、国、都道府県・州、都市、有効時間帯の各項目は AND で結合され、同じ項目内の複数の値は OR で結合されます。空の項目は一致を制限しません。",
+      "rule_match_all_warning": "一致条件が設定されていないため、このルールはすべてのアクセス要求に一致します。",
+      "enable_rule": "このルールを有効にする",
+      "rule_enabled_extra": "無効なルールはグループ内の一致判定から除外されます。",
+      "ip_group": "送信元 IP",
+      "ip_group_extra": "単一 IP、CIDR、IP 範囲に対応しています。複数の値は改行またはカンマで区切ってください。0.0.0.0/0 はすべての IP に一致します。",
+      "ip_group_placeholder": "送信元 IP を1行に1つ入力するか、カンマで区切ってください\n例：192.168.0.1\n192.168.1.0/24",
       "action": {
-        "label": "アクション",
+        "label": "一致時のアクション",
+        "extra": "送信元 IP、地域、ポリシー有効時間帯がすべて一致した場合に、このアクションを実行します。",
         "options": {},
-        "allow": "許可",
-        "reject": "拒否"
+        "allow": "アクセスを許可",
+        "reject": "アクセスを拒否"
       },
       "priority": "優先度",
       "priority_extra": "数値が小さいほど優先度が高い",
-      "time_period": "時間範囲"
+      "time_period": "ポリシー有効時間帯",
+      "time_period_extra": "選択した時間帯のみルールが一致します。時間帯を選択しない場合は終日一致します。",
+      "enabled": "このアクセスポリシーを有効にする",
+      "enabled_extra": "無効にすると、このポリシーはアクセス判定に使用されません。",
+      "expiration_at": "ポリシー有効期限",
+      "geo": "地域の制限",
+      "country": "国の制限",
+      "country_extra": "指定した国からのアクセスユーザーのみ許可します。中国語または英語の名称に対応しています。",
+      "country_placeholder": "例：中国 または China",
+      "province": "都道府県/州の制限",
+      "province_extra": "指定した都道府県または州からのアクセスユーザーのみ許可します。中国語または英語の名称に対応しています。",
+      "province_placeholder": "例：広東 または California",
+      "city": "都市の制限",
+      "city_extra": "指定した都市からのアクセスユーザーのみ許可します。中国語または英語の名称に対応しています。",
+      "city_placeholder": "例：深圳 または San Francisco",
+      "binding_targets": "関連付け対象",
+      "bound_users": "ユーザー",
+      "bound_departments": "部門",
+      "effective_policies": "有効なポリシーグループ",
+      "direct_bindings": "直接の関連付け",
+      "direct_binding": "ユーザーへの直接関連付け",
+      "source": "適用元",
+      "reset_binding": "選択をリセット",
+      "expired": "期限切れ",
+      "department_binding_tip": "関連付けたポリシーグループは、この部門の現在および今後の直接メンバーに適用され、子部門のメンバーには適用されません。"
     },
     "role": {
       "type": "ロール種別",
@@ -404,7 +472,7 @@
       }
     },
     "options": {
-      "login_policy": "ログインポリシー"
+      "access_policy": "アクセス制御"
     },
     "oidc_client": {
       "created_success": "OIDC クライアントを作成しました",
@@ -718,6 +786,14 @@
       "statusCode": "ステータスコード",
       "responseSize": "レスポンスサイズ",
       "responseTime": "レスポンスタイム",
+      "clientStatusCode": "クライアント状態",
+      "upstreamStatusCode": "アップストリーム状態",
+      "downstreamResponseSize": "ダウンストリームサイズ",
+      "upstreamContentLength": "アップストリーム宣言サイズ",
+      "totalResponseTime": "合計時間",
+      "noUpstreamResponse": "アップストリームなし",
+      "upstreamFailed": "アップストリーム失敗",
+      "responseProcessingFailed": "レスポンス処理失敗",
       "userAgent": "User-Agent",
       "createdAt": "リクエスト時刻",
       "anonymous": "匿名",
@@ -838,7 +914,7 @@
         "access_token": "アクセストークン",
         "role": "ロール",
         "department": "部門",
-        "login_policy": "ログインポリシー",
+        "access_policy": "アクセス制御",
         "login_lock": "ログインロック",
         "login_log": "ログインログ",
         "oidc_client": "OIDC クライアント",
@@ -906,6 +982,17 @@
       "start": "変換",
       "retry": "再変換",
       "trigger_failed": "変換の送信に失敗しました"
+    },
+    "recording_upload_status": {
+      "pending": "アップロード待ち",
+      "uploading": "アップロード中",
+      "failed": "{{target}} へのアップロードに失敗しました",
+      "retry": "再アップロード",
+      "retry_submitted": "録画の再アップロードを送信しました",
+      "retry_failed": "録画の再アップロード送信に失敗しました",
+      "retry_all": "失敗したアップロードをすべて再試行（{{count}}）",
+      "retry_all_confirm": "失敗した録画 {{count}} 件をすべて再アップロードしますか？",
+      "retry_all_submitted": "{{accepted}} 件を再アップロードに送信し、{{skipped}} 件をスキップしました"
     }
   },
   "access": {
@@ -981,7 +1068,22 @@
       "clear": "画面クリア",
       "connecting": "接続中...",
       "close_title": "端末を閉じる",
-      "close_confirm": "この端末を閉じてもよろしいですか？"
+      "close_confirm": "この端末を閉じてもよろしいですか？",
+      "zmodem": {
+        "save_dialog_title": "ZMODEM ファイルを保存",
+        "upload_skipped_title": "ZMODEM アップロードをスキップしました",
+        "upload_skipped_description": "{{fileName}}：リモートに同名ファイルが存在します",
+        "download_complete_title": "ダウンロード完了",
+        "progress_uploading_title": "ZMODEM アップロード中",
+        "progress_downloading_title": "ZMODEM ダウンロード中",
+        "upload_no_rz_response": "ZMODEM アップロードを開始できませんでした。リモートで rz/lrzsz がインストールされ、実行されているか確認してください。",
+        "upload_transfer_active": "ZMODEM 転送がすでに実行中です。",
+        "upload_no_files": "アップロードするファイルがありません。",
+        "upload_file": "ZMODEM でファイルをアップロード",
+        "ssh_only": "ZMODEM は SSH 端末でのみ使用できます。",
+        "not_connected": "端末が接続されていないため、ZMODEM アップロードを開始できません。",
+        "start_upload_failed": "ZMODEM アップロードを開始できませんでした。"
+      }
     },
     "playback": {
       "shortcut_space": "スペース: 再生/一時停止",
@@ -1219,6 +1321,19 @@
     "private_key": "秘密鍵",
     "password": "パスワード",
     "gateway": "ゲートウェイ",
+    "connection": "接続方法",
+    "connection_mode": "接続方法",
+    "connection_direct": "直接接続",
+    "connection_direct_tip": "サーバーから対象アドレスへ直接接続します。",
+    "connection_gateway": "ゲートウェイ経由",
+    "connection_proxy": "プロキシ経由",
+    "gateway_source": "ゲートウェイ設定",
+    "gateway_custom": "カスタムゲートウェイチェーン",
+    "proxy_tcp_tip": "プロキシサーバー経由で対象アドレスへの TCP 接続を確立します。",
+    "proxy_protocol_tip": "プロキシ接続は SSH と Telnet のみ対応しています。",
+    "proxy_required": "プロキシサーバーを選択してください",
+    "change_connection": "接続方法を変更",
+    "advanced_settings": "詳細設定",
     "gateway_type": "ゲートウェイ種別",
     "display_settings": "表示設定",
     "color_depth": "色深度",
@@ -1258,22 +1373,25 @@
     "origin_host_custom_name": "カスタムオリジンホスト名",
     "origin_timeout": "オリジンタイムアウト",
     "origin_timeout_tip": "プロキシがオリジンからの応答を待つ最大時間です。超過するとエラーを返します。",
+    "insecure_skip_verify": "証明書検証をスキップ",
+    "insecure_skip_verify_tip": "有効にすると HTTPS オリジン証明書を検証しません。自己署名証明書など、信頼できる環境でのみ使用してください。",
     "entrance": "入口パス",
     "entrance_tip": "入口パスは初回アクセス時に自動で開かれるアドレスです",
     "change_group": "グループ変更",
     "change_gateway": "ゲートウェイ設定",
     "batch_edit": {
       "title": "一括編集",
-      "scope_tip": "AI 設定は選択した SSH アセットにのみ適用され、その他のプロトコルのアセットはスキップされます。ゲートウェイ設定は選択したすべてのアセットに適用されます。チェックしていない設定は変更されません。",
-      "update_gateway": "ゲートウェイを変更",
-      "gateway_mode": "ゲートウェイ設定",
-      "gateway_inherit": "グループの既定ゲートウェイを使用",
-      "gateway_custom": "カスタムゲートウェイチェーン",
-      "gateway_required": "少なくとも 1 つのゲートウェイを追加するか、グループの既定ゲートウェイを使用してください",
-      "success_ai": "{{count}} 件の SSH アセットの AI 設定を更新し、{{skippedCount}} 件の非 SSH アセットをスキップしました",
-      "success_gateway": "{{count}} 件のアセットのゲートウェイ設定を更新しました",
-      "success_ai_gateway": "{{aiCount}} 件の SSH アセットの AI 設定を更新し、{{skippedCount}} 件の非 SSH アセットをスキップしました。{{gatewayCount}} 件のアセットのゲートウェイ設定を更新しました",
-      "no_ssh_asset": "選択したアセットに SSH アセットがないため、AI 設定は変更されませんでした"
+      "scope_tip": "SSH ターミナルと AI 設定は選択した SSH アセットにのみ適用され、その他のプロトコルのアセットはスキップされます。接続方法は選択したすべてのアセットに適用されます。チェックしていない設定は変更されません。",
+      "update_connection": "接続方法を変更",
+      "success_ssh": "{{count}} 件の SSH アセットのターミナルまたは AI 設定を更新し、{{skippedCount}} 件の非 SSH アセットをスキップしました",
+      "success_connection": "{{count}} 件のアセットの接続方法を更新しました",
+      "success_ssh_connection": "{{sshCount}} 件の SSH アセットのターミナルまたは AI 設定を更新し、{{skippedCount}} 件の非 SSH アセットをスキップしました。{{connectionCount}} 件のアセットの接続方法を更新しました",
+      "no_ssh_asset": "選択したアセットに SSH アセットがないため、SSH 設定は変更されませんでした"
+    },
+    "website_batch_edit": {
+      "title": "一括編集",
+      "scope_tip": "チェックした Web アセット設定のみ更新し、未チェックの設定は変更しません。接続方法とオリジン設定は選択したすべての Web アセットに適用されます。",
+      "success": "{{count}} 件の Web アセットを更新しました"
     },
     "group_default_gateway": "グループ既定ゲートウェイ",
     "ssh_gateway_required_after_first_hop": "2 番目以降のホップには SSH ゲートウェイのみ指定できます",
@@ -1289,6 +1407,7 @@
     "import": "資産をインポート",
     "copy": "資産をコピー",
     "import_asset_tip": "資産のインポート時、アカウント/パスワードとキー/パスフレーズはどちらか一方のみ。両方ある場合は秘密鍵/パスワードを優先します。",
+    "import_asset_group_tip": "既存グループは名前で照合し、不足するグループは自動作成されます。階層は Production/East のように / で区切ってください。",
     "import_asset_success": "資産のインポートに成功しました",
     "import_asset_error": "資産のインポートに失敗しました",
     "import_asset_error_title": "インポートファイルを確認してください。以下の資産が失敗しました：",
@@ -1302,23 +1421,26 @@
     "cert": "証明書",
     "public": "公開アクセス",
     "temp_allow": "一時 IP 許可",
-    "public_tip": "制限は匿名ユーザーのみに適用されます。",
-    "limit_ip": "IP アクセス制限",
-    "limit_ip_tip": "指定 IP からのみアクセスを許可します。CIDR 形式対応（例：192.168.1.0/24）。ハイフン範囲対応（例：192.168.1.0-192.168.1.255）。複数 IP は改行、カンマ、またはセミコロンで区切れます。",
-    "limit_country": "国制限",
-    "limit_country_tip": "匿名ユーザーのアクセスを指定国に限定します。中国語/英語名に対応。",
+    "public_access_switch": "匿名パブリックアクセスを許可",
+    "public_validity": "公開アクセスの有効期限",
+    "public_validity_tip": "期限切れ後は、直接許可とパスコードアクセスの両方が無効になります。",
+    "public_rule_relation_tip": "送信元 IP、地域、リクエストヘッダー、公開パスのいずれかに一致すると許可されます。",
+    "public_access_rules": "直接許可ルール",
+    "public_geo_rules": "地域ルール",
+    "public_geo_rules_tip": "項目間は AND、同じ項目内の複数値は OR です。空の項目は制限しません。Enter で値を追加します。",
+    "public_password_access": "パスコードアクセス",
+    "public_password_access_tip": "直接許可ルールがない場合、パスコードで認証します。",
+    "limit_ip": "送信元 IP",
+    "limit_ip_tip": "単一 IP、CIDR、IP 範囲に対応します。複数値は改行、カンマ、またはセミコロンで区切ります。",
+    "limit_country": "国",
     "limit_country_placeholder": "例：中国 または China",
-    "limit_province": "州/省制限",
-    "limit_province_tip": "匿名ユーザーのアクセスを指定の州/省に限定します。中国語/英語名に対応。",
+    "limit_province": "州/省",
     "limit_province_placeholder": "例：広東 または California",
-    "limit_city": "都市制限",
-    "limit_city_tip": "匿名ユーザーのアクセスを指定都市に限定します。中国語/英語名に対応。",
+    "limit_city": "都市",
     "limit_city_placeholder": "例：深圳 または San Francisco",
-    "limit_geo_input_tip": "入力後に Enter でタグを追加できます。",
-    "limit_time_enabled": "有効期限制限",
+    "limit_time_enabled": "有効期限を設定",
     "limit_time": "有効期限",
-    "limit_password": "パスフレーズ制限",
-    "limit_password_tip": "正しいパスフレーズでのみ資産にアクセスできます。",
+    "limit_password": "アクセスパスコード",
     "temp_allow_duration": "有効期間（分）",
     "temp_allow_duration_tip": "ボタン操作後、現在の IP を期間内で許可します。",
     "temp_allow_auto_renew": "自動更新",
@@ -1387,6 +1509,10 @@
     },
     "dns_provider_config": "DNS プロバイダー設定",
     "terminal_settings": "ターミナル設定",
+    "restricted_shell": "ネットワーク機器 / 制限付き Shell",
+    "restricted_shell_extra": "スイッチ、ルーター、ファイアウォール、RouterOS などの非標準 Linux SSH 環境向けです。このような環境では SSH 子セッションを開始できません。有効にすると、ファイルシステム（SFTP）や実行統計（Stats）などの機能は使用できなくなります。",
+    "sftp_directory_follow": "SFTP ディレクトリの自動追従",
+    "sftp_directory_follow_extra": "有効にすると、SFTP ファイルシステムのディレクトリがターミナルの現在のディレクトリに自動的に追従します。",
     "enable_alive_check": "生存チェック",
     "enable_alive_check_extra": "接続中に対象資産がオンラインかどうかを定期的に確認し、接続異常をすばやく検出します。一部のハードウェアスイッチではこのチェックに対応していない場合があります。接続に失敗する、または頻繁に切断される場合は、この項目をオフにしてください。",
     "enable_detect_os": "OS の自動検出",
@@ -1483,11 +1609,11 @@
     "auto_fetch_favicon": "アイコン自動取得",
     "auto_fetch_favicon_failed": "アイコンの取得に失敗しました。対象URLを確認してください",
     "public_header_whitelist": "リクエストヘッダーのホワイトリスト",
-    "public_header_whitelist_tip": "いずれかの指定されたリクエストヘッダーを含んでいれば許可され、大文字・小文字は区別されません。",
-    "public_header_whitelist_placeholder": "例：X-Bypass-Token",
-    "public_path_whitelist": "パスホワイトリスト",
-    "public_path_whitelist_tip": "いずれかのパスに一致すれば許可され、正規表現をサポートしています。",
-    "public_path_whitelist_placeholder": "例：^/public/.* または /health",
+    "public_header_whitelist_tip": "1 行に 1 つのヘッダー名を入力します。大文字・小文字は区別されません。",
+    "public_header_whitelist_placeholder": "X-Bypass-Token\nX-Internal-Request",
+    "public_path_whitelist": "公開パス",
+    "public_path_whitelist_tip": "1 行に 1 つのパスを入力します。* は任意の文字列、? は任意の 1 文字、ワイルドカードのないパスは完全一致です。",
+    "public_path_whitelist_placeholder": "/public/*\n/health",
     "detect_os_success": "OS検出成功、アイコンを更新しました",
     "detect_os_failed": "OS検出に失敗しました",
     "wol_send": "WOL送信",
@@ -1497,9 +1623,6 @@
       "settings": "AI 設定",
       "enabled": "AI を有効化",
       "enabled_extra": "有効にすると、グローバル AI がこの SSH アセットを検索して操作できます。",
-      "restricted_shell": "制限付き Shell",
-      "restricted_shell_extra": "ネットワーク機器、ファイアウォール、スイッチなど、より厳格なコマンド確認が必要な環境に適用します。",
-      "restricted_shell_tip": "制限付き Shell では、すべての AI コマンドに確認が必要です。",
       "command_policy": "AI コマンド実行ポリシー",
       "command_policy_extra": "空の場合はグローバル AI 設定に従います。",
       "follow_global": "グローバル設定に従う"
@@ -1515,6 +1638,22 @@
     "name_required": "グループ名は必須です",
     "parent": "親グループ",
     "parent_placeholder": "親グループを選択してください"
+  },
+  "network_proxy": {
+    "setting": "プロキシサーバー",
+    "protocol": "プロキシプロトコル",
+    "address": "プロキシアドレス",
+    "host": "ホスト",
+    "port": "ポート",
+    "username": "ユーザー名",
+    "password": "パスワード",
+    "connection_test": "接続テスト",
+    "target_address": "接続先アドレス",
+    "target_required": "接続先ホストとポートを入力してください",
+    "test": "接続テスト",
+    "test_success": "プロキシ接続テストに成功しました",
+    "test_failed": "プロキシ接続テストに失敗しました",
+    "delete_referenced_title": "使用中のプロキシサーバーは削除できません"
   },
   "gateway_group": {
     "name": "グループ名",
@@ -1652,7 +1791,11 @@
       "disable_password_login": "パスワードログインを無効化",
       "devices": "デバイス",
       "session": {
+        "login_session": "ログインセッション",
+        "session_count": "セッション数",
+        "client_certificate": "クライアント証明書",
         "duration": "セッション有効期間",
+        "browser_close_logout": "ブラウザを閉じたときにログアウト",
         "count_custom": "カスタムセッション数",
         "count_limit": "セッション数上限"
       },
@@ -1951,6 +2094,8 @@
       "wecom_app_to_user_required": "メッセージ受信者を入力してください",
       "wecom_app_to_user_placeholder": "受信者を入力、全員には @all",
       "recipients_required": "受信者を入力してください",
+      "access_document": "連携ドキュメント",
+      "enable_to_configure": "現在のチャネルは無効です。有効にすると設定を編集できます。",
       "test": "テスト",
       "test_success": "テスト通知を送信しました",
       "event_types_label": "イベントタイプ",
@@ -2168,6 +2313,7 @@
     "ai": {
       "setting": "AI アシスタント",
       "enabled": "AI アシスタントを有効化",
+      "asset_enable_tip": "グローバル AI を有効にした後、SSH アセットの「AI 設定」で「AI を有効化」を手動でオンにすると、ターミナルで AI アシスタントを使用できます。",
       "disclaimer_title": "AI アシスタント免責事項",
       "disclaimer_description": "AI アシスタントが生成する内容やコマンドには、誤り、欠落、誤解を招く内容、または危険な操作が含まれる可能性があります。有効化後は出力結果を自分で評価し、コマンドを実行する前に意図と影響を確認してください。AI アシスタントの利用により生じるリスクと結果は利用者が負担します。",
       "disclaimer_accepted": "リスクを理解しました",

@@ -8,9 +8,9 @@ import PublicView from "@/pages/assets/website-drawer/PublicView";
 import TempAllowView from "@/pages/assets/website-drawer/TempAllowView";
 import WebsiteBasicFields from "@/pages/assets/website-drawer/WebsiteBasicFields";
 import WebsiteModifyResponseView from "@/pages/assets/WebsiteModifyResponseView";
+import ConnectionView from "@/pages/assets/website-drawer/ConnectionView";
 import {
   getDefaultWebsiteData,
-  getWebsiteHeaders,
   normalizeOriginHostMode,
   normalizeOriginTimeout,
   WebsiteBasicFormData
@@ -64,7 +64,9 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
       const {scheme, host, port} = parseURL(website.targetUrl);
       const nextWebsiteData: Partial<WebsiteFormData> = {
         ...website,
-        gatewayChain: hasPremiumFeatures ? website.gatewayChain || [] : [],
+        connectionMode: website.connectionMode || 'direct',
+        gatewayChain: website.gatewayChain || [],
+        gatewaySource: website.gatewayChain?.length ? 'custom' : 'inherit',
         originHostMode: normalizeOriginHostMode(website.originHostMode),
         originHostCustom: website.originHostCustom || '',
         originTimeout: normalizeOriginTimeout(website.originTimeout),
@@ -93,7 +95,7 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
   };
 
   const postOrUpdate = async (values: WebsiteBasicFormData) => {
-    const {originHostMode, originHostCustom, ...restValues} = values;
+    const {originHostMode, originHostCustom, gatewaySource: _gatewaySource, ...restValues} = values;
     const defaults = getDefaultWebsiteData();
     const publicExpiredAt = values.public?.expiredAt;
     const submitTempAllow = {
@@ -108,43 +110,27 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
       expiredAt: values.public?.timeLimit && publicExpiredAt && dayjs.isDayjs(publicExpiredAt)
         ? publicExpiredAt.valueOf()
         : 0,
-      countries: hasPremiumFeatures ? values.public?.countries || [] : [],
-      provinces: hasPremiumFeatures ? values.public?.provinces || [] : [],
-      cities: hasPremiumFeatures ? values.public?.cities || [] : []
+      countries: values.public?.countries ?? websiteData?.public?.countries ?? [],
+      provinces: values.public?.provinces ?? websiteData?.public?.provinces ?? [],
+      cities: values.public?.cities ?? websiteData?.public?.cities ?? []
     };
     const submitData: any = {
       ...websiteData,
       ...restValues,
-      gatewayChain: hasPremiumFeatures ? restValues.gatewayChain || [] : [],
+      gatewayChain: restValues.gatewayChain ?? websiteData?.gatewayChain ?? [],
       cert: values.cert || websiteData?.cert || defaults.cert,
       public: submitPublic,
       tempAllow: submitTempAllow,
-      headers: getWebsiteHeaders(websiteData, values),
+      headers: values.headers ?? [],
       originHostMode,
       originHostCustom: originHostMode === 'custom' ? originHostCustom : '',
+      insecureSkipVerify: values.scheme === 'https' ? values.insecureSkipVerify ?? false : false,
       modifyRules: values.modifyRules || websiteData?.modifyRules || [],
       targetUrl: `${values.scheme}://${values.host}:${values.port}`,
     };
 
     if (id) {
-      await websiteApi.updateBasic(id, {
-        logo: submitData.logo,
-        name: submitData.name,
-        domain: submitData.domain,
-        entrance: submitData.entrance,
-        targetUrl: submitData.targetUrl,
-        groupId: submitData.groupId,
-        gatewayChain: submitData.gatewayChain,
-        originHostMode: submitData.originHostMode,
-        originHostCustom: submitData.originHostCustom,
-        originTimeout: submitData.originTimeout,
-        headers: submitData.headers
-      });
-      await websiteApi.updatePublic(id, {public: submitData.public});
-      await websiteApi.updateTempAllow(id, {tempAllow: submitData.tempAllow});
-      await websiteApi.updateHeaders(id, {headers: submitData.headers});
-      await websiteApi.updateCert(id, {cert: submitData.cert});
-      await websiteApi.updateModifyResponse(id, {modifyRules: submitData.modifyRules});
+      await websiteApi.updateById(id, submitData);
       return undefined;
     }
     return await websiteApi.create(submitData);
@@ -181,6 +167,12 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
       key: 'basic',
       label: t('assets.general'),
       children: <WebsiteBasicFields showLogo={true}/>,
+      forceRender: true
+    },
+    {
+      key: 'connection',
+      label: t('assets.connection'),
+      children: <ConnectionView/>,
       forceRender: true
     },
     {

@@ -11,7 +11,7 @@ import { useMutation,useQuery } from "@tanstack/react-query";
 import { Button,ConfigProvider,Divider,Form,Input,Select,Space,Spin,Typography } from "antd";
 import i18n from "i18next";
 import { LanguagesIcon,Moon,Sun } from "lucide-react";
-import { useEffect,useRef,useState } from 'react';
+import { useEffect,useState } from 'react';
 import { useTranslation } from "react-i18next";
 import { useNavigate,useSearchParams } from "react-router-dom";
 import accountApi,{ LoginResult,LoginStatus } from "../../api/account-api";
@@ -27,8 +27,7 @@ export enum LoginStep {
 const LoginPage = () => {
     const [optForm] = Form.useForm();
     let {t} = useTranslation();
-    const themeToggleRef = useRef<HTMLButtonElement>(null);
-    const {isDarkMode, toggleDarkMode} = useThemeToggle(themeToggleRef);
+    const {isDarkMode, toggleDarkMode} = useThemeToggle();
     const [ntTheme] = useNTTheme();
 
     const [step, setStep] = useState<LoginStep>(LoginStep.Default);
@@ -357,7 +356,6 @@ const LoginPage = () => {
 
                     <div className={'absolute top-8 right-8 flex items-center gap-2'}>
                         <button
-                            ref={themeToggleRef}
                             type="button"
                             onClick={() => toggleDarkMode(!isDarkMode)}
                             className="h-8 w-8 rounded-md border border-slate-200/60 bg-white/80 text-slate-700 transition-colors hover:bg-white dark:border-slate-700/60 dark:bg-slate-900/70 dark:text-slate-100 dark:hover:bg-slate-900"

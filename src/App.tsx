@@ -21,6 +21,7 @@ const WechatWorkCallback = lazy(() => import("@/pages/account/WechatWorkCallback
 const OidcCallback = lazy(() => import("@/pages/account/OidcCallback"));
 const OidcServerConsent = lazy(() => import("@/pages/account/OidcServerConsent"));
 const OAuthConsent = lazy(() => import("@/pages/account/OAuthConsent"));
+const AssetAuthorizationPage = lazy(() => import("@/pages/access/AssetAuthorizationPage"));
 const StandaloneAssetAccessPage = lazy(() => import("@/pages/access/StandaloneAssetAccessPage"));
 const UserPage = lazy(() => import("@/pages/identity/UserPage"));
 const UserDetailPage = lazy(() => import("@/pages/identity/UserDetailPage"));
@@ -31,9 +32,10 @@ const DepartmentDetail = lazy(() => import("@/pages/identity/DepartmentDetail"))
 const RolePage = lazy(() => import("@/pages/identity/RolePage"));
 const RoleDetail = lazy(() => import("@/pages/identity/RoleDetail"));
 const LoginLockedPage = lazy(() => import("@/pages/identity/LoginLockedPage"));
-const LoginPolicyPage = lazy(() => import("@/pages/identity/LoginPolicyPage"));
-const LoginPolicyPostPage = lazy(() => import("@/pages/identity/LoginPolicyPostPage"));
-const LoginPolicyDetailPage = lazy(() => import("@/pages/identity/LoginPolicyDetailPage"));
+const AccessPolicyPage = lazy(() => import("@/pages/identity/AccessPolicyPage"));
+const AccessPolicyPostPage = lazy(() => import("@/pages/identity/AccessPolicyPostPage"));
+const AccessPolicyDetailPage = lazy(() => import("@/pages/identity/AccessPolicyDetailPage"));
+const AccessPolicyRulePostPage = lazy(() => import("@/pages/identity/AccessPolicyRulePostPage"));
 const OidcClientPage = lazy(() => import("@/pages/identity/OidcClientPage"));
 const AssetsPage = lazy(() => import("@/pages/assets/AssetPage"));
 const DatabaseAssetPage = lazy(() => import("@/pages/assets/DatabaseAssetPage"));
@@ -64,6 +66,7 @@ const DatabaseSQLLogPage = lazy(() => import("@/pages/dbproxy/DatabaseSQLLogPage
 const SshGatewayPage = lazy(() => import("@/pages/gateway/SshGatewayPage"));
 const AgentGatewayPage = lazy(() => import("@/pages/gateway/AgentGatewayPage"));
 const GatewayGroupPage = lazy(() => import("@/pages/gateway/GatewayGroupPage"));
+const NetworkProxyPage = lazy(() => import("@/pages/gateway/NetworkProxyPage"));
 const ErrorPage = lazy(() => import("@/components/ErrorPage"));
 const StoragePage = lazy(() => import("@/pages/assets/StoragePage"));
 const WebsitePage = lazy(() => import("@/pages/assets/WebsitePage"));
@@ -84,15 +87,18 @@ const DatabaseWorkOrderUserPage = lazy(() => import("@/pages/facade/DatabaseWork
 const AccessRequestPage = lazy(() => import("@/pages/accessrequest/AccessRequestPage"));
 const AccessRequestUserPage = lazy(() => import("@/pages/facade/AccessRequestUserPage"));
 const GlobalAIPage = lazy(() => import("@/pages/ai/GlobalAIPage"));
+const AccessDeniedPage = lazy(() => import("@/pages/identity/AccessDeniedPage"));
 
 const router = createBrowserRouter([
     {path: "/setup", element: <SetupPage/>},
     {path: "/access", element: <AccessPage/>},
     {path: "/login", element: <LoginPage/>},
+    {path: "/access-denied", element: <AccessDeniedPage/>},
     {path: "/wechat-work/callback", element: <WechatWorkCallback/>},
     {path: "/oidc/callback", element: <OidcCallback/>},
     {path: "/oidc/server/consent", element: <OidcServerConsent/>},
     {path: "/oauth/consent", element: <OAuthConsent/>},
+    {path: "/asset-authorization", element: <AssetAuthorizationPage/>},
     {path: "/terminal-playback", element: <TerminalPlayback/>},
     {path: "/terminal-monitor", element: <TerminalMonitor/>},
     {path: "/graphics-playback", element: <GuacdPlayback/>},
@@ -125,9 +131,10 @@ const router = createBrowserRouter([
             {path: "/department", element: <DepartmentPage/>},
             {path: "/department/:departmentId", element: <DepartmentDetail/>},
             {path: "/login-locked", element: <LoginLockedPage/>},
-            {path: "/login-policy", element: <LoginPolicyPage/>},
-            {path: "/login-policy/new", element: <LoginPolicyPostPage/>},
-            {path: "/login-policy/:loginPolicyId", element: <LoginPolicyDetailPage/>},
+            {path: "/access-policy", element: <AccessPolicyPage/>},
+            {path: "/access-policy/new", element: <AccessPolicyPostPage/>},
+            {path: "/access-policy/:groupId/rules/new", element: <AccessPolicyRulePostPage/>},
+            {path: "/access-policy/:groupId", element: <AccessPolicyDetailPage/>},
             {path: "/role", element: <RolePage/>},
             {path: "/role/:roleId", element: <RoleDetail/>},
             {path: "/oidc-client", element: <OidcClientPage/>},
@@ -170,6 +177,7 @@ const router = createBrowserRouter([
             {path: "/ssh-gateway", element: <SshGatewayPage/>},
             {path: "/agent-gateway", element: <AgentGatewayPage/>},
             {path: "/gateway-group", element: <GatewayGroupPage/>},
+            {path: "/network-proxy", element: <NetworkProxyPage/>},
 
             {path: "/setting", element: <SettingPage/>},
             {path: "/info", element: <InfoPage/>},

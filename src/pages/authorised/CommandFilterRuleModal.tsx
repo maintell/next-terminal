@@ -69,7 +69,10 @@ const CommandFilterRuleModal = ({
                 <Form.Item label={t('authorised.command_filter.rule.match_content')} name='command' rules={[{
         required: true
       }]}>
-    <Input />
+    <Input.TextArea rows={4} />
+      </Form.Item>
+                <Form.Item label={t('general.remark')} name='remark'>
+    <Input.TextArea rows={3} />
       </Form.Item>
                 <Form.Item label={t('identity.policy.action.label')} name='action' rules={[{
         required: true

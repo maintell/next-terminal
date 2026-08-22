@@ -1,4 +1,4 @@
-import React, {RefObject} from 'react';
+import React from 'react';
 import {Breadcrumb, Button, Dropdown, MenuProps, Select, Switch} from 'antd';
 import {DownOutlined, MenuOutlined, MoonOutlined, SunOutlined} from '@ant-design/icons';
 import {LanguagesIcon, LaptopIcon} from 'lucide-react';
@@ -12,7 +12,6 @@ interface LayoutHeaderProps {
     onMobileMenuOpen: () => void;
     isDarkMode: boolean;
     onThemeToggle: (isDark: boolean) => void;
-    themeToggleRef: RefObject<HTMLButtonElement | null>;
     userInfo?: any;
     dropMenus: MenuProps['items'];
 }
@@ -27,7 +26,6 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = ({
     onMobileMenuOpen,
     isDarkMode,
     onThemeToggle,
-    themeToggleRef,
     userInfo,
     dropMenus,
 }) => {
@@ -89,7 +87,6 @@ const LayoutHeader: React.FC<LayoutHeaderProps> = ({
 
                 {/* 主题切换 */}
                 <Switch
-                    ref={themeToggleRef}
                     checkedChildren={<MoonOutlined/>}
                     unCheckedChildren={<SunOutlined/>}
                     checked={isDarkMode}

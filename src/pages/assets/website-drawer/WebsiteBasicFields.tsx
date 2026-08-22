@@ -1,11 +1,10 @@
 import React from 'react';
-import {Button, Form, Input, InputNumber, message, Radio, Select} from "antd";
+import {Button, Form, Input, InputNumber, message, Radio, Select, Switch} from "antd";
 import {useMutation} from "@tanstack/react-query";
 import {useTranslation} from "react-i18next";
 import {RefreshCwIcon} from "lucide-react";
 import ProFormTreeSelect from "@/components/ProFormTreeSelect";
 import websiteApi from "@/api/website-api";
-import GatewayView from "@/pages/assets/website-drawer/GatewayView";
 import LogoSelector from "@/pages/assets/components/LogoSelector";
 
 interface WebsiteBasicFieldsProps {
@@ -141,6 +140,17 @@ const WebsiteBasicFields: React.FC<WebsiteBasicFieldsProps> = ({
                 </div>
             </div>
 
+            {scheme === 'https' && (
+                <Form.Item
+                    label={t('assets.insecure_skip_verify')}
+                    name="insecureSkipVerify"
+                    valuePropName="checked"
+                    extra={t('assets.insecure_skip_verify_tip')}
+                >
+                    <Switch/>
+                </Form.Item>
+            )}
+
             <Form.Item label={t('assets.origin_host')} name="originHostMode" rules={[{required: true}]}>
                 <Radio.Group
                     optionType="button"
@@ -176,8 +186,6 @@ const WebsiteBasicFields: React.FC<WebsiteBasicFieldsProps> = ({
             >
                 <InputNumber precision={0} min={1} max={3600} addonAfter={t('general.second')} style={{width: "100%"}}/>
             </Form.Item>
-
-            <GatewayView/>
         </>
     );
 };

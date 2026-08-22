@@ -16,6 +16,7 @@ import {
     Message,
     MessageTypeAuthPrompt,
     MessageTypeAuthReply,
+    MessageTypeBinaryData,
     MessageTypeData,
     MessageTypeDirChanged,
     MessageTypeError,
@@ -25,6 +26,7 @@ import {
     MessageTypeResize
 } from "@/pages/access/Terminal";
 import {normalizeTerminalBackspace} from "@/pages/access/terminal-backspace";
+import {ZmodemController} from "@/pages/access/lrzsz/zmodemController";
 import {MOBILE_TOOL_DRAWER_SIZE} from "@/pages/access/terminal-tool-drawer";
 import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
 import {debounce} from "@/utils/debounce";
@@ -38,11 +40,13 @@ import "@xterm/xterm/css/xterm.css";
 import {App} from "antd";
 import clsx from "clsx";
 import copy from "copy-to-clipboard";
+import {Base64} from "js-base64";
 import {
     ActivityIcon,
     ChevronDownIcon,
     ChevronUpIcon,
     EraserIcon,
+    FileUpIcon,
     FolderCode,
     FolderIcon,
     SearchIcon,
@@ -89,14 +93,20 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
     const searchRef = useRef<SearchAddon>(null);
     const webglRef = useRef<WebglAddon>(null);
     const canvasRef = useRef<CanvasAddon>(null);
+    const zmodemControllerRef = useRef<ZmodemController>(null);
     const rootRef = useRef<HTMLDivElement>(null);
     const mobileTopControlsRef = useRef<HTMLDivElement>(null);
     const mobileBottomControlsRef = useRef<HTMLDivElement>(null);
+    const zmodemUploadInputRef = useRef<HTMLInputElement>(null);
     const hasConnectedRef = useRef(false);
 
     let websocketRef = useRef<WebSocket>(null); // 使用 ref 来存储 websocket
     let [session, setSession] = useState<ExportSession>();
     const aiEnabled = session?.attrs?.['ai-enabled'] === true;
+    const restrictedShell = session?.attrs?.['restricted-shell'] === true;
+    const fileSystemEnabled = session?.fileSystem === true && !restrictedShell;
+    const statsEnabled = Boolean(session?.id) && !restrictedShell;
+    const zmodemUploadEnabled = session?.protocol?.toLowerCase() === 'ssh' && !session.readonly && !restrictedShell;
 
     let [accessTheme] = useTerminalTheme();
     let [accessTab] = useAccessTab();
@@ -143,6 +153,17 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         }
     }, [aiEnabled]);
 
+    useEffect(() => {
+        if (!fileSystemEnabled) {
+            setFileSystemOpen(false);
+            setPreFileSystemOpen(false);
+            setMobileToolDrawer((current) => current === 'fileSystem' ? null : current);
+        }
+        if (!statsEnabled) {
+            setStatsOpen(false);
+        }
+    }, [fileSystemEnabled, statsEnabled]);
+
     // 获取访问设置
     useEffect(() => {
         const fetchAccessSetting = async () => {
@@ -171,11 +192,11 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                 terminalRef.current?.focus();
             }, 100);
             fitFit();
-            setFileSystemOpen(preFileSystemOpen)
+            setFileSystemOpen(fileSystemEnabled && preFileSystemOpen)
         } else {
             setFileSystemOpen(false);
         }
-    }, [active, preFileSystemOpen]);
+    }, [active, fileSystemEnabled, preFileSystemOpen]);
 
     useEffect(() => {
         if (accessTheme && terminalRef) {
@@ -338,6 +359,8 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         term.focus();
 
         return () => {
+            zmodemControllerRef.current?.dispose();
+            zmodemControllerRef.current = null;
             term.dispose();
             fitAddon.dispose();
             webglAddon?.dispose();
@@ -396,6 +419,31 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
             return;
         }
 
+        zmodemControllerRef.current?.dispose();
+        zmodemControllerRef.current = new ZmodemController({
+            terminal,
+            messageApi: message,
+            enabled: session.protocol.toLowerCase() === 'ssh',
+            disabledMessage: t('access.terminal.zmodem.ssh_only'),
+            sendBytes: (data) => {
+                const ws = websocketRef.current;
+                if (ws?.readyState === WebSocket.OPEN) {
+                    ws.send(new Message(MessageTypeBinaryData, Base64.fromUint8Array(data)).toString());
+                }
+            },
+            texts: {
+                saveDialogTitle: t('access.terminal.zmodem.save_dialog_title'),
+                uploadSkippedTitle: t('access.terminal.zmodem.upload_skipped_title'),
+                uploadSkippedDescription: (fileName) => t('access.terminal.zmodem.upload_skipped_description', {fileName}),
+                downloadCompleteTitle: t('access.terminal.zmodem.download_complete_title'),
+                progressUploadingTitle: t('access.terminal.zmodem.progress_uploading_title'),
+                progressDownloadingTitle: t('access.terminal.zmodem.progress_downloading_title'),
+                uploadNoRzResponse: t('access.terminal.zmodem.upload_no_rz_response'),
+                uploadTransferActive: t('access.terminal.zmodem.upload_transfer_active'),
+                uploadNoFiles: t('access.terminal.zmodem.upload_no_files'),
+            },
+        });
+
         let cols = terminal.cols;
         let rows = terminal.rows;
         let params = {
@@ -445,7 +493,10 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                     websocketRef.current?.close();
                     break;
                 case MessageTypeData:
-                    terminal.write(msg.content);
+                    zmodemControllerRef.current?.consume(new TextEncoder().encode(msg.content));
+                    break;
+                case MessageTypeBinaryData:
+                    zmodemControllerRef.current?.consume(Base64.toUint8Array(msg.content));
                     break;
                 case MessageTypeJoin:
                     notification.success({
@@ -462,7 +513,9 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                     })
                     break;
                 case MessageTypeDirChanged:
-                    onDirChanged(msg.content);
+                    if (session.attrs?.['sftp-directory-follow'] !== false) {
+                        onDirChanged(msg.content);
+                    }
                     break;
                 case MessageTypeAuthPrompt:
                     // 收到认证提示，根据内容决定提示什么
@@ -830,6 +883,35 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         terminalRef.current?.focus();
     };
 
+    const handleZmodemUpload = (files: FileList | null) => {
+        const uploadFiles = files ? Array.from(files) : [];
+        const input = zmodemUploadInputRef.current;
+        if (input) {
+            input.value = '';
+        }
+        if (uploadFiles.length === 0) {
+            return;
+        }
+
+        const controller = zmodemControllerRef.current;
+        const ws = websocketRef.current;
+        if (!controller || ws?.readyState !== WebSocket.OPEN) {
+            void message.warning(t('access.terminal.zmodem.not_connected'));
+            return;
+        }
+        if (!controller.prepareUploadFiles(uploadFiles)) {
+            return;
+        }
+        try {
+            ws.send(new Message(MessageTypeData, 'rz\r').toString());
+            terminalRef.current?.focus();
+        } catch (error) {
+            controller.cancelPendingUploadFiles();
+            console.error('Failed to start ZMODEM upload:', error);
+            void message.error(t('access.terminal.zmodem.start_upload_failed'));
+        }
+    };
+
     const handleMobileShortcutPointerDown = (event: React.PointerEvent<HTMLButtonElement>, data: string) => {
         event.preventDefault();
         sendTerminalData(data);
@@ -977,6 +1059,16 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                                                 >
                                                     <Share2Icon className="h-4 w-4"/>
                                                 </button>
+                                                {zmodemUploadEnabled && (
+                                                    <button
+                                                        type="button"
+                                                        title={t('access.terminal.zmodem.upload_file')}
+                                                        className="flex h-7 w-7 items-center justify-center rounded bg-white/10 text-white transition-colors active:bg-white/20"
+                                                        onClick={() => zmodemUploadInputRef.current?.click()}
+                                                    >
+                                                        <FileUpIcon className="h-4 w-4"/>
+                                                    </button>
+                                                )}
                                                 {aiEnabled && (
                                                     <button
                                                         type="button"
@@ -987,14 +1079,16 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                                                         <SparklesIcon className="h-4 w-4"/>
                                                     </button>
                                                 )}
-                                                <button
-                                                    type="button"
-                                                    title="FileSystem"
-                                                    className="flex h-7 w-7 items-center justify-center rounded bg-white/10 text-white transition-colors active:bg-white/20"
-                                                    onClick={() => setMobileToolDrawer('fileSystem')}
-                                                >
-                                                    <FolderIcon className="h-4 w-4"/>
-                                                </button>
+                                                {fileSystemEnabled && (
+                                                    <button
+                                                        type="button"
+                                                        title="FileSystem"
+                                                        className="flex h-7 w-7 items-center justify-center rounded bg-white/10 text-white transition-colors active:bg-white/20"
+                                                        onClick={() => setMobileToolDrawer('fileSystem')}
+                                                    >
+                                                        <FolderIcon className="h-4 w-4"/>
+                                                    </button>
+                                                )}
                                                 <button
                                                     type="button"
                                                     title={t('menus.resource.submenus.snippet')}
@@ -1067,7 +1161,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                         </div>
                     </ResizablePanel>
                     {
-                        statsOpen && <>
+                        statsEnabled && statsOpen && <>
                             <ResizableHandle withHandle/>
                             <ResizablePanel
                                 defaultSize={22}
@@ -1119,6 +1213,14 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                                 <EraserIcon className={'h-4 w-4'} onClick={handleClearTerminal}/>
                             </div>
                             <Share2Icon className={'h-4 w-4'} onClick={() => setSharerOpen(true)}/>
+                            {zmodemUploadEnabled && (
+                                <div title={t('access.terminal.zmodem.upload_file')}>
+                                    <FileUpIcon
+                                        className={'h-4 w-4'}
+                                        onClick={() => zmodemUploadInputRef.current?.click()}
+                                    />
+                                </div>
+                            )}
                             {aiEnabled && (
                                 <SparklesIcon className={clsx('h-4 w-4', aiOpen && 'text-blue-500')}
                                               onClick={() => {
@@ -1127,16 +1229,20 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                                               }}
                                 />
                             )}
-                            <FolderIcon className={'h-4 w-4'} onClick={() => {
-                                setFileSystemOpen(true);
-                                setPreFileSystemOpen(true);
-                            }}/>
-                            <ActivityIcon className={clsx('h-4 w-4', statsOpen && 'text-blue-500')}
-                                          onClick={() => {
-                                              setAiOpen(false);
-                                              setStatsOpen(!statsOpen);
-                                          }}
-                            />
+                            {fileSystemEnabled && (
+                                <FolderIcon className={'h-4 w-4'} onClick={() => {
+                                    setFileSystemOpen(true);
+                                    setPreFileSystemOpen(true);
+                                }}/>
+                            )}
+                            {statsEnabled && (
+                                <ActivityIcon className={clsx('h-4 w-4', statsOpen && 'text-blue-500')}
+                                              onClick={() => {
+                                                  setAiOpen(false);
+                                                  setStatsOpen(!statsOpen);
+                                              }}
+                                />
+                            )}
                             <FolderCode className={'h-4 w-4'} onClick={() => setSnippetOpen(true)}/>
                         </div>
                     </div>
@@ -1179,21 +1285,23 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                 />
             )}
 
-            <FileSystemPage fsId={session?.id ?? ''}
-                            strategy={session?.strategy}
-                            open={isMobile ? mobileToolDrawer === 'fileSystem' : fileSystemOpen}
-                            placement={isMobile ? 'bottom' : 'right'}
-                            size={isMobile ? MOBILE_TOOL_DRAWER_SIZE : 720}
-                            mask={false}
-                            maskClosable={false}
-                            onClose={() => {
-                                setMobileToolDrawer(null);
-                                setFileSystemOpen(false)
-                                setPreFileSystemOpen(false);
-                            }}
-                            ref={fsRef}
-                            getContainer={drawerGetContainer}
-            />
+            {fileSystemEnabled && (
+                <FileSystemPage fsId={session?.id ?? ''}
+                                strategy={session?.strategy}
+                                open={isMobile ? mobileToolDrawer === 'fileSystem' : fileSystemOpen}
+                                placement={isMobile ? 'bottom' : 'right'}
+                                size={isMobile ? MOBILE_TOOL_DRAWER_SIZE : 720}
+                                mask={false}
+                                maskClosable={false}
+                                onClose={() => {
+                                    setMobileToolDrawer(null);
+                                    setFileSystemOpen(false)
+                                    setPreFileSystemOpen(false);
+                                }}
+                                ref={fsRef}
+                                getContainer={drawerGetContainer}
+                />
+            )}
 
             <MultiFactorAuthentication
                 open={mfaOpen}
@@ -1202,6 +1310,13 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                     connect(securityToken);
                 }}
                 handleCancel={() => setMfaOpen(false)}
+            />
+            <input
+                ref={zmodemUploadInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(event) => handleZmodemUpload(event.target.files)}
             />
         </div>
     );

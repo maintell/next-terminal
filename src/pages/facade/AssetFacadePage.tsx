@@ -13,6 +13,7 @@ import {getProtocolColor} from "@/helper/asset-helper";
 import FacadeLogo from "@/pages/facade/components/FacadeLogo";
 import {ExternalLink, FileDown, LayoutGrid, List} from "lucide-react";
 import {browserDownload} from "@/utils/utils";
+import MultiFactorAuthentication from '@/pages/account/MultiFactorAuthentication';
 
 type AssetViewMode = 'list' | 'card';
 
@@ -38,6 +39,8 @@ const AssetFacadePage = () => {
     let [selectedGroupKey, setSelectedGroupKey] = useState<string>('');
     let [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
     let [viewMode, setViewMode] = useState<AssetViewMode>(getInitialAssetViewMode);
+    const [rdpMfaOpen, setRdpMfaOpen] = useState(false);
+    const [pendingRdpAssetId, setPendingRdpAssetId] = useState('');
 
     let queryAssets = useQuery({
         queryKey: ['my-assets'],
@@ -59,14 +62,24 @@ const AssetFacadePage = () => {
     });
 
     const createRdpProxyTicketMutation = useMutation({
-        mutationFn: (assetId: string) => portalApi.createRdpProxyTicket(assetId),
+        mutationFn: ({assetId, securityToken}: {assetId: string; securityToken?: string}) =>
+            portalApi.createRdpProxyTicket(assetId, securityToken),
         onSuccess: (ticket) => {
             browserDownload(ticket.rdpFileUrl);
         },
         onError: (error: any) => {
+            if (error?.code === 10027) {
+                setRdpMfaOpen(true);
+                return;
+            }
             message.error(error?.message || t('general.failed'));
         }
     });
+
+    const handleRdpProxyAccess = (assetId: string) => {
+        setPendingRdpAssetId(assetId);
+        createRdpProxyTicketMutation.mutate({assetId});
+    };
 
     useEffect(() => {
         if (queryAssets.data) {
@@ -149,7 +162,7 @@ const AssetFacadePage = () => {
         const isInactive = item.status === 'inactive';
         const hasUsers = item.users && item.users.length > 0;
         const isRdpAsset = item.protocol?.toLowerCase() === 'rdp';
-        const isCreatingRdpProxyTicket = createRdpProxyTicketMutation.isPending && createRdpProxyTicketMutation.variables === item.id;
+        const isCreatingRdpProxyTicket = createRdpProxyTicketMutation.isPending && createRdpProxyTicketMutation.variables?.assetId === item.id;
 
         return (
             <div
@@ -220,7 +233,7 @@ const AssetFacadePage = () => {
                             type="button"
                             disabled={isCreatingRdpProxyTicket}
                             onClick={() => {
-                                createRdpProxyTicketMutation.mutate(item.id);
+                                handleRdpProxyAccess(item.id);
                             }}
                             className={'hidden cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs text-slate-400 transition-colors hover:text-[#1A73E8] disabled:cursor-not-allowed disabled:opacity-50 sm:flex'}
                         >
@@ -246,7 +259,7 @@ const AssetFacadePage = () => {
         const isInactive = item.status === 'inactive';
         const hasUsers = item.users && item.users.length > 0;
         const isRdpAsset = item.protocol?.toLowerCase() === 'rdp';
-        const isCreatingRdpProxyTicket = createRdpProxyTicketMutation.isPending && createRdpProxyTicketMutation.variables === item.id;
+        const isCreatingRdpProxyTicket = createRdpProxyTicketMutation.isPending && createRdpProxyTicketMutation.variables?.assetId === item.id;
 
         return (
             <div
@@ -322,7 +335,7 @@ const AssetFacadePage = () => {
                             type="button"
                             disabled={isCreatingRdpProxyTicket}
                             onClick={() => {
-                                createRdpProxyTicketMutation.mutate(item.id);
+                                handleRdpProxyAccess(item.id);
                             }}
                             className={'flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs text-slate-400 transition-colors hover:text-[#1A73E8] disabled:cursor-not-allowed disabled:opacity-50'}
                         >
@@ -422,6 +435,17 @@ const AssetFacadePage = () => {
                     )}
                 </div>
             </div>
+            <MultiFactorAuthentication
+                open={rdpMfaOpen}
+                handleOk={(securityToken) => {
+                    setRdpMfaOpen(false);
+                    createRdpProxyTicketMutation.mutate({assetId: pendingRdpAssetId, securityToken});
+                }}
+                handleCancel={() => {
+                    setRdpMfaOpen(false);
+                    setPendingRdpAssetId('');
+                }}
+            />
         </div>
     );
 };

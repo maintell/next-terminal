@@ -2,11 +2,10 @@ import websiteApi, {SortPositionRequest, Website} from "@/api/website-api";
 import DraggableTable, {DragHandle} from "@/components/DraggableTable";
 import NButton from "@/components/NButton";
 import {getImgColor} from "@/helper/asset-helper";
-import {useLicense} from "@/hook/LicenseContext";
 import {useMobile} from "@/hook/use-mobile";
 import {cn} from "@/lib/utils";
 import WebsiteDrawer from "@/pages/assets/WebsiteDrawer";
-import WebsiteGatewayChoose from "@/pages/assets/WebsiteGatewayChoose";
+import WebsiteBatchEditDrawer from "@/pages/assets/WebsiteBatchEditDrawer";
 import WebsiteGroupDrawer from "@/pages/assets/WebsiteGroupDrawer";
 import {getSort} from "@/utils/sort";
 import {useMutation, useQuery} from "@tanstack/react-query";
@@ -32,8 +31,6 @@ const WebsitePage = () => {
     const {isMobile} = useMobile();
     const {t} = useTranslation();
     const {message, modal} = App.useApp();
-    const {license, isLoading: licenseLoading} = useLicense();
-    const hasPremiumFeatures = !licenseLoading && license.hasPremiumFeatures();
     let [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
     let [groupId, setGroupId] = useState('');
     let [dataSource, setDataSource] = useState<Website[]>([]);
@@ -41,7 +38,7 @@ const WebsitePage = () => {
     let [sort, setSort] = useState<Record<string, string | null>>({});
     let [keyword, setKeyword] = useState('');
     const [groupDrawerOpen, setGroupDrawerOpen] = useState<boolean>(false);
-    const [gatewayChooserOpen, setGatewayChooserOpen] = useState<boolean>(false);
+    const [batchEditorOpen, setBatchEditorOpen] = useState<boolean>(false);
     const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>('');
     let [params, setParams] = useState<PostParams>({
         open: false,
@@ -290,6 +287,21 @@ const WebsitePage = () => {
             }
         },
         {
+            title: t('assets.connection_mode'),
+            dataIndex: 'connectionMode',
+            hidden: isMobile,
+            width: 110,
+            render: (mode: Website['connectionMode']) => {
+                if (mode === 'gateway') {
+                    return <Tag color="blue">{t('assets.connection_gateway')}</Tag>;
+                }
+                if (mode === 'proxy') {
+                    return <Tag color="purple">{t('assets.connection_proxy')}</Tag>;
+                }
+                return <Tag>{t('assets.connection_direct')}</Tag>;
+            }
+        },
+        {
             title: t('general.created_at'),
             key: 'createdAt',
             dataIndex: 'createdAt',
@@ -375,15 +387,13 @@ const WebsitePage = () => {
                 >
                     {t('assets.change_group')}
                 </NButton>
-                {hasPremiumFeatures && (
-                    <NButton
-                        onClick={() => {
-                            setGatewayChooserOpen(true);
-                        }}
-                    >
-                        {t('assets.change_gateway')}
-                    </NButton>
-                )}
+                <NButton
+                    onClick={() => {
+                        setBatchEditorOpen(true);
+                    }}
+                >
+                    {t('assets.website_batch_edit.title')}
+                </NButton>
             </Space>
         </div>
     );
@@ -528,11 +538,12 @@ const WebsitePage = () => {
             }}
         />
 
-        <WebsiteGatewayChoose
-            resourceIds={selectedRowKeys}
-            open={gatewayChooserOpen}
-            onClose={() => {
-                setGatewayChooserOpen(false);
+        <WebsiteBatchEditDrawer
+            websiteIds={selectedRowKeys}
+            open={batchEditorOpen}
+            onClose={() => setBatchEditorOpen(false)}
+            onSuccess={() => {
+                setBatchEditorOpen(false);
                 setSelectedRowKeys([]);
                 websitePagingQuery.refetch();
             }}

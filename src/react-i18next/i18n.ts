@@ -10,6 +10,7 @@ i18n
     .use(initReactI18next) // 绑定 react-i18next 实例到 react
     .init({
         resources,
+        supportedLngs: Object.keys(resources),
         fallbackLng: "en-US",
         debug: isDev,
         saveMissing: isDev,

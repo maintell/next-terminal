@@ -1,4 +1,5 @@
 import { baseUrl } from "@/api/core/requests";
+import accountApi from "@/api/account-api";
 import fileSystemApi,{ FileInfo } from "@/api/filesystem-api";
 import { Strategy } from "@/api/strategy-api";
 import PromptModal from "@/components/PromptModal";
@@ -6,8 +7,11 @@ import { useLicense } from "@/hook/LicenseContext";
 import { cn } from "@/lib/utils";
 import FileEditor from "@/pages/access/FileEditor";
 import { useFileEditor } from "@/pages/access/hooks/use-file-editor";
+import UploadTaskDrawer from "@/pages/access/upload/UploadTaskDrawer";
+import {useUploadManager} from "@/pages/access/upload/UploadManagerProvider";
 import strings from "@/utils/strings";
-import { browserDownload,generateRandomId,isMobileByMediaQuery,renderSize } from "@/utils/utils";
+import {getCurrentUser} from "@/utils/permission";
+import { browserDownload,isMobileByMediaQuery,renderSize } from "@/utils/utils";
 import { EyeInvisibleOutlined,EyeOutlined,ReloadOutlined,SyncOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import type { DrawerProps } from "antd";
@@ -22,11 +26,9 @@ Input,
 MenuProps,
 message,
 Modal,
-Progress,
 Row,
 Space,
 Table,
-Tag,
 Tooltip
 } from "antd";
 import { ColumnsType } from "antd/es/table";
@@ -52,16 +54,11 @@ Shield,
 Trash2Icon,
 TrashIcon,
 Undo2,
-X,
-XCircle
 } from "lucide-react";
 import React,{
 forwardRef,
-useCallback,
 useEffect,
 useImperativeHandle,
-useMemo,
-useReducer,
 useRef,
 useState
 } from 'react';
@@ -92,23 +89,6 @@ interface Props {
     getContainer?: DrawerProps['getContainer']
 }
 
-interface TransmissionRecord {
-    id: string,
-    path: string,
-    name: string,
-    loaded: number,
-    size: number,
-    percent: number,
-    status: "preparing" | "uploading" | "transmitting" | "success" | "error" | "cancelled",
-    error: string,
-    speed: number,
-    xhr?: XMLHttpRequest,
-    intervalId?: NodeJS.Timeout,
-    file?: File,
-    dir?: string,
-}
-
-
 interface PromptState {
     type: "create-dir" | "create-file" | "rename" | "chmod" | undefined
     value: string
@@ -138,50 +118,6 @@ interface ImagePreviewState {
     open: boolean
     file?: FileInfo
     src: string
-}
-
-// 传输记录的 reducer
-type TransmissionAction =
-    | { type: 'ADD_RECORDS'; records: TransmissionRecord[] }
-    | { type: 'UPDATE_RECORD'; id: string; updates: Partial<TransmissionRecord> }
-    | { type: 'REMOVE_RECORD'; id: string }
-    | { type: 'CLEAR_COMPLETED' }
-    | { type: 'CANCEL_UPLOAD'; id: string };
-
-function transmissionReducer(state: TransmissionRecord[], action: TransmissionAction): TransmissionRecord[] {
-    switch (action.type) {
-        case 'ADD_RECORDS':
-            return [...state, ...action.records];
-        case 'UPDATE_RECORD':
-            return state.map(record =>
-                record.id === action.id ? {...record, ...action.updates} : record
-            );
-        case 'REMOVE_RECORD':
-            return state.filter(record => record.id !== action.id);
-        case 'CLEAR_COMPLETED':
-            // 清除已完成的记录，但保留上传中和传输中的
-            return state.filter(record =>
-                record.status === 'uploading' ||
-                record.status === 'transmitting' ||
-                record.status === 'preparing'
-            );
-        case 'CANCEL_UPLOAD':
-            return state.map(record => {
-                if (record.id === action.id) {
-                    // 取消上传
-                    if (record.xhr) {
-                        record.xhr.abort();
-                    }
-                    if (record.intervalId) {
-                        clearInterval(record.intervalId);
-                    }
-                    return {...record, status: 'cancelled' as const, speed: 0};
-                }
-                return record;
-            });
-        default:
-            return state;
-    }
 }
 
 const iconClassName = 'h-4 w-4'
@@ -280,10 +216,26 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [fileTableScrollY, setFileTableScrollY] = useState(240);
 
-    const [transmissionRecords, transmissionDispatch] = useReducer(transmissionReducer, []);
+    const {manager: uploadManager, tasks: uploadTasks} = useUploadManager();
+    const accountInfoQuery = useQuery({
+        queryKey: ['infoQuery'],
+        queryFn: accountApi.getUserInfo,
+        enabled: open && !getCurrentUser(),
+        staleTime: 5 * 60 * 1000,
+    });
+    const [fileTransmitterOpen, setFileTransmitterOpen] = useState(false);
+    const filesystemUploadTasks = uploadTasks.filter(task => task.fsId === fsId);
+    const activeUploadCount = filesystemUploadTasks.filter(task =>
+        task.status === 'queued' || task.status === 'retrying' || task.status === 'initializing' || task.status === 'uploading' || task.status === 'transmitting'
+    ).length;
+    const uploading = activeUploadCount > 0;
+    const uploadAccountReady = Boolean(getCurrentUser());
 
-    let [uploading, setUploading] = useState(false);
-    let [fileTransmitterOpen, setFileTransmitterOpen] = useState(false);
+    useEffect(() => {
+        if (accountInfoQuery.data) {
+            uploadManager.syncAccount();
+        }
+    }, [accountInfoQuery.data, uploadManager]);
 
     let [promptState, setPromptState] = useState<PromptState>({
         loading: false, value: "", open: false, type: undefined
@@ -313,15 +265,16 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
     let { license } = useLicense();
     const dragUploadHint = t('fs.drag_upload_hint');
     const dragUploadDisabledMessage = t('fs.drag_upload_disabled');
+    const uploadInitializingMessage = t('fs.upload_initializing');
 
     let editLabel = t('actions.edit');
     if (!license.hasPremiumFeatures()) {
         editLabel += ` (${t('settings.license.type.premium')})`;
     }
 
-    const getFileDownloadUrl = useCallback((filename: string) => {
+    const getFileDownloadUrl = (filename: string) => {
         return `${baseUrl()}/${fileSystemApi.group}/${fsId}/download?filename=${encodeURIComponent(filename)}`;
-    }, [fsId]);
+    };
 
     const items: MenuProps['items'] = [
         {
@@ -572,149 +525,6 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
         },
     ];
 
-    const handleRetryUpload = async (record: TransmissionRecord) => {
-        if (!record.file || !record.dir) {
-            return;
-        }
-
-        setUploading(true);
-        transmissionDispatch({
-            type: 'UPDATE_RECORD',
-            id: record.id,
-            updates: {
-                loaded: 0,
-                percent: 0,
-                status: 'preparing',
-                error: '',
-                speed: 0,
-                xhr: undefined,
-                intervalId: undefined,
-            }
-        });
-
-        try {
-            await uploadFile(record.id, record.file, record.dir, fsId);
-            filesQuery.refetch();
-        } finally {
-            setUploading(false);
-        }
-    };
-
-    const tranColumns: ColumnsType<TransmissionRecord> = [
-        {
-            title: t('audit.filename'),
-            dataIndex: 'name',
-            key: 'name',
-            ellipsis: true,
-            render: (text, record) => (
-                <Tooltip title={record.path}>
-                    {text}
-                </Tooltip>
-            ),
-        },
-        {
-            title: t('fs.attributes.size'),
-            dataIndex: 'size',
-            key: 'size',
-            render: (value, _item) => {
-                return renderSize(value);
-            },
-            width: 80,
-        },
-        {
-            title: t('general.status'),
-            dataIndex: 'status',
-            key: 'status',
-            render: (v, item) => {
-                switch (v) {
-                    case 'preparing':
-                        return <Tag color={'default'}>{t('fs.transmission.options.preparing')}</Tag>;
-                    case 'uploading':
-                        return <Tag color={'processing'}>{t('fs.transmission.options.uploading')}</Tag>;
-                    case 'transmitting':
-                        return <Tag color={'processing'}>{t('fs.transmission.options.transmitting')}</Tag>;
-                    case 'success':
-                        return <Tag color={'success'}>{t('fs.transmission.options.upload_success')}</Tag>
-                    case 'cancelled':
-                        return <Tag color={'warning'}>{t('fs.transmission.options.cancelled')}</Tag>
-                    case 'error':
-                        return <Tooltip title={item.error}>
-                            <Tag color={'error'}>{t('fs.transmission.options.upload_failed')}</Tag>
-                        </Tooltip>
-                }
-            },
-            width: 100,
-        },
-        {
-            title: t('fs.transmission.progress'),
-            dataIndex: 'percent',
-            key: 'percent',
-            render: (_v, record) => (
-                <Progress
-                    percent={record.percent}
-                    size="small"
-                    status={record.status === 'error' ? 'exception' :
-                        record.status === 'success' ? 'success' : 'active'}
-                    format={(percent) => `${percent?.toFixed(1)}%`}
-                    style={{width: 80}}
-                />
-            ),
-            width: 120,
-        },
-        {
-            title: t('fs.transmission.speed'),
-            dataIndex: 'speed',
-            key: 'speed',
-            render: (v) => {
-                return (
-                    <span className="text-xs whitespace-nowrap">
-                        {v > 0 ? `${renderSize(v, 0)}/s` : '-'}
-                    </span>
-                );
-            },
-            width: 90,
-        },
-        {
-            title: t('actions.label'),
-            key: 'actions',
-            width: 96,
-            render: (_, record) => (
-                <div className="flex gap-1">
-                    {(record.status === 'uploading' || record.status === 'transmitting') && (
-                        <Tooltip title={t('actions.cancel')}>
-                            <Button
-                                type="text"
-                                size="small"
-                                icon={<XCircle className="h-3 w-3"/>}
-                                onClick={() => transmissionDispatch({type: 'CANCEL_UPLOAD', id: record.id})}
-                            />
-                        </Tooltip>
-                    )}
-                    {record.status === 'error' && (
-                        <Tooltip title={t('actions.retry')}>
-                            <Button
-                                type="text"
-                                size="small"
-                                icon={<ReloadOutlined className="h-3 w-3"/>}
-                                onClick={() => handleRetryUpload(record)}
-                            />
-                        </Tooltip>
-                    )}
-                    {(record.status === 'success' || record.status === 'error' || record.status === 'cancelled') && (
-                        <Tooltip title={t('actions.delete')}>
-                            <Button
-                                type="text"
-                                size="small"
-                                icon={<X className="h-3 w-3"/>}
-                                onClick={() => transmissionDispatch({type: 'REMOVE_RECORD', id: record.id})}
-                            />
-                        </Tooltip>
-                    )}
-                </div>
-            ),
-        },
-    ];
-
     const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
         setSelectedRowKeys(newSelectedRowKeys as string[]);
     };
@@ -735,395 +545,58 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
         setCurrentDirectory(path);
     }
 
-    const getFileKey = (file: File) => {
-        if (strings.hasText(file.webkitRelativePath)) {
-            return file.webkitRelativePath;
+    const joinRemoteDirectory = (baseDirectory: string, relativeDirectory: string) => {
+        const base = baseDirectory === '/' ? '' : baseDirectory.replace(/\/+$/, '');
+        const relative = relativeDirectory.replace(/^\/+|\/+$/g, '');
+        return `${base}/${relative}` || '/';
+    };
+
+    const handleUploadDir = (files: FileList | null, fsId: string) => {
+        if (!uploadAccountReady) {
+            messageApi.warning(uploadInitializingMessage);
+            return;
         }
-        return file.name;
-    }
-
-    const getFileName = (file: File) => {
-        if (strings.hasText(file.webkitRelativePath)) {
-            return file.webkitRelativePath;
-        }
-        return file.name;
-    }
-
-    // 重构的上传函数，修复进度显示bug
-    const uploadFile = useCallback(async (id: string, file: File, dir: string, fsId: string): Promise<void> => {
-        return new Promise((resolve, reject) => {
-            const {size} = file;
-            const name = getFileName(file);
-            const url = `${baseUrl()}/${fileSystemApi.group}/${fsId}/upload?dir=${dir}&id=${id}`;
-
-            const xhr = new XMLHttpRequest();
-            let intervalId: NodeJS.Timeout | undefined;
-
-            // 保存 xhr 和 intervalId 到记录中，用于取消操作
-            transmissionDispatch({
-                type: 'UPDATE_RECORD',
-                id,
-                updates: {xhr, intervalId}
-            });
-
-            let prevTime = Date.now();
-            let prevLoaded = 0;
-            let hasStartedBackendPolling = false;
-
-            xhr.upload.onprogress = (event) => {
-                if (!event.lengthComputable) {
-                    return;
-                }
-
-                const currentTime = Date.now();
-                const elapsedTime = Math.max((currentTime - prevTime) / 1000, 0.1); // 避免除零
-                const loaded = event.loaded;
-                const speed = Math.max((loaded - prevLoaded) / elapsedTime, 0);
-
-                // 计算前端上传进度，最大99%
-                let percent = Math.min((event.loaded * 100 / event.total), 99);
-                percent = Math.max(Number(percent.toFixed(2)), 0);
-
-                transmissionDispatch({
-                    type: 'UPDATE_RECORD',
-                    id,
-                    updates: {
-                        loaded: event.loaded,
-                        size,
-                        percent,
-                        status: "uploading",
-                        error: "",
-                        speed
-                    }
-                });
-
-                // 当前端上传完成时，开始后端处理阶段
-                if (event.loaded === event.total && !hasStartedBackendPolling) {
-                    hasStartedBackendPolling = true;
-
-                    transmissionDispatch({
-                        type: 'UPDATE_RECORD',
-                        id,
-                        updates: {
-                            status: "transmitting",
-                            percent: 99,
-                            speed: 0
-                        }
-                    });
-
-                    // 开始轮询后端进度，无延迟
-                    let retryCount = 0;
-                    const maxRetries = 10; // 最多重试10次（5秒）
-
-                    intervalId = setInterval(async () => {
-                        try {
-                            const progress = await fileSystemApi.uploadProgress(fsId, id);
-                            console.log('Upload progress polling result:', progress);
-
-                            // 如果返回-1，可能是后端还没准备好，重试几次
-                            if (progress.total === -1) {
-                                retryCount++;
-                                console.log(`Upload progress not found, retry count: ${retryCount}/${maxRetries}`);
-                                if (retryCount >= maxRetries) {
-                                    // 重试次数过多，认为上传失败
-                                    console.error('Upload progress not found after max retries');
-                                    clearInterval(intervalId);
-                                    transmissionDispatch({
-                                        type: 'UPDATE_RECORD',
-                                        id,
-                                        updates: {
-                                            status: "error",
-                                            error: "Upload progress not found after retries",
-                                            speed: 0
-                                        }
-                                    });
-                                }
-                                return;
-                            }
-
-                            // 重置重试计数
-                            retryCount = 0;
-
-                            transmissionDispatch({
-                                type: 'UPDATE_RECORD',
-                                id,
-                                updates: {
-                                    loaded: progress.written,
-                                    percent: Math.min(progress.percent, 100),
-                                    speed: progress.speed || 0
-                                }
-                            });
-
-                            // 检查是否完成
-                            if (progress.isCompleted || progress.percent >= 100) {
-                                console.log('Upload completed via progress polling');
-                                clearInterval(intervalId);
-                                transmissionDispatch({
-                                    type: 'UPDATE_RECORD',
-                                    id,
-                                    updates: {
-                                        status: "success",
-                                        percent: 100,
-                                        speed: 0,
-                                        error: ""
-                                    }
-                                });
-                            }
-                        } catch (error) {
-                            console.error('Failed to fetch upload progress:', error);
-                            retryCount++;
-                            if (retryCount >= maxRetries) {
-                                console.error('Upload progress polling failed after max retries');
-                                clearInterval(intervalId);
-                                transmissionDispatch({
-                                    type: 'UPDATE_RECORD',
-                                    id,
-                                    updates: {
-                                        status: "error",
-                                        error: "Failed to fetch upload progress",
-                                        speed: 0
-                                    }
-                                });
-                            }
-                        }
-                    }, 500);
-
-                    // 保存更新后的 intervalId
-                    transmissionDispatch({
-                        type: 'UPDATE_RECORD',
-                        id,
-                        updates: {intervalId}
-                    });
-                }
-
-                prevTime = currentTime;
-                prevLoaded = loaded;
-            };
-
-            xhr.onreadystatechange = () => {
-                if (xhr.readyState !== 4) {
-                    return;
-                }
-
-                console.log(`Upload response - Status: ${xhr.status}, Response: ${xhr.responseText}`);
-
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    // 检查响应体是否包含错误信息
-                    let hasError = false;
-                    let errorMessage = '';
-
-                    try {
-                        const responseText = xhr.responseText;
-                        if (responseText) {
-                            const result = JSON.parse(responseText);
-                            console.log('Upload response parsed:', result);
-
-                            // 检查是否是标准错误响应格式
-                            if (result.error === true || (result.message && result.code)) {
-                                hasError = true;
-                                errorMessage = result.message || 'Upload failed';
-                                console.error('Upload failed with parsed error:', errorMessage);
-                            }
-                        }
-                    } catch (e) {
-                        // JSON解析失败，可能是成功的空响应，继续处理为成功
-                        console.log('Upload response parse failed, treating as success:', e);
-                    }
-
-                    if (hasError) {
-                        // 虽然HTTP状态码是200，但响应内容表示失败
-                        if (intervalId) {
-                            clearInterval(intervalId);
-                        }
-
-                        transmissionDispatch({
-                            type: 'UPDATE_RECORD',
-                            id,
-                            updates: {
-                                status: "error",
-                                error: errorMessage,
-                                speed: 0
-                            }
-                        });
-
-                        console.error('Upload marked as error:', errorMessage);
-                        reject(new Error(errorMessage));
-                    } else {
-                        // 真正成功
-                        console.log('Upload marked as success');
-                        if (!hasStartedBackendPolling) {
-                            transmissionDispatch({
-                                type: 'UPDATE_RECORD',
-                                id,
-                                updates: {
-                                    loaded: size,
-                                    size,
-                                    percent: 100,
-                                    status: "success",
-                                    error: "",
-                                    speed: 0
-                                }
-                            });
-                        }
-                        resolve();
-                    }
-                } else {
-                    // 处理HTTP错误状态码
-                    if (intervalId) {
-                        clearInterval(intervalId);
-                    }
-
-                    let errorMessage = `Upload failed with status code: ${xhr.status}`;
-                    try {
-                        const responseText = xhr.responseText;
-                        if (responseText) {
-                            const result = JSON.parse(responseText);
-                            if (result.message) {
-                                errorMessage = result.message;
-                            }
-                        }
-                    } catch (e) {
-                        // 若解析失败，使用默认错误信息
-                    }
-
-                    transmissionDispatch({
-                        type: 'UPDATE_RECORD',
-                        id,
-                        updates: {
-                            status: "error",
-                            error: errorMessage,
-                            speed: 0
-                        }
-                    });
-
-                    console.error(errorMessage);
-                    reject(new Error(errorMessage));
-                }
-            };
-
-            xhr.onerror = () => {
-                if (intervalId) {
-                    clearInterval(intervalId);
-                }
-
-                const errorMessage = `Upload failed due to a network error`;
-                transmissionDispatch({
-                    type: 'UPDATE_RECORD',
-                    id,
-                    updates: {
-                        status: "error",
-                        error: errorMessage,
-                        speed: 0
-                    }
-                });
-
-                console.error(errorMessage);
-                reject(new Error(errorMessage));
-            };
-
-            xhr.onabort = () => {
-                if (intervalId) {
-                    clearInterval(intervalId);
-                }
-                // onabort 由取消操作触发，状态已在 reducer 中更新
-            };
-
-            xhr.open('POST', url, true);
-            const formData = new FormData();
-            formData.append("file", file, name);
-            xhr.send(formData);
-        });
-    }, []);
-
-    const handleUploadDir = async (files: FileList | null, fsId: string) => {
         if (!files) {
             return;
         }
-        setUploading(true);
-        const records: TransmissionRecord[] = [];
-
+        const uploadFiles = [];
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            const relativePath = file['webkitRelativePath'];
-            records.push({
-                id: generateRandomId(),
-                path: getFileKey(file),
-                name: relativePath,
-                loaded: 0,
-                size: file.size,
-                percent: 0,
-                status: "preparing",
-                error: "",
-                speed: 0,
+            const relativePath = file.webkitRelativePath || file.name;
+            const relativeDirectory = relativePath.substring(0, relativePath.length - file.name.length);
+            uploadFiles.push({
                 file,
-                dir: currentDirectory + '/' + relativePath.substring(0, relativePath.length - file.name.length),
+                directory: joinRemoteDirectory(currentDirectory, relativeDirectory),
+                displayName: relativePath,
             });
         }
-
-        transmissionDispatch({type: 'ADD_RECORDS', records});
-
-        try {
-            const uploadPromises = [];
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const relativePath = file['webkitRelativePath'];
-                const dir = relativePath.substring(0, relativePath.length - file.name.length);
-
-                uploadPromises.push(uploadFile(records[i].id, file, currentDirectory + '/' + dir, fsId));
-            }
-
-            await Promise.allSettled(uploadPromises);
-            filesQuery.refetch();
-        } finally {
-            setUploading(false);
-        }
+        uploadManager.enqueue({fsId, files: uploadFiles});
     }
 
-    const handleUploadFile = async (files: FileList | null, fsId: string) => {
+    const handleUploadFile = (files: FileList | null, fsId: string) => {
+        if (!uploadAccountReady) {
+            messageApi.warning(uploadInitializingMessage);
+            return;
+        }
         if (!files) {
             return;
         }
-
-        setUploading(true);
-        const records: TransmissionRecord[] = [];
-
+        const uploadFiles = [];
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            records.push({
-                id: generateRandomId(),
-                path: getFileKey(file),
-                name: getFileName(file),
-                loaded: 0,
-                size: file.size,
-                percent: 0,
-                status: "preparing",
-                error: "",
-                speed: 0,
+            uploadFiles.push({
                 file,
-                dir: currentDirectory,
+                directory: currentDirectory,
+                displayName: file.name,
             });
         }
-
-        transmissionDispatch({type: 'ADD_RECORDS', records});
-
-        try {
-            const uploadPromises = [];
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                uploadPromises.push(uploadFile(records[i].id, file, currentDirectory, fsId));
-            }
-
-            await Promise.allSettled(uploadPromises);
-            filesQuery.refetch();
-        } finally {
-            setUploading(false);
-        }
+        uploadManager.enqueue({fsId, files: uploadFiles});
     }
 
-    const handleDragEnter = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.stopPropagation();
-        if (!strategy?.upload) {
+        if (!strategy?.upload || !uploadAccountReady) {
             event.dataTransfer.dropEffect = 'none';
             return;
         }
@@ -1131,19 +604,19 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
         if (!isDraggingOver) {
             setIsDraggingOver(true);
         }
-    }, [strategy?.upload, isDraggingOver]);
+    };
 
-    const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.stopPropagation();
-        if (!strategy?.upload) {
+        if (!strategy?.upload || !uploadAccountReady) {
             event.dataTransfer.dropEffect = 'none';
             return;
         }
         event.dataTransfer.dropEffect = 'copy';
-    }, [strategy?.upload]);
+    };
 
-    const handleDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.stopPropagation();
         if (!strategy?.upload) {
@@ -1153,9 +626,9 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
         if (dragCounterRef.current === 0) {
             setIsDraggingOver(false);
         }
-    }, [strategy?.upload]);
+    };
 
-    const handleDrop = useCallback(async (event: React.DragEvent<HTMLDivElement>) => {
+    const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         event.stopPropagation();
         dragCounterRef.current = 0;
@@ -1165,14 +638,18 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
             messageApi.warning(dragUploadDisabledMessage);
             return;
         }
+        if (!uploadAccountReady) {
+            messageApi.warning(uploadInitializingMessage);
+            return;
+        }
 
         const files = event.dataTransfer?.files;
         if (!files || files.length === 0) {
             return;
         }
 
-        await handleUploadFile(files, fsId);
-    }, [strategy?.upload, messageApi, dragUploadDisabledMessage, handleUploadFile, fsId]);
+        handleUploadFile(files, fsId);
+    };
 
     const realDeleteFile = async (keys: string[]) => {
         try {
@@ -1252,18 +729,6 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
     }
 
 
-    // 计算统计信息
-    const transmissionStats = useMemo(() => {
-        const totalRecords = transmissionRecords.length;
-        const completedRecords = transmissionRecords.filter(r => r.status === 'success').length;
-        const errorRecords = transmissionRecords.filter(r => r.status === 'error').length;
-        const activeRecords = transmissionRecords.filter(r =>
-            r.status === 'uploading' || r.status === 'transmitting' || r.status === 'preparing'
-        ).length;
-
-        return {totalRecords, completedRecords, errorRecords, activeRecords};
-    }, [transmissionRecords]);
-
     let uploadDirLabel = t('fs.operations.upload_dir');
     if (!license.hasPremiumFeatures()) {
         uploadDirLabel += ` (${t('settings.license.type.premium')})`;
@@ -1297,28 +762,41 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
                     extra={
                         <div>
                             <div className={'flex items-center gap-4'}>
-                                <Tooltip title={t('fs.operations.upload_file')}>
+                                <Tooltip title={uploadAccountReady ? t('fs.operations.upload_file') : uploadInitializingMessage}>
                                     {strategy?.upload &&
-                                        <FileUpIcon className={'h-4 w-4 cursor-pointer'} onClick={() => {
+                                        <FileUpIcon className={cn(
+                                            'h-4 w-4 cursor-pointer',
+                                            !uploadAccountReady && 'text-gray-400 cursor-wait'
+                                        )} onClick={() => {
+                                            if (!uploadAccountReady) {
+                                                messageApi.warning(uploadInitializingMessage);
+                                                return;
+                                            }
                                             fileUploadRef.current?.click();
                                         }}/>
                                     }
                                     <input type="file"
                                            ref={fileUploadRef}
                                            style={{display: 'none'}}
-                                           onChange={async (e) => {
+                                           onChange={(e) => {
                                                let files = e.target.files;
-                                               await handleUploadFile(files, fsId);
+                                               handleUploadFile(files, fsId);
                                                e.target.value = '';
                                            }}
                                            multiple/>
                                 </Tooltip>
 
-                                <Tooltip title={uploadDirLabel}>
+                                <Tooltip title={uploadAccountReady ? uploadDirLabel : uploadInitializingMessage}>
                                     {strategy?.upload &&
                                         <FolderUpIcon className={cn(
-                                            'h-4 w-4 cursor-pointer', !license.hasPremiumFeatures() && 'text-gray-400 cursor-no-drop'
+                                            'h-4 w-4 cursor-pointer',
+                                            !uploadAccountReady && 'text-gray-400 cursor-wait',
+                                            uploadAccountReady && !license.hasPremiumFeatures() && 'text-gray-400 cursor-no-drop'
                                         )} onClick={() => {
+                                            if (!uploadAccountReady) {
+                                                messageApi.warning(uploadInitializingMessage);
+                                                return;
+                                            }
                                             if (!license.hasPremiumFeatures()) {
                                                 return
                                             }
@@ -1328,9 +806,9 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
                                     <input type="file"
                                            ref={dirUploadRef}
                                            style={{display: 'none'}}
-                                           onChange={async (e) => {
+                                           onChange={(e) => {
                                                let files = e.target.files;
-                                               await handleUploadDir(files, fsId);
+                                               handleUploadDir(files, fsId);
                                                e.target.value = '';
                                            }}
                                            directory=""
@@ -1441,9 +919,9 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
                                         )}
                                     />}
                                 >
-                                    {transmissionStats.activeRecords > 0 && (
+                                    {activeUploadCount > 0 && (
                                         <span className="ml-1 text-xs">
-                                            {transmissionStats.activeRecords}
+                                            {activeUploadCount}
                                         </span>
                                     )}
                                 </Button>
@@ -1519,49 +997,12 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
                     />
                 </div>
 
-                <Drawer
-                    title={
-                        <div className="flex items-center justify-between">
-                            <span>{t('fs.navigation.file_tran')}</span>
-                            <div className="flex items-center gap-2 text-sm text-gray-500 mr-4">
-                                {transmissionStats.totalRecords > 0 && (
-                                    <div>
-                                        {transmissionStats.completedRecords}/{transmissionStats.totalRecords} completed
-                                        {transmissionStats.errorRecords > 0 && (
-                                            <span className="text-red-500 ml-1">
-                                                ({transmissionStats.errorRecords} failed)
-                                            </span>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    }
-                    placement={'bottom'}
+                <UploadTaskDrawer
+                    fsId={fsId}
                     onClose={() => setFileTransmitterOpen(false)}
                     open={fileTransmitterOpen}
                     getContainer={getContainer}
-                    mask={false}
-                    extra={<div>
-                        <Button
-                            type={'primary'}
-                            danger={true}
-                            onClick={() => {
-                                transmissionDispatch({type: 'CLEAR_COMPLETED'});
-                            }}
-                        >
-                            {t('actions.clear')}
-                        </Button>
-                    </div>}
-                >
-                    <Table
-                        rowKey={'id'}
-                        columns={tranColumns}
-                        dataSource={transmissionRecords}
-                        size={'small'}
-                        pagination={false}
-                    />
-                </Drawer>
+                />
 
                 <PromptModal
                     title={getPromptTitle()}

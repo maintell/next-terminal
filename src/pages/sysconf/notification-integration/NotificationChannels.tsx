@@ -1,6 +1,17 @@
-import {useEffect} from "react";
-import {App, Button, Card, Form, Input, InputNumber, Select, Space, Spin, Switch, Typography} from "antd";
-import {Send} from "lucide-react";
+import {useEffect, useState} from "react";
+import {App, Button, Card, Form, Input, InputNumber, Select, Spin, Switch, Tag, Typography, theme} from "antd";
+import {
+    AppWindow,
+    BellRing,
+    Building2,
+    ExternalLink,
+    Mail,
+    MessageSquare,
+    Save,
+    Send,
+    Webhook,
+    type LucideIcon,
+} from "lucide-react";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {notificationChannelApi, NotificationChannel} from "@/api/notification-api";
 import {
@@ -14,10 +25,22 @@ import {useTranslation} from "react-i18next";
 
 const hiddenSecret = "******";
 
+const channelIcons: Record<string, LucideIcon> = {
+    mail: Mail,
+    wecom: Building2,
+    wecomApp: AppWindow,
+    feishu: MessageSquare,
+    dingtalk: BellRing,
+    webhook: Webhook,
+};
+
 const NotificationChannels = () => {
     const {t} = useTranslation();
     const {message, modal} = App.useApp();
+    const {token} = theme.useToken();
     const queryClient = useQueryClient();
+    const [selectedType, setSelectedType] = useState(channelTypes[0]);
+    const [enabledDrafts, setEnabledDrafts] = useState<Record<string, boolean>>({});
 
     const channelsQuery = useQuery({
         queryKey: ['notification-channels'],
@@ -28,9 +51,14 @@ const NotificationChannels = () => {
         mutationFn: async (values: NotificationChannel) => {
             await notificationChannelApi.updateById(values.type, values);
         },
-        onSuccess: async () => {
+        onSuccess: async (_, values) => {
             message.success(t('general.success'));
             await queryClient.invalidateQueries({queryKey: ['notification-channels']});
+            setEnabledDrafts(current => {
+                const next = {...current};
+                delete next[values.type];
+                return next;
+            });
         },
     });
 
@@ -63,39 +91,105 @@ const NotificationChannels = () => {
         createdAt: 0,
         updatedAt: 0,
     });
+    const selectedChannel = sortedChannels.find(channel => channel.type === selectedType) || sortedChannels[0];
 
-    return <Space direction="vertical" size="middle" style={{width: '100%'}}>
-        {sortedChannels.map(channel => <NotificationChannelPanel
-            key={channel.type}
-            channel={channel}
-            saveLoading={saveMutation.isPending}
-            testLoading={testMutation.isPending}
-            onSave={saveMutation.mutate}
-            onTest={testMutation.mutate}
-        />)}
-    </Space>;
+    return <div className="grid items-start gap-4 xl:grid-cols-[260px_minmax(0,1fr)]">
+        <Card styles={{body: {padding: 12}}}>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-1">
+                {sortedChannels.map(channel => {
+                    const Icon = channelIcons[channel.type] || Webhook;
+                    const selected = channel.type === selectedType;
+                    const enabled = enabledDrafts[channel.type] ?? channel.enabled;
+                    const savingChannel = saveMutation.isPending && saveMutation.variables?.type === channel.type;
+
+                    return <div
+                        key={channel.type}
+                        className="flex min-w-0 items-center gap-2 rounded-md border p-2 transition-colors"
+                        style={{
+                            borderColor: selected ? token.colorPrimaryBorder : 'transparent',
+                            background: selected ? token.colorPrimaryBg : undefined,
+                        }}
+                    >
+                        <button
+                            type="button"
+                            onClick={() => setSelectedType(channel.type)}
+                            className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 border-0 bg-transparent p-0 text-left"
+                        >
+                            <span
+                                className="flex size-9 shrink-0 items-center justify-center rounded-md"
+                                style={{
+                                    color: selected ? token.colorPrimary : token.colorTextSecondary,
+                                    background: selected ? token.colorBgContainer : token.colorFillSecondary,
+                                }}
+                            >
+                                <Icon size={16}/>
+                            </span>
+                            <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-medium" style={{color: token.colorText}}>
+                                    {channelTypeLabel(channel.type, t)}
+                                </span>
+                                <span className="mt-0.5 block truncate text-xs" style={{color: token.colorTextDescription}}>
+                                    {t(enabled ? 'general.enabled' : 'general.disabled')}
+                                </span>
+                            </span>
+                        </button>
+                        <Switch
+                            size="small"
+                            checked={enabled}
+                            loading={savingChannel}
+                            disabled={saveMutation.isPending}
+                            aria-label={`${t(enabled ? 'general.disabled' : 'general.enabled')} ${channelTypeLabel(channel.type, t)}`}
+                            onChange={enabled => {
+                                setSelectedType(channel.type);
+                                setEnabledDrafts(current => ({...current, [channel.type]: enabled}));
+                            }}
+                        />
+                    </div>;
+                })}
+            </div>
+        </Card>
+
+        <div className="min-w-0">
+            {sortedChannels.map(channel => <div
+                key={channel.type}
+                className={channel.type === selectedChannel.type ? undefined : 'hidden'}
+            >
+                <NotificationChannelPanel
+                    channel={channel}
+                    enabled={enabledDrafts[channel.type] ?? channel.enabled}
+                    saveLoading={saveMutation.isPending}
+                    testLoading={testMutation.isPending}
+                    onSave={saveMutation.mutate}
+                    onTest={testMutation.mutate}
+                />
+            </div>)}
+        </div>
+    </div>;
 };
 
 const NotificationChannelPanel = ({
                                       channel,
+                                      enabled,
                                       saveLoading,
                                       testLoading,
                                       onSave,
                                       onTest,
                                   }: {
     channel: NotificationChannel;
+    enabled: boolean;
     saveLoading: boolean;
     testLoading: boolean;
     onSave: (channel: NotificationChannel) => void;
     onTest: (type: string) => void;
 }) => {
     const {t} = useTranslation();
+    const {token} = theme.useToken();
     const [form] = Form.useForm();
-    const enabled = Form.useWatch('enabled', form);
     const isMail = channel.type === 'mail';
     const isWebhook = channel.type === 'webhook';
     const isWeComApp = channel.type === 'wecomApp';
     const showSecret = channel.type === 'feishu' || channel.type === 'dingtalk' || channel.type === 'webhook';
+    const Icon = channelIcons[channel.type] || Webhook;
 
     const validateWebhookUrl = (_: unknown, value?: string) => {
         if (!value || value === hiddenSecret) {
@@ -114,109 +208,157 @@ const NotificationChannelPanel = ({
 
     useEffect(() => {
         form.setFieldsValue({
-            enabled: channel.enabled,
             config: channel.config || {},
             secretConfig: channel.secretConfig || {},
         });
     }, [channel, form]);
 
     const handleSave = async () => {
-        const values = await form.validateFields();
+        const values = enabled ? await form.validateFields() : form.getFieldsValue(true);
         onSave({
             ...channel,
-            enabled: values.enabled,
+            enabled,
             config: values.config || {},
             secretConfig: values.secretConfig || {},
         });
     };
 
     return <Form form={form} layout="vertical">
-        <Card
-            title={channelTypeLabel(channel.type, t)}
-            extra={<Space>
-                <Form.Item name="enabled" valuePropName="checked" noStyle>
-                    <Switch checkedChildren={t('general.enabled')} unCheckedChildren={t('general.disabled')}/>
-                </Form.Item>
-                <Button size="small" icon={<Send size={14}/>} loading={testLoading} onClick={() => onTest(channel.type)}>
-                    {t('settings.notification.test')}
-                </Button>
-                <Button size="small" type="primary" loading={saveLoading} onClick={handleSave}>
-                    {t('actions.save')}
-                </Button>
-            </Space>}
-        >
-            {enabled && <>
-                {channelDocumentLinks[channel.type] && <Typography.Paragraph>
-                    <Typography.Link href={channelDocumentLinks[channel.type]} target="_blank">
-                        {channelDocumentLinks[channel.type]}
-                    </Typography.Link>
-                </Typography.Paragraph>}
-                <Form.Item name={['config', 'language']} label={t('settings.notification.language')}>
-                    <Select options={notificationLanguages.map(item => ({
-                        label: t(`settings.notification.languages.${item}`, item),
-                        value: item,
-                    }))}/>
-                </Form.Item>
-                {isMail && <Form.Item
-                    name={['config', 'recipient']}
-                    label={t('settings.notification.recipients')}
-                    rules={[{required: enabled, message: t('settings.notification.recipients_required')}]}
+        <Card styles={{body: {padding: 0}}}>
+            <div
+                className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+                style={{borderBottom: `1px solid ${token.colorBorderSecondary}`}}
+            >
+                <div className="flex min-w-0 items-center gap-3">
+                    <span
+                        className="flex size-10 shrink-0 items-center justify-center rounded-md"
+                        style={{background: token.colorPrimaryBg, color: token.colorPrimary}}
+                    >
+                        <Icon size={20}/>
+                    </span>
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Typography.Title level={5} style={{margin: 0}}>
+                                {channelTypeLabel(channel.type, t)}
+                            </Typography.Title>
+                            <Tag color={enabled ? 'success' : 'default'}>
+                                {t(enabled ? 'general.enabled' : 'general.disabled')}
+                            </Tag>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    {channelDocumentLinks[channel.type] && <Button
+                        icon={<ExternalLink size={14}/>}
+                        href={channelDocumentLinks[channel.type]}
+                        target="_blank"
+                    >
+                        {t('settings.notification.access_document')}
+                    </Button>}
+                    <Button
+                        icon={<Send size={14}/>}
+                        loading={testLoading}
+                        disabled={!enabled || enabled !== channel.enabled || saveLoading}
+                        onClick={() => onTest(channel.type)}
+                    >
+                        {t('settings.notification.test')}
+                    </Button>
+                    <Button
+                        type="primary"
+                        icon={<Save size={14}/>}
+                        loading={saveLoading}
+                        onClick={handleSave}
+                    >
+                        {t('actions.save')}
+                    </Button>
+                </div>
+            </div>
+
+            <div className="p-4 sm:p-6">
+                {!enabled && <div
+                    className="mb-5 flex items-center gap-2 rounded-md border px-3.5 py-3 text-sm"
+                    style={{
+                        borderColor: token.colorBorderSecondary,
+                        background: token.colorFillQuaternary,
+                        color: token.colorTextSecondary,
+                    }}
                 >
-                    <Input.TextArea rows={3} placeholder={t('settings.notification.recipients_placeholder')}/>
-                </Form.Item>}
-                {isWeComApp && <>
-                    <Form.Item
-                        name={['config', 'origin']}
-                        label={t('settings.notification.wecom_app_origin')}
-                        initialValue="https://qyapi.weixin.qq.com"
-                        rules={[{required: enabled, message: t('settings.notification.wecom_app_origin_required')}]}
-                    >
-                        <Input autoComplete="off" placeholder="https://qyapi.weixin.qq.com"/>
+                    <span className="size-1.5 shrink-0 rounded-full" style={{background: token.colorTextQuaternary}}/>
+                    {t('settings.notification.enable_to_configure')}
+                </div>}
+
+                <div className={!enabled ? 'pointer-events-none opacity-50' : undefined}>
+                    <Form.Item name={['config', 'language']} label={t('settings.notification.language')}>
+                        <Select disabled={!enabled} options={notificationLanguages.map(item => ({
+                            label: t(`settings.notification.languages.${item}`, item),
+                            value: item,
+                        }))}/>
                     </Form.Item>
-                    <Form.Item
-                        name={['config', 'corpId']}
-                        label={t('settings.notification.wecom_app_corp_id')}
-                        rules={[{required: enabled, message: t('settings.notification.wecom_app_corp_id_required')}]}
+                    {isMail && <Form.Item
+                        name={['config', 'recipient']}
+                        label={t('settings.notification.recipients')}
+                        rules={[{required: enabled, message: t('settings.notification.recipients_required')}]}
                     >
-                        <Input autoComplete="off" placeholder={t('settings.notification.wecom_app_corp_id_placeholder')}/>
-                    </Form.Item>
-                    <Form.Item
-                        name={['secretConfig', 'corpSecret']}
-                        label={t('settings.notification.wecom_app_corp_secret')}
-                        rules={[{required: enabled, message: t('settings.notification.wecom_app_corp_secret_required')}]}
+                        <Input.TextArea
+                            disabled={!enabled}
+                            rows={3}
+                            placeholder={t('settings.notification.recipients_placeholder')}
+                        />
+                    </Form.Item>}
+                    {isWeComApp && <>
+                        <Form.Item
+                            name={['config', 'origin']}
+                            label={t('settings.notification.wecom_app_origin')}
+                            initialValue="https://qyapi.weixin.qq.com"
+                            rules={[{required: enabled, message: t('settings.notification.wecom_app_origin_required')}]}
+                        >
+                            <Input disabled={!enabled} autoComplete="off" placeholder="https://qyapi.weixin.qq.com"/>
+                        </Form.Item>
+                        <Form.Item
+                            name={['config', 'corpId']}
+                            label={t('settings.notification.wecom_app_corp_id')}
+                            rules={[{required: enabled, message: t('settings.notification.wecom_app_corp_id_required')}]}
+                        >
+                            <Input disabled={!enabled} autoComplete="off" placeholder={t('settings.notification.wecom_app_corp_id_placeholder')}/>
+                        </Form.Item>
+                        <Form.Item
+                            name={['secretConfig', 'corpSecret']}
+                            label={t('settings.notification.wecom_app_corp_secret')}
+                            rules={[{required: enabled, message: t('settings.notification.wecom_app_corp_secret_required')}]}
+                        >
+                            <Input.Password disabled={!enabled} autoComplete="new-password" placeholder={t('settings.notification.wecom_app_corp_secret_placeholder')}/>
+                        </Form.Item>
+                        <Form.Item
+                            name={['config', 'agentId']}
+                            label={t('settings.notification.wecom_app_agent_id')}
+                            rules={[{required: enabled, message: t('settings.notification.wecom_app_agent_id_required')}]}
+                        >
+                            <InputNumber disabled={!enabled} style={{width: '100%'}} placeholder={t('settings.notification.wecom_app_agent_id_placeholder')}/>
+                        </Form.Item>
+                        <Form.Item
+                            name={['config', 'toUser']}
+                            label={t('settings.notification.wecom_app_to_user')}
+                            initialValue="@all"
+                            rules={[{required: enabled, message: t('settings.notification.wecom_app_to_user_required')}]}
+                        >
+                            <Input disabled={!enabled} autoComplete="off" placeholder={t('settings.notification.wecom_app_to_user_placeholder')}/>
+                        </Form.Item>
+                    </>}
+                    {!isMail && !isWeComApp && <Form.Item
+                        name={['secretConfig', 'webhookUrl']}
+                        label={isWebhook ? t('settings.notification.webhook_url') : t('settings.notification.robot_webhook_url')}
+                        rules={[
+                            {required: enabled, message: t('settings.notification.webhook_url_required')},
+                            {validator: validateWebhookUrl},
+                        ]}
                     >
-                        <Input.Password autoComplete="new-password" placeholder={t('settings.notification.wecom_app_corp_secret_placeholder')}/>
-                    </Form.Item>
-                    <Form.Item
-                        name={['config', 'agentId']}
-                        label={t('settings.notification.wecom_app_agent_id')}
-                        rules={[{required: enabled, message: t('settings.notification.wecom_app_agent_id_required')}]}
-                    >
-                        <InputNumber style={{width: '100%'}} placeholder={t('settings.notification.wecom_app_agent_id_placeholder')}/>
-                    </Form.Item>
-                    <Form.Item
-                        name={['config', 'toUser']}
-                        label={t('settings.notification.wecom_app_to_user')}
-                        initialValue="@all"
-                        rules={[{required: enabled, message: t('settings.notification.wecom_app_to_user_required')}]}
-                    >
-                        <Input autoComplete="off" placeholder={t('settings.notification.wecom_app_to_user_placeholder')}/>
-                    </Form.Item>
-                </>}
-                {!isMail && !isWeComApp && <Form.Item
-                    name={['secretConfig', 'webhookUrl']}
-                    label={isWebhook ? t('settings.notification.webhook_url') : t('settings.notification.robot_webhook_url')}
-                    rules={[
-                        {required: enabled, message: t('settings.notification.webhook_url_required')},
-                        {validator: validateWebhookUrl},
-                    ]}
-                >
-                    <Input autoComplete="off" placeholder={robotWebhookPlaceholders[channel.type]}/>
-                </Form.Item>}
-                {showSecret && <Form.Item name={['secretConfig', 'secret']} label={t('settings.notification.sign_secret')}>
-                    <Input.Password autoComplete="new-password" placeholder="SEC..."/>
-                </Form.Item>}
-            </>}
+                        <Input disabled={!enabled} autoComplete="off" placeholder={robotWebhookPlaceholders[channel.type]}/>
+                    </Form.Item>}
+                    {showSecret && <Form.Item name={['secretConfig', 'secret']} label={t('settings.notification.sign_secret')}>
+                        <Input.Password disabled={!enabled} autoComplete="new-password" placeholder="SEC..."/>
+                    </Form.Item>}
+                </div>
+            </div>
         </Card>
     </Form>;
 };

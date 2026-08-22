@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react';
 import {
+    Alert,
     App,
     Button,
     Checkbox,
@@ -226,8 +227,10 @@ const AISetting = ({get, set}: SettingProps) => {
                             role="button"
                             tabIndex={0}
                             className={[
-                                'min-w-0 cursor-pointer rounded border p-3 transition-colors',
-                                active ? 'border-blue-500 bg-blue-50 shadow-sm ring-1 ring-blue-500' : 'border-gray-200 hover:border-blue-300',
+                                'min-w-0 cursor-pointer rounded-lg border p-3 transition-[border-color,background-color,box-shadow]',
+                                active
+                                    ? 'border-blue-400/70 bg-blue-50/60 shadow-sm dark:border-blue-500/60 dark:bg-blue-950/20'
+                                    : 'border-gray-200/70 hover:border-blue-300/80 hover:bg-gray-50/60 dark:border-white/10 dark:hover:border-blue-600/70 dark:hover:bg-white/[0.03]',
                             ].join(' ')}
                             onClick={() => setActiveProfile(profile)}
                             onKeyDown={(event) => {
@@ -250,7 +253,7 @@ const AISetting = ({get, set}: SettingProps) => {
                                             </Tag>
                                         ) : null}
                                     </div>
-                                    <div className="mt-1 truncate text-xs text-gray-500">{profile.baseUrl}</div>
+                                    <div className="mt-1 truncate text-xs text-gray-500 dark:text-gray-400">{profile.baseUrl}</div>
                                 </div>
                                 <div className="flex shrink-0 items-center gap-1">
                                     <Button
@@ -273,7 +276,7 @@ const AISetting = ({get, set}: SettingProps) => {
                                     />
                                 </div>
                             </div>
-                            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                                 <Tag>{preset.name}</Tag>
                                 <Tag>{profile.apiType === 'openai_responses' ? 'Responses' : 'Chat'}</Tag>
                                 <span className="truncate">{profile.model || '-'}</span>
@@ -302,6 +305,13 @@ const AISetting = ({get, set}: SettingProps) => {
                         onChange={handleEnabledChange}
                     />
                 </Form.Item>
+                <div className="mb-6">
+                    <Alert
+                        type="info"
+                        showIcon
+                        title={t('settings.ai.asset_enable_tip')}
+                    />
+                </div>
 
                 <div className="mb-4 flex items-center justify-between gap-3">
                     <Typography.Title level={5} className="!mb-0">{t('settings.ai.profile')}</Typography.Title>
