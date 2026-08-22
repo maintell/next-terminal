@@ -45,6 +45,7 @@ export interface WebsiteFormData {
         enabled: boolean;
         expiredAt?: number | Dayjs;
         ip?: string;
+		ipWhitelistIds?: string[];
         password?: string;
         timeLimit?: boolean;
         countries?: string[];

@@ -13,7 +13,7 @@ import {App, Button, Dropdown, Input, Space, Switch, Table, type TableProps, Tag
 import clsx from "clsx";
 import dayjs from "dayjs";
 import {PanelLeftCloseIcon, PanelLeftOpenIcon, RefreshCw} from "lucide-react";
-import {useEffect, useState} from 'react';
+import {type CSSProperties, useEffect, useState} from 'react';
 import {useTranslation} from "react-i18next";
 import {useNavigate} from "react-router-dom";
 import WebsiteTree from "./WebsiteTree";
@@ -49,6 +49,11 @@ const WebsitePage = () => {
         const saved = localStorage.getItem('website-tree-collapsed');
         return saved ? JSON.parse(saved) : false;
     });
+    const [treeWidth, setTreeWidth] = useState<number>(() => {
+        const saved = Number(localStorage.getItem('website-tree-width'));
+        return saved >= 200 && saved <= 420 ? saved : 240;
+    });
+    const [treeResizeStart, setTreeResizeStart] = useState<{x: number; width: number}>();
 
     let navigate = useNavigate();
 
@@ -59,6 +64,29 @@ const WebsitePage = () => {
     useEffect(() => {
         localStorage.setItem('website-tree-collapsed', JSON.stringify(isTreeCollapsed));
     }, [isTreeCollapsed]);
+
+    useEffect(() => {
+        localStorage.setItem('website-tree-width', String(treeWidth));
+    }, [treeWidth]);
+
+    useEffect(() => {
+        if (!treeResizeStart) {
+            return;
+        }
+
+        const handleMouseMove = (event: MouseEvent) => {
+            const nextWidth = treeResizeStart.width + event.clientX - treeResizeStart.x;
+            setTreeWidth(Math.min(420, Math.max(200, nextWidth)));
+        };
+        const handleMouseUp = () => setTreeResizeStart(undefined);
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [treeResizeStart]);
 
     const updateSortMutation = useMutation({
         mutationFn: (req: SortPositionRequest) => api.updateSortPosition(req),
@@ -460,8 +488,10 @@ const WebsitePage = () => {
             ) : (
                 <div className={cn(
                     "grid gap-4 transition-all duration-300",
-                    isTreeCollapsed ? "grid-cols-[48px_1fr]" : "grid-cols-[240px_1fr]"
-                )}>
+                    isTreeCollapsed ? "grid-cols-[48px_1fr]" : "grid-cols-[var(--group-tree-width)_1fr]"
+                )} style={{
+                    '--group-tree-width': `${treeWidth}px`,
+                } as CSSProperties}>
                     <div className="relative flex min-h-[240px] flex-col rounded-md bg-gray-50 dark:bg-[#141414]">
                         {!isTreeCollapsed && (
                             <div className="flex-1">
@@ -499,6 +529,16 @@ const WebsitePage = () => {
                                 </button>
                             </Tooltip>
                         </div>
+                        {!isTreeCollapsed && (
+                            <div
+                                aria-label={t('assets.group')}
+                                className="absolute -right-2 top-0 h-full w-4 cursor-col-resize select-none"
+                                onMouseDown={event => {
+                                    event.preventDefault();
+                                    setTreeResizeStart({x: event.clientX, width: treeWidth});
+                                }}
+                            />
+                        )}
                     </div>
                     <div className="overflow-hidden rounded-md">
                         {renderTable({x: 'max-content'})}

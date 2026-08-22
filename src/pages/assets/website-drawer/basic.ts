@@ -23,6 +23,7 @@ export const getDefaultWebsiteData = (): Partial<WebsiteBasicFormData> => ({
         countries: [],
         provinces: [],
         cities: [],
+		ipWhitelistIds: [],
         headerWhitelist: [],
         pathWhitelist: []
     },
@@ -34,7 +35,8 @@ export const getDefaultWebsiteData = (): Partial<WebsiteBasicFormData> => ({
     originHostMode: 'origin',
     originHostCustom: '',
     originTimeout: DEFAULT_ORIGIN_TIMEOUT,
-    insecureSkipVerify: false
+    insecureSkipVerify: false,
+    disableAccessLog: false
 });
 
 export const normalizeOriginHostMode = (originHostMode?: string): WebsiteOriginHostMode => {

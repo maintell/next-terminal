@@ -161,6 +161,7 @@
         "snippet": "命令片段",
         "storage": "儲存",
         "website": "Web 資產",
+        "ip_whitelist": "IP 白名單",
         "certificate": "證書管理"
       }
     },
@@ -1360,6 +1361,8 @@
     "origin_timeout_tip": "代理等待源站回應的最長時間，逾時後返回錯誤。",
     "insecure_skip_verify": "忽略憑證驗證",
     "insecure_skip_verify_tip": "啟用後將不驗證 HTTPS 源站憑證，僅建議用於自簽憑證等可信環境。",
+    "disable_access_log": "停用訪問日誌",
+    "disable_access_log_tip": "啟用後，該網站的訪問請求將不會被記錄到訪問日誌中。",
     "entrance": "入口路徑",
     "entrance_tip": "入口路徑是首次訪問自動開啟的位址",
     "change_group": "修改分組",
@@ -1639,6 +1642,26 @@
     "test_success": "代理連線測試成功",
     "test_failed": "代理連線測試失敗",
     "delete_referenced_title": "代理伺服器正在使用中，無法刪除"
+  },
+  "ip_whitelist": {
+    "source": "來源",
+    "source_manual": "手動維護",
+    "source_url": "URL 同步",
+    "source_url_label": "來源 URL",
+    "source_url_tip": "支援 HTTP 和 HTTPS URL；同步失敗時會繼續使用最近一次成功的版本。",
+    "source_headers": "請求標頭",
+    "source_headers_tip": "下載 URL 來源時可選傳送的請求標頭。",
+    "header_name": "請求標頭名稱",
+    "header_value": "請求標頭值",
+    "add_header": "新增請求標頭",
+    "refresh_minutes": "同步間隔（分鐘）",
+    "refresh_minutes_tip": "同步間隔最少為 5 分鐘。",
+    "rules": "IP 規則",
+    "rules_tip": "每行填寫一個 IP、CIDR 或 IP 範圍。",
+    "reference": "引用 IP 白名單",
+    "reference_tip": "命中任一引用的白名單即可通過 IP 規則。",
+    "sync": "立即同步",
+    "last_synced_at": "最近同步時間"
   },
   "gateway_group": {
     "name": "分組名稱",

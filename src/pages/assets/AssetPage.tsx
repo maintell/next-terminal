@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {type CSSProperties, useEffect, useState} from 'react';
 
 import assetsApi, {Asset, SortPositionRequest} from '@/api/asset-api';
 import {baseUrl} from "@/api/core/requests";
@@ -90,10 +90,38 @@ const AssetPage = () => {
         const saved = localStorage.getItem('asset-tree-collapsed');
         return saved ? JSON.parse(saved) : false;
     });
+    const [treeWidth, setTreeWidth] = useState<number>(() => {
+        const saved = Number(localStorage.getItem('asset-tree-width'));
+        return saved >= 200 && saved <= 420 ? saved : 240;
+    });
+    const [treeResizeStart, setTreeResizeStart] = useState<{x: number; width: number}>();
 
     useEffect(() => {
         localStorage.setItem('asset-tree-collapsed', JSON.stringify(isTreeCollapsed));
     }, [isTreeCollapsed]);
+
+    useEffect(() => {
+        localStorage.setItem('asset-tree-width', String(treeWidth));
+    }, [treeWidth]);
+
+    useEffect(() => {
+        if (!treeResizeStart) {
+            return;
+        }
+
+        const handleMouseMove = (event: MouseEvent) => {
+            const nextWidth = treeResizeStart.width + event.clientX - treeResizeStart.x;
+            setTreeWidth(Math.min(420, Math.max(200, nextWidth)));
+        };
+        const handleMouseUp = () => setTreeResizeStart(undefined);
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mouseup', handleMouseUp);
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mouseup', handleMouseUp);
+        };
+    }, [treeResizeStart]);
 
     const tagsQuery = useQuery({
         queryKey: ['tags'],
@@ -704,8 +732,10 @@ const AssetPage = () => {
             ) : (
                 <div className={cn(
                     "grid gap-4 transition-all duration-300",
-                    isTreeCollapsed ? "grid-cols-[48px_1fr]" : "grid-cols-[240px_1fr]"
-                )}>
+                    isTreeCollapsed ? "grid-cols-[48px_1fr]" : "grid-cols-[var(--group-tree-width)_1fr]"
+                )} style={{
+                    '--group-tree-width': `${treeWidth}px`,
+                } as CSSProperties}>
                     <div className="relative flex min-h-60 flex-col rounded-md bg-gray-50 dark:bg-[#141414]">
                         {!isTreeCollapsed && (
                             <div className="flex-1">
@@ -739,6 +769,16 @@ const AssetPage = () => {
                                 </button>
                             </Tooltip>
                         </div>
+                        {!isTreeCollapsed && (
+                            <div
+                                aria-label={t('assets.group')}
+                                className="absolute -right-2 top-0 h-full w-4 cursor-col-resize select-none"
+                                onMouseDown={event => {
+                                    event.preventDefault();
+                                    setTreeResizeStart({x: event.clientX, width: treeWidth});
+                                }}
+                            />
+                        )}
                     </div>
                     <div className="overflow-hidden">
                         {tagFilter}

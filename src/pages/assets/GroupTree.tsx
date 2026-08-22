@@ -305,39 +305,43 @@ const GroupTree = ({data, selected, keyPrefix, saving, onSelect, onSave, onDelet
                 />
             </div>
 
-            <Tree<GroupTreeNode>
-                draggable
-                blockNode
-                onDrop={onDrop}
-                treeData={treeData}
-                titleRender={node => {
-                    const gatewayHop = firstGatewayHop(node.gatewayChain);
-                    return (
-                        <div className="flex items-center gap-1">
-                            <span>{node.title as React.ReactNode}</span>
-                            {gatewayHop.gatewayType && gatewayHop.gatewayId && (
-                                <Tooltip title={t('assets.group_default_gateway')}>
-                                    <Tag color="blue" className="m-0 leading-4 text-[11px]">
-                                        {getGatewayTypeName(gatewayHop.gatewayType)}
-                                    </Tag>
+            <div className="overflow-x-auto">
+                <Tree<GroupTreeNode>
+                    draggable
+                    blockNode
+                    onDrop={onDrop}
+                    treeData={treeData}
+                    titleRender={node => {
+                        const gatewayHop = firstGatewayHop(node.gatewayChain);
+                        return (
+                            <div className="flex min-w-0 items-center gap-1">
+                                <Tooltip title={node.title as React.ReactNode}>
+                                    <span className="min-w-0 truncate">{node.title as React.ReactNode}</span>
                                 </Tooltip>
-                            )}
-                        </div>
-                    );
-                }}
-                expandedKeys={expandedKeys}
-                onExpand={setExpandedKeys}
-                style={{
-                    backgroundColor: theme.isDark ? theme.backgroundColor : '#F9FAFB',
-                    padding: 8,
-                }}
-                selectedKeys={selectedKeys}
-                onSelect={keys => {
-                    setSelectedKeys(keys);
-                    onSelect(keys.length > 0 ? keys[0] as string : '');
-                }}
-                onRightClick={handleRightClick}
-            />
+                                {gatewayHop.gatewayType && gatewayHop.gatewayId && (
+                                    <Tooltip title={t('assets.group_default_gateway')}>
+                                        <Tag color="blue" className="m-0 shrink-0 leading-4 text-[11px]">
+                                            {getGatewayTypeName(gatewayHop.gatewayType)}
+                                        </Tag>
+                                    </Tooltip>
+                                )}
+                            </div>
+                        );
+                    }}
+                    expandedKeys={expandedKeys}
+                    onExpand={setExpandedKeys}
+                    style={{
+                        backgroundColor: theme.isDark ? theme.backgroundColor : '#F9FAFB',
+                        padding: 8,
+                    }}
+                    selectedKeys={selectedKeys}
+                    onSelect={keys => {
+                        setSelectedKeys(keys);
+                        onSelect(keys.length > 0 ? keys[0] as string : '');
+                    }}
+                    onRightClick={handleRightClick}
+                />
+            </div>
 
             {contextMenu && (
                 <Dropdown

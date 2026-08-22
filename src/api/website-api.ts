@@ -47,6 +47,7 @@ export interface Website {
 interface Public {
     enabled: boolean;
     ip: string;
+	 ipWhitelistIds?: string[];
     expiredAt: number;
     password: string;
     timeLimit?: boolean;

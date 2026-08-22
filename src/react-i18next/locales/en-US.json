@@ -164,6 +164,7 @@
         "snippet": "Command Snippets",
         "storage": "Storage",
         "website": "Web Assets",
+        "ip_whitelist": "IP Whitelists",
         "certificate": "Certificate Management"
       }
     },
@@ -1375,6 +1376,8 @@
     "origin_timeout_tip": "Maximum time the proxy waits for the origin to respond before returning an error.",
     "insecure_skip_verify": "Skip Certificate Verification",
     "insecure_skip_verify_tip": "When enabled, the HTTPS origin certificate is not verified. Use only for trusted environments such as self-signed certificates.",
+    "disable_access_log": "Disable Access Log",
+    "disable_access_log_tip": "When enabled, access requests to this website will not be recorded in access logs.",
     "entrance": "Entry Path",
     "entrance_tip": "Entry path is the page opened automatically on first access",
     "change_group": "Change Group",
@@ -1654,6 +1657,26 @@
     "test_success": "Proxy connection test succeeded",
     "test_failed": "Proxy connection test failed",
     "delete_referenced_title": "Proxy server is in use and cannot be deleted"
+  },
+  "ip_whitelist": {
+    "source": "Source",
+    "source_manual": "Manual",
+    "source_url": "URL Synchronization",
+    "source_url_label": "Source URL",
+    "source_url_tip": "HTTP and HTTPS URLs are allowed. The last successful version remains active if synchronization fails.",
+    "source_headers": "Request Headers",
+    "source_headers_tip": "Optional headers sent while downloading the URL source.",
+    "header_name": "Header name",
+    "header_value": "Header value",
+    "add_header": "Add Header",
+    "refresh_minutes": "Refresh Interval (minutes)",
+    "refresh_minutes_tip": "The minimum refresh interval is 5 minutes.",
+    "rules": "IP Rules",
+    "rules_tip": "One IP, CIDR, or IP range per line.",
+    "reference": "Referenced IP Whitelists",
+    "reference_tip": "A request matching any referenced whitelist passes the IP rule.",
+    "sync": "Synchronize",
+    "last_synced_at": "Last Synchronized"
   },
   "gateway_group": {
     "name": "Group Name",

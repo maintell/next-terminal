@@ -70,6 +70,7 @@ const NetworkProxyPage = lazy(() => import("@/pages/gateway/NetworkProxyPage"));
 const ErrorPage = lazy(() => import("@/components/ErrorPage"));
 const StoragePage = lazy(() => import("@/pages/assets/StoragePage"));
 const WebsitePage = lazy(() => import("@/pages/assets/WebsitePage"));
+const IPWhitelistPage = lazy(() => import("@/pages/assets/IPWhitelistPage"));
 const BrowserPage = lazy(() => import("@/pages/access/BrowserPage"));
 const FacadePage = lazy(() => import("@/pages/facade/AssetFacadePage.tsx"));
 const WebsiteFacadePage = lazy(() => import("@/pages/facade/WebsiteFacadePage"));
@@ -147,6 +148,7 @@ const router = createBrowserRouter([
             {path: "/snippet", element: <SnippetPage/>},
             {path: "/storage", element: <StoragePage/>},
             {path: "/website", element: <WebsitePage/>},
+            {path: "/ip-whitelist", element: <IPWhitelistPage/>},
             {path: "/certificate", element: <CertificatePage/>},
             {path: "/db-work-order", element: <DatabaseWorkOrderPage/>},
             {path: "/access-request", element: <AccessRequestPage/>},

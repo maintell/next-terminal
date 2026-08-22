@@ -31,6 +31,7 @@ import {
     UserSwitchOutlined,
     WarningOutlined,
     SafetyCertificateOutlined,
+    SyncOutlined,
     RobotOutlined,
     UserAddOutlined,
 } from "@ant-design/icons";
@@ -81,6 +82,11 @@ export const getMenus = (t: any) => {
                     key: 'website',
                     label: t('menus.resource.submenus.website'),
                     icon: <GlobalOutlined/>,
+                },
+                {
+                    key: 'ip-whitelist',
+                    label: t('menus.resource.submenus.ip_whitelist'),
+                    icon: <SyncOutlined/>,
                 },
                 {
                     key: 'certificate',

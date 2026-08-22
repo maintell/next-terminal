@@ -164,6 +164,7 @@
         "snippet": "命令片段",
         "storage": "存储",
         "website": "Web资产",
+        "ip_whitelist": "IP 白名单",
         "certificate": "证书管理"
       }
     },
@@ -1375,6 +1376,8 @@
     "origin_timeout_tip": "代理等待源站响应的最长时间，超时后返回错误。",
     "insecure_skip_verify": "忽略证书校验",
     "insecure_skip_verify_tip": "开启后将不校验 HTTPS 源站证书，仅建议用于自签名证书等可信环境。",
+    "disable_access_log": "禁用访问日志",
+    "disable_access_log_tip": "开启后，该网站的访问请求将不会被记录到访问日志中。",
     "entrance": "入口路径",
     "entrance_tip": "入口路径是首次访问自动打开的地址",
     "change_group": "修改分组",
@@ -1654,6 +1657,26 @@
     "test_success": "代理连接测试成功",
     "test_failed": "代理连接测试失败",
     "delete_referenced_title": "代理服务器正在使用中，无法删除"
+  },
+  "ip_whitelist": {
+    "source": "来源",
+    "source_manual": "手动维护",
+    "source_url": "URL 同步",
+    "source_url_label": "来源 URL",
+    "source_url_tip": "支持 HTTP 和 HTTPS URL；同步失败时会继续使用最近一次成功的版本。",
+    "source_headers": "请求头",
+    "source_headers_tip": "下载 URL 来源时可选发送的请求头。",
+    "header_name": "请求头名称",
+    "header_value": "请求头值",
+    "add_header": "添加请求头",
+    "refresh_minutes": "同步间隔（分钟）",
+    "refresh_minutes_tip": "同步间隔最少为 5 分钟。",
+    "rules": "IP 规则",
+    "rules_tip": "每行填写一个 IP、CIDR 或 IP 范围。",
+    "reference": "引用 IP 白名单",
+    "reference_tip": "命中任一引用的白名单即可通过 IP 规则。",
+    "sync": "立即同步",
+    "last_synced_at": "最近同步时间"
   },
   "gateway_group": {
     "name": "分组名称",

@@ -186,6 +186,15 @@ const WebsiteBasicFields: React.FC<WebsiteBasicFieldsProps> = ({
             >
                 <InputNumber precision={0} min={1} max={3600} addonAfter={t('general.second')} style={{width: "100%"}}/>
             </Form.Item>
+
+            <Form.Item
+                label={t('assets.disable_access_log')}
+                name="disableAccessLog"
+                valuePropName="checked"
+                extra={t('assets.disable_access_log_tip')}
+            >
+                <Switch checkedChildren={t('general.yes')} unCheckedChildren={t('general.no')}/>
+            </Form.Item>
         </>
     );
 };

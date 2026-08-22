@@ -161,6 +161,7 @@
         "snippet": "コマンドスニペット",
         "storage": "ストレージ",
         "website": "Web 資産",
+        "ip_whitelist": "IP ホワイトリスト",
         "certificate": "証明書管理"
       }
     },
@@ -1375,6 +1376,8 @@
     "origin_timeout_tip": "プロキシがオリジンからの応答を待つ最大時間です。超過するとエラーを返します。",
     "insecure_skip_verify": "証明書検証をスキップ",
     "insecure_skip_verify_tip": "有効にすると HTTPS オリジン証明書を検証しません。自己署名証明書など、信頼できる環境でのみ使用してください。",
+    "disable_access_log": "アクセスログを無効化",
+    "disable_access_log_tip": "有効にすると、このサイトへのアクセスはアクセスログに記録されません。",
     "entrance": "入口パス",
     "entrance_tip": "入口パスは初回アクセス時に自動で開かれるアドレスです",
     "change_group": "グループ変更",
@@ -1654,6 +1657,26 @@
     "test_success": "プロキシ接続テストに成功しました",
     "test_failed": "プロキシ接続テストに失敗しました",
     "delete_referenced_title": "使用中のプロキシサーバーは削除できません"
+  },
+  "ip_whitelist": {
+    "source": "ソース",
+    "source_manual": "手動管理",
+    "source_url": "URL 同期",
+    "source_url_label": "ソース URL",
+    "source_url_tip": "HTTP および HTTPS URL を利用できます。同期に失敗した場合は最後に成功したバージョンを使用します。",
+    "source_headers": "リクエストヘッダー",
+    "source_headers_tip": "URL ソースのダウンロード時に送信する任意のヘッダーです。",
+    "header_name": "ヘッダー名",
+    "header_value": "ヘッダー値",
+    "add_header": "ヘッダーを追加",
+    "refresh_minutes": "更新間隔（分）",
+    "refresh_minutes_tip": "更新間隔は 5 分以上にしてください。",
+    "rules": "IP ルール",
+    "rules_tip": "IP、CIDR、または IP 範囲を 1 行ずつ入力します。",
+    "reference": "参照する IP ホワイトリスト",
+    "reference_tip": "参照するいずれかのホワイトリストに一致すると IP ルールを通過します。",
+    "sync": "今すぐ同期",
+    "last_synced_at": "最終同期日時"
   },
   "gateway_group": {
     "name": "グループ名",

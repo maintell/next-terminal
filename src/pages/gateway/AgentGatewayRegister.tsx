@@ -4,7 +4,7 @@ import { baseUrl } from "@/api/core/requests";
 import { useQuery } from "@tanstack/react-query";
 import { Input,Modal,Select,Typography } from 'antd';
 import clsx from "clsx";
-import { useEffect,useState } from 'react';
+import {useEffect, useState} from 'react';
 import { useTranslation } from "react-i18next";
 
 const {Paragraph} = Typography;
@@ -18,6 +18,13 @@ const linuxImg = new URL('@/assets/images/linux.png', import.meta.url).href;
 const windowsImg = new URL('@/assets/images/windows.png', import.meta.url).href;
 const macosImg = new URL('@/assets/images/macos.png', import.meta.url).href;
 
+const shellQuote = (value: string) => `'${value.replaceAll("'", "'\"'\"'")}'`;
+
+const getInstallCommand = (endpoint: string, token: string) => {
+    const installUrl = `${endpoint.replace(/\/+$/, '')}/api/agent/install.sh`;
+    return `curl --fail --show-error --silent --location --insecure ${shellQuote(installUrl)} | sudo bash -s -- ${shellQuote(token)}`;
+};
+
 const AgentGatewayRegister = ({
                                   open,
                                   handleCancel,
@@ -28,8 +35,6 @@ const AgentGatewayRegister = ({
         endpoint: "", token: ""
     });
     let [os, setOS] = useState('linux');
-    let [bash, setBash] = useState('');
-
     let tokenQuery = useQuery({
         queryKey: ['agent-gateway-tokens'],
         queryFn: agentGatewayTokenApi.getAll,
@@ -62,10 +67,6 @@ const AgentGatewayRegister = ({
         tokenQuery.refetch();
     }, [open]);
 
-    useEffect(() => {
-        setBash(`curl -k ${param.endpoint}/api/agent/install.sh | bash -s ${param.token}`);
-    }, [param]);
-
     const options = [
         {key: 'linux', label: 'Linux', img: linuxImg},
         {key: 'windows', label: 'Windows', img: windowsImg},
@@ -79,7 +80,7 @@ const AgentGatewayRegister = ({
                     <div className={'font-medium'}>{t('gateways.install_auto')}</div>
                     <div className={clsx('bg-slate-200 p-4 rounded', 'dark:bg-slate-700')}>
                         <Paragraph copyable={true} style={{margin: 0}}>
-                            {bash}
+                            {getInstallCommand(param.endpoint, param.token)}
                         </Paragraph>
                     </div>
                     <div className={'font-medium mt-4'}>{t('gateways.install_manual')}</div>
@@ -125,6 +126,13 @@ const AgentGatewayRegister = ({
                 </div>;
             case 'macos':
                 return <div className={'space-y-2'}>
+                    <div className={'font-medium'}>{t('gateways.install_auto')}</div>
+                    <div className={clsx('bg-slate-200 p-4 rounded', 'dark:bg-slate-700')}>
+                        <Paragraph copyable={true} style={{margin: 0}}>
+                            {getInstallCommand(param.endpoint, param.token)}
+                        </Paragraph>
+                    </div>
+                    <div className={'font-medium mt-4'}>{t('gateways.install_manual')}</div>
                     <div>1. {t('gateways.download_binary')}</div>
                     <div className={'flex items-center gap-2'}>
                         <a href={`${baseUrl()}/agent/downloads/nt-tunnel-darwin-arm64`}>arm64</a>
