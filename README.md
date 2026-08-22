@@ -42,7 +42,13 @@ If you discover any security vulnerabilities, please contact the maintainer:
 
 ## Contact
 
-- Telegram https://t.me/next_terminal
+- **Website**: https://www.next-terminal.com
+- **Docs**: https://docs.next-terminal.com
+- **Support email (official)**: [support@next-terminal.com](mailto:support@next-terminal.com) — after-sales within 1 year of purchase, workdays 10:00–18:00; replies on the next workday outside these hours
+- **Issues / Bugs / Feature requests**: [GitHub Issues](https://github.com/next-terminal/next-terminal/issues) (public and searchable — your question helps others with the same issue)
+- **Community**: Telegram https://t.me/next_terminal · WeChat group (add with note `next-terminal`)
+
+> Telegram / WeChat groups are for community discussion and experience sharing only and do not handle support tickets. For any functional questions or bugs, please use GitHub Issues. Private messages are for casual chat only and consulting messages will not be replied to. License usage and upgrades are not affected.
 
 ### Sponsors
 
@@ -53,7 +59,6 @@ CDN acceleration and security protection for this project is sponsored by [Tence
 
 Thanks to the following sponsors for their support:
 
-- [SharonNetworks](https://sharon.io/) — China-optimized network access across APAC
 - [Laika Cloud](https://www.lcayun.com/actcloud.html?from=next-terminal)
 - [Digitalvirt](https://digitalvirt.com/aff.php?aff=1326) — Elastic compute service
 - [Gomami](https://gomami.io/aff.php?aff=298) — The Fastest China Route

@@ -30,10 +30,15 @@ Next Terminal 是一个简洁、安全、易用的运维审计系统，支持多
 
 📧 support@next-terminal.com
 
-## 社群
+## 联系方式
 
-- Telegram https://t.me/next_terminal
-- 微信群：加我微信备注「next-terminal」，拉你进群（详见下方二维码）
+- **官网**：https://www.next-terminal.com（备案已完成，恢复公开访问）
+- **文档**：https://docs.next-terminal.com
+- **官方售后**（购买后 1 年内）：support@next-terminal.com，工作日 10:00–18:00，非工作时间顺延至下一工作日回复
+- **功能使用 / bug / 建议**：[GitHub Issues](https://github.com/next-terminal/next-terminal/issues)（公开可搜索，您的提问也会帮助他人）
+- **社群**：Telegram https://t.me/next_terminal · 微信群：加我微信备注「next-terminal」拉你进群
+
+> 微信群与 Telegram 群为社区交流渠道（闲聊/经验分享），不处理功能使用、bug 等问题，此类请走 GitHub Issues；微信私聊仅闲聊，咨询类不回复。授权正常使用与版本升级不受影响。
 
 <details>
 <summary>微信群二维码</summary>
@@ -49,7 +54,6 @@ Next Terminal 是一个简洁、安全、易用的运维审计系统，支持多
 <details>
 <summary>鸣谢</summary>
 
-- [SharonNetworks](https://sharon.io/) — 亚太顶级中国优化网络接入
 - [莱卡云](https://www.lcayun.com/actcloud.html?from=next-terminal)
 - [Digitalvirt](https://digitalvirt.com/aff.php?aff=1326) — 弹性计算服务
 - [Gomami](https://gomami.io/aff.php?aff=298)
