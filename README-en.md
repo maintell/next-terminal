@@ -28,33 +28,33 @@ Next Terminal 是一个简洁、安全、易用的运维审计系统，支持多
 
 如果您在使用过程中发现安全漏洞或潜在风险，请通过以下方式联系我们：
 
-📧support@next-terminal.com
+📧 support@next-terminal.com
 
 ## 社群
-- telegram https://t.me/next_terminal
-- 微信群：加我微信备注「next-terminal」，拉你进群
+
+- Telegram https://t.me/next_terminal
+- 微信群：加我微信备注「next-terminal」，拉你进群（详见下方二维码）
+
+<details>
+<summary>微信群二维码</summary>
 
 <img src="screenshots/zh/wx1.png" width="300" height="auto"/>
 
+</details>
+
 ## 赞助
 
-- 本项目 CDN 加速及安全防护由 [Tencent EdgeOne](https://edgeone.ai/zh?from=github) 赞助
+本项目 CDN 加速及安全防护由 [Tencent EdgeOne](https://edgeone.ai/zh?from=github) 赞助。
 
-- **[SharonNetworks](https://sharon.io/)**
+<details>
+<summary>鸣谢</summary>
 
-  亚太数据中心提供顶级的中国优化网络接入 · 低延时&高带宽&提供Tbps级本地清洗高防服务, 为您的业务保驾护航, 为您的客户提供极致体验.
+- [SharonNetworks](https://sharon.io/) — 亚太顶级中国优化网络接入
+- [莱卡云](https://www.lcayun.com/actcloud.html?from=next-terminal)
+- [Digitalvirt](https://digitalvirt.com/aff.php?aff=1326) — 弹性计算服务
+- [Gomami](https://gomami.io/aff.php?aff=298)
 
-- **[莱卡云-专业云计算服务器提供商](https://www.lcayun.com/actcloud.html?from=next-terminal)**
-
-    <img src="images/lcayun.png" width="200" height="auto"/>
-
-- **[Digitalvirt](https://digitalvirt.com/aff.php?aff=1326)** 提供安全可靠的弹性计算服务（优惠码 typesafe 全线云主机 八五折）
-
-  [![digitalvirt](https://digitalvirt.com/templates/BlueWhite/img/logo-dark.svg)](https://digitalvirt.com/aff.php?aff=1326)
-
-- **[Gomami](https://gomami.io/aff.php?aff=298)**  The Fastest China Route. The Strongest Performance.
-
-  <img src="https://gomami.io/templates/webflow/images/GoMami.svg" width="200" height="auto" alt="Gomami"/>
+</details>
 
 ## 优秀项目推荐
 

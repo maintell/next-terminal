@@ -1,5 +1,11 @@
 # Next Terminal
 
+[![Stars](https://img.shields.io/github/stars/next-terminal/next-terminal?style=flat&label=Stars)](https://github.com/next-terminal/next-terminal/stargazers)
+[![License](https://img.shields.io/github/license/next-terminal/next-terminal?label=License)](./LICENSE)
+[![Website](https://img.shields.io/badge/Website-next--terminal.com-1063ff)](https://www.next-terminal.com)
+[![Docs](https://img.shields.io/badge/Docs-docs.next--terminal.com-0ea5e9)](https://docs.next-terminal.com)
+[![Demo](https://img.shields.io/badge/Demo-demo.next--terminal.com-10b981)](https://demo.next-terminal.com)
+
 English | [简体中文](./README-en.md)
 
 Note: Starting with v2.0.0, the backend code for this project is no longer open source.
@@ -35,7 +41,24 @@ If you discover any security vulnerabilities, please contact the maintainer:
 📧 [support@next-terminal.com](mailto:support@next-terminal.com)
 
 ## Contact
-- telegram https://t.me/next_terminal
+
+- Telegram https://t.me/next_terminal
+
+### Sponsors
+
+CDN acceleration and security protection for this project is sponsored by [Tencent EdgeOne](https://edgeone.ai/zh?from=github).
+
+<details>
+<summary>Acknowledgements</summary>
+
+Thanks to the following sponsors for their support:
+
+- [SharonNetworks](https://sharon.io/) — China-optimized network access across APAC
+- [Laika Cloud](https://www.lcayun.com/actcloud.html?from=next-terminal)
+- [Digitalvirt](https://digitalvirt.com/aff.php?aff=1326) — Elastic compute service
+- [Gomami](https://gomami.io/aff.php?aff=298) — The Fastest China Route
+
+</details>
 
 ### Recommended Projects
 
