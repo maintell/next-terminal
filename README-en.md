@@ -32,7 +32,7 @@ Next Terminal 是一个简洁、安全、易用的运维审计系统，支持多
 
 ## 联系方式
 
-- **官网**：https://www.next-terminal.com（备案已完成，恢复公开访问）
+- **官网**：https://www.next-terminal.com
 - **文档**：https://docs.next-terminal.com
 - **官方售后**（购买后 1 年内）：support@next-terminal.com，工作日 10:00–18:00，非工作时间顺延至下一工作日回复
 - **功能使用 / bug / 建议**：[GitHub Issues](https://github.com/next-terminal/next-terminal/issues)（公开可搜索，您的提问也会帮助他人）
