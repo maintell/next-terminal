@@ -46,7 +46,7 @@ If you discover any security vulnerabilities, please contact the maintainer:
 - **Docs**: https://docs.next-terminal.com
 - **Support email (official)**: [support@next-terminal.com](mailto:support@next-terminal.com) — after-sales within 1 year of purchase, workdays 10:00–18:00; replies on the next workday outside these hours
 - **Issues / Bugs / Feature requests**: [GitHub Issues](https://github.com/next-terminal/next-terminal/issues) (public and searchable — your question helps others with the same issue)
-- **Community**: See https://www.next-terminal.com for community channels (GitHub Issues for bugs/features).
+- **Community**: Telegram https://t.me/next_terminal · WeChat group — see https://www.next-terminal.com
 
 ### Sponsors
 
