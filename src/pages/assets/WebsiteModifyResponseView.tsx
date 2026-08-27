@@ -95,6 +95,177 @@ const WebsiteModifyResponseView = () => {
         </Form.List>
     );
 
+    const renderRewriteHeaders = (ruleName: number) => (
+        <Form.List name={[ruleName, 'actions', 'rewrite_headers']}>
+            {(fields, {add, remove}) => (
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                        {renderTitle(
+                            t('assets.website_response_modify.rewrite_headers_label'),
+                            t('assets.website_response_modify.rewrite_headers_tip')
+                        )}
+                        <Button
+                            type="link"
+                            size="small"
+                            icon={<PlusOutlined/>}
+                            onClick={() => add({
+                                key: 'Location',
+                                mode: 'url_host',
+                                replacement: '{{website.domain}}',
+                                scheme: ''
+                            })}
+                            style={{paddingInline: 0}}
+                        >
+                            {t('assets.website_response_modify.add_rewrite_header')}
+                        </Button>
+                    </div>
+
+                    {fields.length > 0 && (
+                        <div className="overflow-x-auto">
+                            <div className="min-w-[860px] space-y-2">
+                                <div className="grid grid-cols-[minmax(140px,0.8fr)_150px_minmax(220px,1.2fr)_minmax(180px,1fr)_32px] gap-2 px-2 text-xs text-gray-500">
+                                    <div>{t('assets.header_key')}</div>
+                                    <div>{t('assets.website_response_modify.rewrite_mode_label')}</div>
+                                    <div>{t('assets.website_response_modify.rewrite_source_label')}</div>
+                                    <div>{t('assets.website_response_modify.rewrite_target_label')}</div>
+                                    <div/>
+                                </div>
+
+                                {fields.map(({key, name: subName, ...restField}) => (
+                                    <div
+                                        key={key}
+                                        className="grid grid-cols-[minmax(140px,0.8fr)_150px_minmax(220px,1.2fr)_minmax(180px,1fr)_32px] items-start gap-2"
+                                    >
+                                        <Form.Item
+                                            {...restField}
+                                            name={[subName, 'key']}
+                                            rules={[{
+                                                required: true,
+                                                message: t('assets.website_response_modify.header_key_required')
+                                            }]}
+                                            style={{marginBottom: 0}}
+                                        >
+                                            <Input placeholder="Location"/>
+                                        </Form.Item>
+                                        <Form.Item
+                                            {...restField}
+                                            name={[subName, 'mode']}
+                                            rules={[{
+                                                required: true,
+                                                message: t('assets.website_response_modify.rewrite_mode_required')
+                                            }]}
+                                            style={{marginBottom: 0}}
+                                        >
+                                            <Select
+                                                options={[
+                                                    {
+                                                        value: 'url_host',
+                                                        label: t('assets.website_response_modify.rewrite_mode_url_host')
+                                                    },
+                                                    {
+                                                        value: 'regex',
+                                                        label: t('assets.website_response_modify.rewrite_mode_regex')
+                                                    }
+                                                ]}
+                                            />
+                                        </Form.Item>
+                                        <Form.Item
+                                            noStyle
+                                            shouldUpdate={(previousValues, currentValues) =>
+                                                previousValues.modifyRules?.[ruleName]?.actions?.rewrite_headers?.[subName]?.mode !==
+                                                currentValues.modifyRules?.[ruleName]?.actions?.rewrite_headers?.[subName]?.mode
+                                            }
+                                        >
+                                            {({getFieldValue}) => {
+                                                const mode = getFieldValue([
+                                                    'modifyRules',
+                                                    ruleName,
+                                                    'actions',
+                                                    'rewrite_headers',
+                                                    subName,
+                                                    'mode'
+                                                ]);
+
+                                                if (mode === 'regex') {
+                                                    return (
+                                                        <>
+                                                            <Form.Item
+                                                                {...restField}
+                                                                name={[subName, 'search']}
+                                                                rules={[{
+                                                                    required: true,
+                                                                    message: t('assets.website_response_modify.rewrite_search_required')
+                                                                }]}
+                                                                style={{marginBottom: 0}}
+                                                            >
+                                                                <Input placeholder="^(https?://)[^/]+(.*)$"/>
+                                                            </Form.Item>
+                                                            <Form.Item
+                                                                {...restField}
+                                                                name={[subName, 'replacement']}
+                                                                style={{marginBottom: 0}}
+                                                            >
+                                                                <Input placeholder="${1}{{website.domain}}${2}"/>
+                                                            </Form.Item>
+                                                        </>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <>
+                                                        <Form.Item
+                                                            {...restField}
+                                                            name={[subName, 'replacement']}
+                                                            rules={[{
+                                                                required: true,
+                                                                message: t('assets.website_response_modify.rewrite_host_required')
+                                                            }]}
+                                                            style={{marginBottom: 0}}
+                                                        >
+                                                            <Input placeholder="{{website.domain}}"/>
+                                                        </Form.Item>
+                                                        <Form.Item
+                                                            {...restField}
+                                                            name={[subName, 'scheme']}
+                                                            style={{marginBottom: 0}}
+                                                        >
+                                                            <Select
+                                                                options={[
+                                                                    {
+                                                                        value: '',
+                                                                        label: t('assets.website_response_modify.rewrite_scheme_preserve')
+                                                                    },
+                                                                    {value: 'https', label: 'HTTPS'},
+                                                                    {value: 'http', label: 'HTTP'}
+                                                                ]}
+                                                            />
+                                                        </Form.Item>
+                                                    </>
+                                                );
+                                            }}
+                                        </Form.Item>
+                                        <Button
+                                            type="text"
+                                            danger
+                                            icon={<DeleteOutlined/>}
+                                            onClick={() => remove(subName)}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {fields.length > 0 && (
+                        <div className="text-xs text-gray-500">
+                            {t('assets.website_response_modify.rewrite_variable_tip')}
+                        </div>
+                    )}
+                </div>
+            )}
+        </Form.List>
+    );
+
     const renderRemoveHeaders = (ruleName: number) => (
         <Form.List name={[ruleName, 'actions', 'remove_headers']}>
             {(fields, {add, remove}) => (
@@ -310,6 +481,7 @@ const WebsiteModifyResponseView = () => {
 
                             <div className="space-y-3">
                                 {renderTitle(t('assets.website_response_modify.header_operations'))}
+                                {renderRewriteHeaders(name)}
                                 {renderKeyValueFields(
                                     [name, 'actions', 'set_headers'],
                                     t('assets.website_response_modify.set_headers_label'),

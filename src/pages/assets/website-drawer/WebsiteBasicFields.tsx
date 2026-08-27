@@ -181,12 +181,13 @@ const WebsiteBasicFields: React.FC<WebsiteBasicFieldsProps> = ({
 
             <Form.Item
                 label={t('assets.origin_timeout')}
-                name="originTimeout"
                 extra={t('assets.origin_timeout_tip')}
-                rules={[{required: true}]}
+                required
             >
                 <Space.Compact block>
-                    <InputNumber precision={0} min={1} max={3600} style={{width: "100%"}}/>
+                    <Form.Item name="originTimeout" noStyle rules={[{required: true}]}>
+                        <InputNumber precision={0} min={1} max={3600} style={{width: "100%"}}/>
+                    </Form.Item>
                     <Space.Addon>{t('general.second')}</Space.Addon>
                 </Space.Compact>
             </Form.Item>

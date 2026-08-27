@@ -276,10 +276,11 @@ const BackupSetting = () => {
                 enabled: !!values.successActions?.webdav?.enabled,
             },
         };
+        const retentionDays = Number(values.retentionDays);
         const payload: BackupConfigUpdate = {
             scheduleEnabled: !!values.scheduleEnabled,
             scheduleTime: values.scheduleTime ? values.scheduleTime.format(timeFormat) : '04:00',
-            retentionDays: values.retentionDays || 7,
+            retentionDays: Number.isFinite(retentionDays) && retentionDays > 0 ? retentionDays : 7,
             successActions,
         };
         await saveConfigMutation.mutateAsync(payload);
@@ -364,6 +365,29 @@ const BackupSetting = () => {
         reader.readAsText(files[0]);
     };
 
+    const handleCreateBackup = () => {
+        let remark = '';
+        modal.confirm({
+            title: t('settings.backup.create_confirm_title'),
+            content: (
+                <Input.TextArea
+                    rows={3}
+                    maxLength={200}
+                    showCount
+                    placeholder={t('general.enter_remark')}
+                    onChange={(event) => {
+                        remark = event.target.value;
+                    }}
+                />
+            ),
+            okText: t('settings.backup.backup_now'),
+            cancelText: t('actions.cancel'),
+            onOk: async () => {
+                await createMutation.mutateAsync(remark);
+            },
+        });
+    };
+
     const handleRestore = (file: BackupFile) => {
         modal.confirm({
             title: t('settings.backup.restore_confirm_title'),
@@ -371,6 +395,7 @@ const BackupSetting = () => {
                 <Space orientation="vertical">
                     <Typography.Text>{t('settings.backup.restore_confirm_content')}</Typography.Text>
                     <Typography.Text type="secondary">{t('settings.backup.backup_file', {name: file.name})}</Typography.Text>
+                    <Typography.Text type="secondary">{t('general.remark_label')}{file.remark || '-'}</Typography.Text>
                     <Typography.Text type="secondary">{t('settings.backup.exclude_tip')}</Typography.Text>
                 </Space>
             ),
@@ -411,6 +436,13 @@ const BackupSetting = () => {
             title: t('settings.backup.file_name'),
             dataIndex: 'name',
             ellipsis: true,
+        },
+        {
+            title: t('general.remark'),
+            dataIndex: 'remark',
+            width: 200,
+            ellipsis: true,
+            render: (value: string) => value || '-',
         },
         {
             title: t('settings.backup.backup_time'),
@@ -478,17 +510,18 @@ const BackupSetting = () => {
                                        style={{marginBottom: 0}}>
                                 <TimePicker format={timeFormat} minuteStep={5} style={{width: 112}}/>
                             </Form.Item>
-                            <Form.Item name="retentionDays" label={t('settings.backup.retention_days')}
-                                       style={{marginBottom: 0}}>
+                            <Form.Item label={t('settings.backup.retention_days')} style={{marginBottom: 0}}>
                                 <Space.Compact>
-                                    <InputNumber min={1} max={365} style={{width: 88}}/>
+                                    <Form.Item name="retentionDays" noStyle>
+                                        <InputNumber min={1} max={365} precision={0} style={{width: 88}}/>
+                                    </Form.Item>
                                     <Space.Addon>{t('general.days')}</Space.Addon>
                                 </Space.Compact>
                             </Form.Item>
                             <Form.Item style={{marginBottom: 0}}>
                                 <Space wrap>
                                     <Button icon={<Play size={16}/>} loading={taskRunning}
-                                            onClick={() => createMutation.mutate()}>
+                                            onClick={handleCreateBackup}>
                                         {t('settings.backup.backup_now')}
                                     </Button>
                                     <Button danger icon={<Upload size={16}/>} loading={uploadRestoreMutation.isPending}
@@ -782,7 +815,7 @@ const BackupSetting = () => {
                     columns={columns}
                     dataSource={filesQuery.data || []}
                     loading={filesQuery.isLoading || filesQuery.isFetching}
-                    scroll={{x: 780}}
+                    scroll={{x: 980}}
                     pagination={{pageSize: 10}}
                 />
 

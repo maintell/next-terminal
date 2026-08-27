@@ -15,12 +15,11 @@ const ScheduledTaskModal = ({
 }: Props) => {
     let {t} = useTranslation();
     const [form] = Form.useForm();
-    let [spec, setSpec] = useState('');
+    const spec = Form.useWatch('spec', form) || '';
     let [runtimeOpen, setRuntimeOpen] = useState(false);
     const get = async () => {
         if (id) {
             let data = await scheduledTaskApi.getById(id);
-            setSpec(data.spec);
             return data;
         }
         return {
@@ -70,16 +69,11 @@ const ScheduledTaskModal = ({
                     </Form.Item>
                 </Col>
                 <Col span={12}>
-                    <Form.Item label={t('sysops.spec')} name={'spec'} rules={[{
-                        required: true
-                    }]} tooltip={t('sysops.spec_tooltip')}>
+                    <Form.Item label={t('sysops.spec')} required tooltip={t('sysops.spec_tooltip')}>
                         <Space.Compact block>
-                            <Input
-                                value={spec}
-                                onChange={e => {
-                                    setSpec(e.target.value);
-                                }}
-                            />
+                            <Form.Item name={'spec'} noStyle rules={[{required: true}]}>
+                                <Input/>
+                            </Form.Item>
                             <div className={'flex cursor-pointer items-center rounded-r-md border border-l-0 px-3'}>
                                 <Popover content={<ScheduledTaskRuntime open={runtimeOpen} spec={spec} />} title={t('sysops.spec_run_time')} trigger="click" placement="rightTop" open={runtimeOpen} onOpenChange={open => {
                                     setRuntimeOpen(open);

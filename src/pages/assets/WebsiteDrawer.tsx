@@ -107,7 +107,7 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
       ...(websiteData?.public || defaults.public),
       ...(values.public || {}),
       enabled: values.public?.enabled ?? false,
-      ip: normalizePublicIPRules(values.public?.ip || websiteData?.public?.ip || defaults.public?.ip),
+      ip: normalizePublicIPRules(values.public?.ip ?? websiteData?.public?.ip ?? defaults.public?.ip),
       expiredAt: values.public?.timeLimit && publicExpiredAt && dayjs.isDayjs(publicExpiredAt)
         ? publicExpiredAt.valueOf()
         : 0,

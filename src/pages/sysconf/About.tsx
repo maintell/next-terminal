@@ -1,70 +1,124 @@
+import {App, Button, Spin, Tag, Tooltip, Typography} from "antd";
+import {CheckCircleOutlined, CopyOutlined, ExportOutlined, InfoCircleOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {useQuery} from "@tanstack/react-query";
-import brandingApi from "@/api/branding-api";
+import copy from "copy-to-clipboard";
 import propertyApi from "@/api/property-api";
-import {useMobile} from "@/hook/use-mobile";
 import {cn} from "@/lib/utils";
 import {VersionInfo} from "@/components/VersionInfo";
 
+const UPGRADE_COMMAND = 'docker compose pull && docker compose up -d';
 const CHANGELOG_URL = 'https://www.next-terminal.com/changelog';
 
-const About = () => {
+interface AboutProps {
+    compact?: boolean;
+}
 
-    const {isMobile} = useMobile();
+const About = ({compact = false}: AboutProps) => {
     const {t} = useTranslation();
+    const {message} = App.useApp();
 
-    let brandingQuery = useQuery({
-        queryKey: ['branding'],
-        queryFn: brandingApi.getBranding,
-    });
-
-    let versionQuery = useQuery({
+    const versionQuery = useQuery({
         queryKey: ['version'],
         queryFn: propertyApi.getLatestVersion,
+        staleTime: 30 * 60 * 1000,
     });
 
+    const handleCopyUpgradeCommand = () => {
+        if (copy(UPGRADE_COMMAND)) {
+            message.success(t('settings.about.upgrade_command_copied'));
+            return;
+        }
+        message.error(t('settings.about.upgrade_command_copy_failed'));
+    };
+
+    const version = versionQuery.data;
+
     return (
-        <div>
-            <div className={'flex flex-col gap-4'}>
-                <div className={cn(
-                    'space-y-4',
-                    isMobile && 'w-full px-2'
-                )}>
-                    <div className={cn(
-                        'flex flex-col gap-1',
-                        isMobile ? 'text-left' : 'text-left'
-                    )}>
-                        <VersionInfo
-                            label={t('settings.about.current_version')}
-                            isPending={brandingQuery.isPending}
-                            error={brandingQuery.error}
-                            value={brandingQuery.data?.version}
-                            errorText={t('error')}
-                            isMobile={isMobile}
-                        />
-                        <VersionInfo
-                            label={t('settings.about.latest_version')}
-                            isPending={versionQuery.isPending}
-                            error={versionQuery.error}
-                            value={versionQuery.data?.latestVersion}
-                            errorText={t('error')}
-                            isMobile={isMobile}
-                        />
-                        <div className={cn('font-bold', isMobile && 'text-sm')}>
-                            {t('settings.about.update_content')}:
-                            <a
-                                href={CHANGELOG_URL}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={'mt-2 block text-base font-medium text-blue-500 hover:text-blue-600'}
-                            >
-                                {CHANGELOG_URL}
-                            </a>
-                        </div>
+        <Spin spinning={versionQuery.isPending}>
+            <div className={cn(
+                'space-y-5',
+                compact
+                    ? 'max-h-[calc(100vh-48px)] w-[min(360px,calc(100vw-48px))] overflow-y-auto pr-1'
+                    : 'max-w-3xl'
+            )}>
+                <div className="flex items-start justify-between gap-4">
+                    <div>
+                        <Typography.Title level={5} className="!mb-1">
+                            {t('settings.about.version_update')}
+                        </Typography.Title>
+                        <Typography.Text type="secondary">
+                            {versionQuery.isError
+                                ? t('settings.about.version_check_failed')
+                                : version?.upgrade
+                                    ? t('settings.about.update_available', {version: version.latestVersion})
+                                    : t('settings.about.up_to_date')}
+                        </Typography.Text>
                     </div>
+                    {version && (
+                        <Tag
+                            color={version.upgrade ? 'blue' : 'success'}
+                            icon={version.upgrade ? <InfoCircleOutlined/> : <CheckCircleOutlined/>}
+                        >
+                            {version.upgrade
+                                ? t('settings.about.new_version')
+                                : t('settings.about.latest_status')}
+                        </Tag>
+                    )}
                 </div>
+
+                <div className="flex flex-col gap-1">
+                    <VersionInfo
+                        label={t('settings.about.current_version')}
+                        isPending={versionQuery.isPending}
+                        error={versionQuery.error}
+                        value={version?.currentVersion}
+                        errorText={t('error')}
+                        isMobile={compact}
+                    />
+                    <VersionInfo
+                        label={t('settings.about.latest_version')}
+                        isPending={versionQuery.isPending}
+                        error={versionQuery.error}
+                        value={version?.latestVersion}
+                        errorText={t('error')}
+                        isMobile={compact}
+                    />
+                </div>
+
+                <Typography.Link
+                    href={CHANGELOG_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1"
+                >
+                    {t('settings.about.view_changelog')}
+                    <ExportOutlined/>
+                </Typography.Link>
+
+                <section>
+                    <Typography.Text strong>{t('settings.about.upgrade_method')}</Typography.Text>
+                    <Typography.Paragraph type="secondary" className="!mb-2 !mt-1">
+                        {t('settings.about.upgrade_instruction')}
+                    </Typography.Paragraph>
+                    <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800">
+                        <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-xs text-gray-700 dark:text-gray-200">
+                            {UPGRADE_COMMAND}
+                        </code>
+                        <Tooltip title={t('settings.about.copy_upgrade_command')}>
+                            <Button
+                                type="text"
+                                size="small"
+                                icon={<CopyOutlined/>}
+                                onClick={handleCopyUpgradeCommand}
+                                aria-label={t('settings.about.copy_upgrade_command')}
+                                className="shrink-0"
+                            />
+                        </Tooltip>
+                    </div>
+                </section>
             </div>
-        </div>
+        </Spin>
     );
 };
 

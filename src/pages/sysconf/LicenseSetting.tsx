@@ -295,13 +295,18 @@ const LicenseSetting = () => {
                                 }
                                 {bindingType === 'domain' &&
                                     <Form.Item
-                                        name={licenseDomainKey}
                                         label={t('settings.license.domain')}
                                         tooltip={t('settings.license.domain_tip')}
-                                        rules={[{validator: validateLicenseDomain}]}
+                                        required
                                     >
                                         <Space.Compact block>
-                                            <Input placeholder="nt.example.com"/>
+                                            <Form.Item
+                                                name={licenseDomainKey}
+                                                noStyle
+                                                rules={[{validator: validateLicenseDomain}]}
+                                            >
+                                                <Input placeholder="nt.example.com"/>
+                                            </Form.Item>
                                             <Button
                                                 icon={<AimOutlined/>}
                                                 onClick={handleAutoDetectDomain}

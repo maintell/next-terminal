@@ -1,7 +1,12 @@
 import {Api} from "@/api/core/api";
 import requests from "@/api/core/requests";
 import type { TreeDataNode } from 'antd';
-import type {ConnectionMode, WebsiteFormData, WebsiteOriginHostMode} from "@/pages/assets/website-drawer/types";
+import type {
+    ConnectionMode,
+    WebsiteFormData,
+    WebsiteOriginHostMode,
+    WebsiteResponseModifyRule
+} from "@/pages/assets/website-drawer/types";
 import type {GatewayHop} from "@/api/gateway-chain";
 
 export interface WebsiteGroupNode extends TreeDataNode {
@@ -33,7 +38,7 @@ export interface Website {
     cert: Cert;
     public: Public;
     tempAllow?: TempAllow;
-    modifyRules?: any[];
+    modifyRules?: WebsiteResponseModifyRule[];
     createdAt: number;
     groupId?: string;
     sort: string;  // LexoRank 排序字段
@@ -188,7 +193,7 @@ class WebsiteApi extends Api<Website> {
         return await requests.patch(`/${this.group}/${id}/cert`, data);
     }
 
-    updateModifyResponse = async (id: string, data: { modifyRules?: any[] }) => {
+    updateModifyResponse = async (id: string, data: { modifyRules?: WebsiteResponseModifyRule[] }) => {
         return await requests.patch(`/${this.group}/${id}/modify-response`, data);
     }
 }

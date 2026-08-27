@@ -16,10 +16,12 @@ export interface License {
 export class SimpleLicense {
     type: string | '' | 'free' | 'test' | 'premium' | 'enterprise';
     oem?: boolean;
+    source?: 'local' | 'remote' | string;
 
-    constructor(type: string, oem?: boolean) {
+    constructor(type: string, oem?: boolean, source?: string) {
         this.type = type;
         this.oem = oem;
+        this.source = source;
     }
 
     hasPremiumFeatures(): boolean {
@@ -28,6 +30,10 @@ export class SimpleLicense {
 
     isOEM(): boolean {
         return this.oem === true;
+    }
+
+    isOffline(): boolean {
+        return this.source === 'local';
     }
 }
 
@@ -45,7 +51,7 @@ class LicenseApi {
 
     getSimpleLicense = async () => {
         let data = await requests.get(`/license`, {errorMode: 'silent'});
-        return new SimpleLicense(data.type, data.oem);
+        return new SimpleLicense(data.type, data.oem, data.source);
     }
 
     setLicense = async (values: any) => {

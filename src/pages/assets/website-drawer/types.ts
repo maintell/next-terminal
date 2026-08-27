@@ -10,6 +10,39 @@ export interface ParsedURL {
     port: string;
 }
 
+export type HeaderRewriteMode = 'url_host' | 'regex';
+
+export interface HeaderRewriteRule {
+    key: string;
+    mode: HeaderRewriteMode;
+    search?: string;
+    replacement: string;
+    scheme?: '' | 'http' | 'https';
+}
+
+export interface WebsiteResponseBodyReplaceRule {
+    search: string;
+    replace: string;
+    is_regex: boolean;
+}
+
+export interface WebsiteResponseModifyRule {
+    name: string;
+    match?: {
+        path?: string;
+        method?: string;
+        headers?: Record<string, string>;
+        status?: number;
+    };
+    actions?: {
+        rewrite_headers?: HeaderRewriteRule[];
+        set_headers?: Array<{key: string; value: string}>;
+        add_headers?: Array<{key: string; value: string}>;
+        remove_headers?: string[];
+        body_replace?: WebsiteResponseBodyReplaceRule[];
+    };
+}
+
 export interface WebsiteFormData {
     id?: string;
     name: string;
@@ -59,7 +92,7 @@ export interface WebsiteFormData {
         durationMinutes?: number;
         autoRenew?: boolean;
     };
-    modifyRules?: any[];
+    modifyRules?: WebsiteResponseModifyRule[];
 }
 
 export interface LogoItem {

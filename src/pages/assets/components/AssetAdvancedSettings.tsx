@@ -149,16 +149,17 @@ const SshTerminalSettings = () => {
             <Switch checkedChildren={t('general.enabled')} unCheckedChildren={t('general.disabled')}/>
         </Form.Item>
         <Form.Item
-            name={['attrs', 'connectTimeout']}
             label={t('assets.connect_timeout')}
         >
             <Space.Compact>
-                <InputNumber
-                    min={1}
-                    max={300}
-                    style={{width: 140}}
-                    placeholder={`${DefaultTerminalConnectTimeout}`}
-                />
+                <Form.Item name={['attrs', 'connectTimeout']} noStyle>
+                    <InputNumber
+                        min={1}
+                        max={300}
+                        style={{width: 140}}
+                        placeholder={`${DefaultTerminalConnectTimeout}`}
+                    />
+                </Form.Item>
                 <Space.Addon>
                     {t('general.second')}
                 </Space.Addon>

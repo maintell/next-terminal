@@ -60,6 +60,7 @@ export interface BackupFile {
     size: number;
     createdAt: string;
     source: string;
+    remark: string;
     appVersion: string;
     dbType: string;
     includes: string[];
@@ -104,8 +105,8 @@ class BackupApi {
         return await requests.get(`/${this.group}/files`) as BackupFile[];
     }
 
-    create = async () => {
-        return await requests.post(`/${this.group}/files`) as { taskId: string };
+    create = async (remark: string) => {
+        return await requests.post(`/${this.group}/files`, {remark}) as { taskId: string };
     }
 
     restore = async (name: string) => {

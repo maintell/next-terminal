@@ -199,12 +199,12 @@ const WebsiteBatchEditDrawer = ({websiteIds, open, onClose, onSuccess}: Props) =
                         <Form.Item name="updateOriginTimeout" valuePropName="checked" noStyle>
                             <Checkbox>{t('assets.origin_timeout')}</Checkbox>
                         </Form.Item>
-                        <Form.Item
-                            name="originTimeout"
-                            noStyle
-                            rules={[{required: updateOriginTimeout, type: 'number', min: 1, max: 3600}]}
-                        >
-                            <Space.Compact className="w-48">
+                        <Space.Compact className="w-48">
+                            <Form.Item
+                                name="originTimeout"
+                                noStyle
+                                rules={[{required: updateOriginTimeout, type: 'number', min: 1, max: 3600}]}
+                            >
                                 <InputNumber
                                     disabled={!updateOriginTimeout}
                                     precision={0}
@@ -212,9 +212,9 @@ const WebsiteBatchEditDrawer = ({websiteIds, open, onClose, onSuccess}: Props) =
                                     max={3600}
                                     className="flex-1"
                                 />
-                                <Space.Addon>{t('general.second')}</Space.Addon>
-                            </Space.Compact>
-                        </Form.Item>
+                            </Form.Item>
+                            <Space.Addon>{t('general.second')}</Space.Addon>
+                        </Space.Compact>
                     </div>
 
                     <div className="flex items-center justify-between gap-4">
