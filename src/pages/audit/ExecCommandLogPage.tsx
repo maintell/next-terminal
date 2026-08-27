@@ -162,7 +162,7 @@ const ExecCommandLogPage = () => {
             <Alert
                 type="info"
                 showIcon
-                message={t('audit.exec_command.scope_tip')}
+                title={t('audit.exec_command.scope_tip')}
                 style={{marginBottom: 16}}
             />
             <NTable

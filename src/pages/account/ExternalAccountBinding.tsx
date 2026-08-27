@@ -63,7 +63,7 @@ const ExternalAccountBinding = ({result, onSuccess}: ExternalAccountBindingProps
     return (
         <div className="min-h-screen w-full flex items-center justify-center px-6 py-10">
             <div className="w-full max-w-md">
-                <Space direction="vertical" size={4} className="mb-6">
+                <Space orientation="vertical" size={4} className="mb-6">
                     <Title level={3} className="!mb-0">{t('account.external_binding.title')}</Title>
                     <Text type="secondary">
                         {result.provider === 'wechat'

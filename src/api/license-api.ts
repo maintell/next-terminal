@@ -44,7 +44,7 @@ class LicenseApi {
     }
 
     getSimpleLicense = async () => {
-        let data = await requests.get(`/license?noerr`);
+        let data = await requests.get(`/license`, {errorMode: 'silent'});
         return new SimpleLicense(data.type, data.oem);
     }
 

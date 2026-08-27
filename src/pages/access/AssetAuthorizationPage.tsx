@@ -1,4 +1,4 @@
-import {Alert, message, Result, Spin} from 'antd';
+import {Alert, App, Result, Spin} from 'antd';
 import {useMutation, useQuery} from '@tanstack/react-query';
 import {useSearchParams} from 'react-router-dom';
 import {useState} from 'react';
@@ -8,6 +8,7 @@ import portalApi from '@/api/portal-api';
 
 const AssetAuthorizationPage = () => {
     const {t} = useTranslation();
+    const {message} = App.useApp();
     const [searchParams] = useSearchParams();
     const authorizeId = searchParams.get('authorize_id') ?? '';
     const [open, setOpen] = useState(true);

@@ -53,7 +53,7 @@ const AccessPolicyDepartment = ({active, id}: AccessPolicyDepartmentProps) => {
 
     return (
         <Spin spinning={departmentTreeQuery.isLoading || bindingsQuery.isLoading}>
-            <Space direction="vertical" size="middle" style={{width: '100%'}}>
+            <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                 <div style={{border: '1px solid #f0f0f0', borderRadius: 6, padding: 16, minHeight: 300}}>
                     <Tree
                         checkable

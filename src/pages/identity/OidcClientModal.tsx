@@ -188,10 +188,9 @@ const OidcClientModal = ({
                 <TreeSelect
                     allowClear={true}
                     multiple={true}
-                    showSearch={true}
+                    showSearch={{treeNodeFilterProp: 'title'}}
                     treeDefaultExpandAll={true}
                     treeData={departmentTreeQuery.data || []}
-                    treeNodeFilterProp="title"
                     loading={departmentTreeQuery.isFetching}
                     placeholder={t("identity.oidc_client.bound_departments_placeholder")}
                 />

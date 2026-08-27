@@ -238,7 +238,7 @@ const DashboardPage = () => {
                             content={
                                 <ChartTooltipContent
                                     labelFormatter={(value) => {
-                                        return new Date(value).toLocaleDateString()
+                                        return new Date(String(value)).toLocaleDateString()
                                     }}
                                     indicator="dot"
                                 />

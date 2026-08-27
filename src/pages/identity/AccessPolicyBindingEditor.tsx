@@ -80,13 +80,13 @@ const AccessPolicyBindingEditor = ({active, subjectType, subjectId}: AccessPolic
 
     return (
         <Spin spinning={accessPolicyQuery.isLoading || selectedKeysQuery.isLoading}>
-            <Space direction="vertical" size="middle">
+            <Space orientation="vertical" size="middle">
                 <Transfer
                     dataSource={items}
                     titles={[t('general.unbound'), t('general.bound')]}
-                    operations={[t('actions.binding'), t('actions.unbind')]}
+                    actions={[t('actions.binding'), t('actions.unbind')]}
                     showSearch
-                    listStyle={{width: 300, height: 400}}
+                    styles={{section: {width: 300, height: 400}}}
                     targetKeys={targetKeys}
                     onChange={handleChange}
                     disabled={saveMutation.isPending}

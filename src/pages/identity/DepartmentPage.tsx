@@ -183,7 +183,7 @@ const DepartmentPage = () => {
 
     return (<div>
         <div className="mb-4">
-            <Button.Group>
+            <Space.Compact>
                 <Button
                     type={viewMode === 'table' ? 'primary' : 'default'}
                     onClick={() => setViewMode('table')}
@@ -196,7 +196,7 @@ const DepartmentPage = () => {
                 >
                     {t('identity.department.tree_view')}
                 </Button>
-            </Button.Group>
+            </Space.Compact>
         </div>
 
         {viewMode === 'table' ? (

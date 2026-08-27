@@ -88,12 +88,12 @@ export const UserSelect = ({value, onChange, style, mode, ...rest}: SelectProps)
             placeholder={t('menus.identity.submenus.user')}
             mode={mode}
             allowClear
-            showSearch
+            showSearch={{
+                filterOption: (input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
+            }}
             loading={loading}
             options={options}
-            filterOption={(input, option) =>
-                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-            }
             style={selectStyle(style)}
             {...rest}
         />
@@ -132,12 +132,12 @@ export const DepartmentSelect = ({value, onChange, style, mode, ...rest}: Select
             placeholder={t('menus.identity.submenus.department')}
             mode={mode}
             allowClear
-            showSearch
+            showSearch={{
+                filterOption: (input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
+            }}
             loading={loading}
             options={options}
-            filterOption={(input, option) =>
-                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-            }
             style={selectStyle(style)}
             {...rest}
         />
@@ -159,9 +159,8 @@ export const DepartmentTreeSelect = ({value, onChange, style, ...rest}: SelectPr
             onChange={onChange}
             placeholder={t('menus.identity.submenus.department')}
             allowClear
-            showSearch
+            showSearch={{treeNodeFilterProp: 'title'}}
             treeDefaultExpandAll
-            treeNodeFilterProp="title"
             loading={query.isPending}
             treeData={query.data || []}
             style={selectStyle(style)}
@@ -213,12 +212,12 @@ export const AssetGroupSelect = ({value, onChange, style, mode, ...rest}: Select
             placeholder={t('authorised.label.asset_group')}
             mode={mode}
             allowClear
-            showSearch
+            showSearch={{
+                filterOption: (input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
+            }}
             loading={loading}
             options={options}
-            filterOption={(input, option) =>
-                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-            }
             style={selectStyle(style)}
             {...rest}
         />
@@ -240,9 +239,8 @@ export const AssetGroupTreeSelect = ({value, onChange, style, ...rest}: SelectPr
             onChange={onChange}
             placeholder={t('authorised.label.asset_group')}
             allowClear
-            showSearch
+            showSearch={{treeNodeFilterProp: 'title'}}
             treeDefaultExpandAll
-            treeNodeFilterProp="title"
             loading={query.isPending}
             treeData={query.data || []}
             style={selectStyle(style)}
@@ -283,12 +281,12 @@ export const AssetSelect = ({value, onChange, style, mode, ...rest}: SelectProps
             placeholder={t('menus.resource.submenus.asset')}
             mode={mode}
             allowClear
-            showSearch
+            showSearch={{
+                filterOption: (input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
+            }}
             loading={loading}
             options={options}
-            filterOption={(input, option) =>
-                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-            }
             style={selectStyle(style)}
             {...rest}
         />
@@ -312,9 +310,8 @@ export const AssetTreeSelect = ({value, onChange, style, ...rest}: SelectProps &
             onChange={onChange}
             placeholder={t('menus.resource.submenus.asset')}
             allowClear
-            showSearch
+            showSearch={{treeNodeFilterProp: 'title'}}
             treeDefaultExpandAll
-            treeNodeFilterProp="title"
             loading={query.isPending}
             treeData={query.data || []}
             style={selectStyle(style)}
@@ -366,12 +363,12 @@ export const WebsiteGroupSelect = ({value, onChange, style, mode, ...rest}: Sele
             placeholder={t('authorised.label.website_group')}
             mode={mode}
             allowClear
-            showSearch
+            showSearch={{
+                filterOption: (input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
+            }}
             loading={loading}
             options={options}
-            filterOption={(input, option) =>
-                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-            }
             style={selectStyle(style)}
             {...rest}
         />
@@ -393,9 +390,8 @@ export const WebsiteGroupTreeSelect = ({value, onChange, style, ...rest}: Select
             onChange={onChange}
             placeholder={t('authorised.label.website_group')}
             allowClear
-            showSearch
+            showSearch={{treeNodeFilterProp: 'title'}}
             treeDefaultExpandAll
-            treeNodeFilterProp="title"
             loading={query.isPending}
             treeData={query.data || []}
             style={selectStyle(style)}
@@ -436,12 +432,12 @@ export const DatabaseAssetSelect = ({value, onChange, style, mode, ...rest}: Sel
             placeholder={t('menus.resource.submenus.database_asset')}
             mode={mode}
             allowClear
-            showSearch
+            showSearch={{
+                filterOption: (input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
+            }}
             loading={loading}
             options={options}
-            filterOption={(input, option) =>
-                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-            }
             style={selectStyle(style)}
             {...rest}
         />
@@ -480,12 +476,12 @@ export const WebsiteSelect = ({value, onChange, style, mode, ...rest}: SelectPro
             placeholder={t('menus.resource.submenus.website')}
             mode={mode}
             allowClear
-            showSearch
+            showSearch={{
+                filterOption: (input, option) =>
+                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
+            }}
             loading={loading}
             options={options}
-            filterOption={(input, option) =>
-                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-            }
             style={selectStyle(style)}
             {...rest}
         />
@@ -507,9 +503,8 @@ export const WebsiteTreeSelect = ({value, onChange, style, ...rest}: SelectProps
             onChange={onChange}
             placeholder={t('menus.resource.submenus.website')}
             allowClear
-            showSearch
+            showSearch={{treeNodeFilterProp: 'title'}}
             treeDefaultExpandAll
-            treeNodeFilterProp="title"
             loading={query.isPending}
             treeData={query.data || []}
             style={selectStyle(style)}

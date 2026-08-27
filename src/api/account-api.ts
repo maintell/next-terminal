@@ -194,7 +194,7 @@ class AccountApi {
     group = 'account';
 
     login = async (account: LoginAccount) => {
-        return await requests.post('/login', account) as LoginResult;
+        return await requests.post('/login', account, {errorMode: 'local'}) as LoginResult;
     }
 
     completeExternalLogin = async (request: CompleteExternalLogin) => {
@@ -348,7 +348,9 @@ class AccountApi {
     }
 
     generateSecurityTokenByMfa = async (passcode: number) => {
-        let data = await requests.post(`/${this.group}/security-token/mfa?passcode=${passcode}&noerr`);
+        let data = await requests.post(`/${this.group}/security-token/mfa?passcode=${passcode}`, undefined, {
+            errorMode: 'local',
+        });
         return data['token'];
     }
 

@@ -1,6 +1,6 @@
 import {useState} from 'react';
 import accountApi from "../../api/account-api";
-import {App, Button, message, Result} from "antd";
+import {App, Button, Result} from "antd";
 import {ExclamationCircleOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
@@ -14,7 +14,7 @@ const OTPUnBinding = ({refetch, forceReauth = false}: UnBinding2faProps) => {
 
     let {t} = useTranslation();
     let [mfaOpen, setMfaOpen] = useState(false);
-    let {modal} = App.useApp();
+    let {message, modal} = App.useApp();
 
     return (
         <div>

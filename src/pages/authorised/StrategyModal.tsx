@@ -46,7 +46,7 @@ const StrategyModal = ({
     <Input />
       </Form.Item>
 
-                <Space direction={'vertical'}>
+                <Space orientation={'vertical'}>
                     <Space>
                         <Form.Item name={'upload'} label={t('general.upload')} valuePropName="checked">
     <Switch checkedChildren={t('general.enabled')} unCheckedChildren={t('general.disabled')} />

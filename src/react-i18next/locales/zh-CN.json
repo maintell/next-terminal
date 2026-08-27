@@ -1150,6 +1150,11 @@
       "back": "返回上一步",
       "processing": "正在处理登录...",
       "failed": "登录失败",
+      "unknown_error": "登录时发生未知错误，请稍后重试",
+      "too_many_failures": {
+        "title": "登录尝试次数过多",
+        "description": "账号或当前 IP 因多次登录失败已被临时锁定。请等待锁定自动解除后再试，或联系系统管理员提前解锁。"
+      },
       "oidc_error": "OIDC 登录失败，请重试",
       "wechat_work_error": "企业微信登录失败，请重试",
       "back_to_login": "返回登录页面"
@@ -1620,11 +1625,11 @@
     "auto_fetch_favicon": "自动获取图标",
     "auto_fetch_favicon_failed": "获取图标失败，请检查目标地址是否正确",
     "public_header_whitelist": "请求头白名单",
-    "public_header_whitelist_tip": "每行一个请求头名称，大小写不敏感。",
-    "public_header_whitelist_placeholder": "X-Bypass-Token\nX-Internal-Request",
+    "public_header_whitelist_tip": "点击添加后输入请求头名称，大小写不敏感。",
+    "public_header_whitelist_placeholder": "如：X-Bypass-Token",
     "public_path_whitelist": "公开路径",
-    "public_path_whitelist_tip": "每行一个路径；* 匹配任意长度内容，? 匹配单个字符；不含通配符时精确匹配。",
-    "public_path_whitelist_placeholder": "/public/*\n/health",
+    "public_path_whitelist_tip": "点击添加后输入路径；* 匹配任意长度内容，? 匹配单个字符；不含通配符时精确匹配。",
+    "public_path_whitelist_placeholder": "如：/public/*",
     "detect_os_success": "操作系统检测成功，图标已更新",
     "detect_os_failed": "操作系统检测失败",
     "wol_send": "发送 WOL",

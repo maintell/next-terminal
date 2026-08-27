@@ -5,19 +5,11 @@ import dayjs, {Dayjs} from "dayjs";
 import Disabled from "@/components/Disabled";
 import ipWhitelistApi from "@/api/ip-whitelist-api";
 import {useQuery} from "@tanstack/react-query";
+import StringListInput from "@/components/StringListInput";
 
 interface PublicViewProps {
     hasPremiumFeatures: boolean;
 }
-
-const listToText = (value?: string[]) => ({
-    value: (value || []).join('\n'),
-});
-
-const textToList = (value: string) => value
-    .split(/\r?\n/)
-    .map(item => item.trim())
-    .filter(Boolean);
 
 const PublicView: React.FC<PublicViewProps> = ({hasPremiumFeatures}) => {
     const {t} = useTranslation();
@@ -114,22 +106,18 @@ const PublicView: React.FC<PublicViewProps> = ({hasPremiumFeatures}) => {
                         </div>
                     </Disabled>
                     <div className="flex flex-col gap-3">
-                        <Form.Item label={t('assets.public_header_whitelist')} name={['public', 'headerWhitelist']}
-                                   extra={t('assets.public_header_whitelist_tip')}
-                                   getValueProps={listToText}
-                                   normalize={textToList}>
-                            <Input.TextArea
-                                autoSize={{minRows: 4, maxRows: 8}}
-                                placeholder={t('assets.public_header_whitelist_placeholder')}/>
-                        </Form.Item>
-                        <Form.Item label={t('assets.public_path_whitelist')} name={['public', 'pathWhitelist']}
-                                   extra={t('assets.public_path_whitelist_tip')}
-                                   getValueProps={listToText}
-                                   normalize={textToList}>
-                            <Input.TextArea
-                                autoSize={{minRows: 4, maxRows: 8}}
-                                placeholder={t('assets.public_path_whitelist_placeholder')}/>
-                        </Form.Item>
+                        <StringListInput
+                            name={['public', 'headerWhitelist']}
+                            label={t('assets.public_header_whitelist')}
+                            extra={t('assets.public_header_whitelist_tip')}
+                            placeholder={t('assets.public_header_whitelist_placeholder')}
+                        />
+                        <StringListInput
+                            name={['public', 'pathWhitelist']}
+                            label={t('assets.public_path_whitelist')}
+                            extra={t('assets.public_path_whitelist_tip')}
+                            placeholder={t('assets.public_path_whitelist_placeholder')}
+                        />
                     </div>
                 </div>
 

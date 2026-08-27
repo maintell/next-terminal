@@ -747,8 +747,7 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
                     onClose={onClose}
                     open={open}
                     size={size ?? (isMobile ? MOBILE_TOOL_DRAWER_SIZE : 720)}
-                    mask={mask}
-                    maskClosable={maskClosable}
+                    mask={{enabled: mask, closable: maskClosable}}
                     push={false}
                     styles={{
                         ...(drawerPlacement === 'bottom' ? MOBILE_TOOL_DRAWER_STYLES : {}),

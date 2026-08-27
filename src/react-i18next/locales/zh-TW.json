@@ -1135,6 +1135,11 @@
       "back": "返回上一步",
       "processing": "正在處理登入...",
       "failed": "登入失敗",
+      "unknown_error": "登入時發生未知錯誤，請稍後再試",
+      "too_many_failures": {
+        "title": "登入嘗試次數過多",
+        "description": "帳號或目前 IP 因多次登入失敗已被暫時鎖定。請等待鎖定自動解除後再試，或聯絡系統管理員提前解鎖。"
+      },
       "oidc_error": "OIDC 登入失敗，請重試",
       "wechat_work_error": "企業微信登入失敗，請重試",
       "back_to_login": "返回登入頁面"
@@ -1597,11 +1602,11 @@
     "auto_fetch_favicon": "自動獲取圖示",
     "auto_fetch_favicon_failed": "獲取圖示失敗，請檢查目標地址是否正確",
     "public_header_whitelist": "請求頭白名單",
-    "public_header_whitelist_tip": "每行一個請求頭名稱，大小寫不敏感。",
-    "public_header_whitelist_placeholder": "X-Bypass-Token\nX-Internal-Request",
+    "public_header_whitelist_tip": "點擊新增後輸入請求頭名稱，大小寫不敏感。",
+    "public_header_whitelist_placeholder": "例如：X-Bypass-Token",
     "public_path_whitelist": "公開路徑",
-    "public_path_whitelist_tip": "每行一個路徑；* 匹配任意長度內容，? 匹配單個字元；不含萬用字元時精確匹配。",
-    "public_path_whitelist_placeholder": "/public/*\n/health",
+    "public_path_whitelist_tip": "點擊新增後輸入路徑；* 匹配任意長度內容，? 匹配單個字元；不含萬用字元時精確匹配。",
+    "public_path_whitelist_placeholder": "例如：/public/*",
     "detect_os_success": "作業系統偵測成功，圖示已更新",
     "detect_os_failed": "作業系統偵測失敗",
     "wol_send": "傳送 WOL",

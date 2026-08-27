@@ -100,9 +100,8 @@ const GroupTreeModal = ({
                 <Form.Item name="parentKey" label={t('group_tree.parent')}>
                     <TreeSelect
                         allowClear
-                        showSearch
+                        showSearch={{treeNodeFilterProp: 'title'}}
                         treeDefaultExpandAll
-                        treeNodeFilterProp="title"
                         placeholder={t('group_tree.parent_placeholder')}
                         treeData={buildParentOptions(treeData, op === 'edit' ? node?.key : undefined)}
                     />

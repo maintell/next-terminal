@@ -11,7 +11,7 @@ const DepartmentAccessPolicy = ({active, departmentId}: DepartmentAccessPolicyPr
     const {t} = useTranslation();
 
     return (
-        <Space direction="vertical" size="middle">
+        <Space orientation="vertical" size="middle">
             <Alert type="info" showIcon title={t('identity.policy.department_binding_tip')}/>
             <AccessPolicyBindingEditor
                 active={active}

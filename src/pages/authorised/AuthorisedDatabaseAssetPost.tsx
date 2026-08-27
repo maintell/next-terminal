@@ -1,7 +1,7 @@
 import authorisedDatabaseAssetApi from "@/api/authorised-database-asset-api";
 import dayjs from "dayjs";
 import {useEffect, useState} from "react";
-import {Checkbox, DatePicker, Form, message, Modal, Space} from "antd";
+import {App, Checkbox, DatePicker, Form, Modal, Space} from "antd";
 import {CheckboxChangeEvent} from "antd/es/checkbox";
 import {RangePickerProps} from "antd/es/date-picker";
 import {useNavigate} from "react-router-dom";
@@ -18,6 +18,7 @@ interface AuthorisedDatabaseAssetPostProps {
 const AuthorisedDatabaseAssetPost = ({open, onCancel, onSuccess}: AuthorisedDatabaseAssetPostProps) => {
     const [form] = Form.useForm();
     const {t} = useTranslation();
+    const {message} = App.useApp();
     const [expiredAtDayjs, setExpiredAtDayjs] = useState<dayjs.Dayjs | null>();
     const [expiredAtNoLimit, setExpiredAtNoLimit] = useState<boolean>(true);
     const navigate = useNavigate();

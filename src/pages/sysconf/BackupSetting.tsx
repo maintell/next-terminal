@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react';
 import {
     Alert,
+    App,
     Button,
     Collapse,
     Divider,
@@ -8,7 +9,6 @@ import {
     Input,
     InputNumber,
     message,
-    Modal,
     Popconfirm,
     Radio,
     Space,
@@ -114,6 +114,7 @@ const sourceLabel = (source: string, t: ReturnType<typeof useTranslation>['t']) 
 
 const BackupSetting = () => {
     const {t} = useTranslation();
+    const {modal} = App.useApp();
     const [form] = Form.useForm();
     const [messageApi, contextHolder] = message.useMessage();
     const [activeTaskId, setActiveTaskId] = useState('');
@@ -364,10 +365,10 @@ const BackupSetting = () => {
     };
 
     const handleRestore = (file: BackupFile) => {
-        Modal.confirm({
+        modal.confirm({
             title: t('settings.backup.restore_confirm_title'),
             content: (
-                <Space direction="vertical">
+                <Space orientation="vertical">
                     <Typography.Text>{t('settings.backup.restore_confirm_content')}</Typography.Text>
                     <Typography.Text type="secondary">{t('settings.backup.backup_file', {name: file.name})}</Typography.Text>
                     <Typography.Text type="secondary">{t('settings.backup.exclude_tip')}</Typography.Text>
@@ -387,10 +388,10 @@ const BackupSetting = () => {
         if (!file) {
             return;
         }
-        Modal.confirm({
+        modal.confirm({
             title: t('settings.backup.upload_restore_confirm_title'),
             content: (
-                <Space direction="vertical">
+                <Space orientation="vertical">
                     <Typography.Text>{t('settings.backup.upload_restore_confirm_content')}</Typography.Text>
                     <Typography.Text type="secondary">{t('settings.backup.backup_file', {name: file.name})}</Typography.Text>
                     <Typography.Text type="secondary">{t('settings.backup.exclude_tip')}</Typography.Text>
@@ -460,14 +461,14 @@ const BackupSetting = () => {
     return (
         <div>
             {contextHolder}
-            <Space direction="vertical" style={{width: '100%'}} size={16}>
+            <Space orientation="vertical" style={{width: '100%'}} size={16}>
                 <Alert
                     type="info"
-                    message={t('settings.backup.backup_directory_tip', {directory: backupDirectory})}
+                    title={t('settings.backup.backup_directory_tip', {directory: backupDirectory})}
                 />
 
                 <Form form={form} layout="vertical" onFinish={handleSaveConfig}>
-                    <Space direction="vertical" style={{width: '100%'}} size={16}>
+                    <Space orientation="vertical" style={{width: '100%'}} size={16}>
                         <Space wrap align="end">
                             <Form.Item name="scheduleEnabled" label={t('settings.backup.schedule_enabled')}
                                        valuePropName="checked" style={{marginBottom: 0}}>
@@ -479,7 +480,10 @@ const BackupSetting = () => {
                             </Form.Item>
                             <Form.Item name="retentionDays" label={t('settings.backup.retention_days')}
                                        style={{marginBottom: 0}}>
-                                <InputNumber min={1} max={365} addonAfter={t('general.days')} style={{width: 128}}/>
+                                <Space.Compact>
+                                    <InputNumber min={1} max={365} style={{width: 88}}/>
+                                    <Space.Addon>{t('general.days')}</Space.Addon>
+                                </Space.Compact>
                             </Form.Item>
                             <Form.Item style={{marginBottom: 0}}>
                                 <Space wrap>
@@ -515,11 +519,11 @@ const BackupSetting = () => {
                                     key: 'success-actions',
                                     label: t('settings.backup.success_actions'),
                                     children: (
-                                        <Space direction="vertical" style={{width: '100%'}} size={16}>
+                                        <Space orientation="vertical" style={{width: '100%'}} size={16}>
                                             <Typography.Text type="secondary">
                                                 {t('settings.backup.success_actions_tip')}
                                             </Typography.Text>
-                                            <Space direction="vertical" style={{width: '100%'}}>
+                                            <Space orientation="vertical" style={{width: '100%'}}>
                                                 <Form.Item name={['successActions', 's3', 'enabled']}
                                                            label={t('settings.backup.upload_to_s3')}
                                                            valuePropName="checked">
@@ -586,7 +590,7 @@ const BackupSetting = () => {
 
                                             <Divider style={{margin: '4px 0'}}/>
 
-                                            <Space direction="vertical" style={{width: '100%'}}>
+                                            <Space orientation="vertical" style={{width: '100%'}}>
                                                 <Form.Item name={['successActions', 'sftp', 'enabled']}
                                                            label={t('settings.backup.upload_to_sftp')}
                                                            valuePropName="checked">
@@ -601,7 +605,7 @@ const BackupSetting = () => {
                                                         const mode = formInstance.getFieldValue(['successActions', 'sftp', 'mode']);
                                                         const authType = formInstance.getFieldValue(['successActions', 'sftp', 'authType']);
                                                         return (
-                                                            <Space direction="vertical" style={{width: '100%'}}>
+                                                            <Space orientation="vertical" style={{width: '100%'}}>
                                                                 <Space wrap align="start">
                                                                     <Form.Item name={['successActions', 'sftp', 'mode']}
                                                                                label={t('settings.backup.sftp_mode')}
@@ -631,7 +635,7 @@ const BackupSetting = () => {
                                                                     </Form.Item>
                                                                 )}
                                                                 {mode === 'custom' && (
-                                                                    <Space direction="vertical" style={{width: '100%'}}>
+                                                                    <Space orientation="vertical" style={{width: '100%'}}>
                                                                         <Space wrap align="start">
                                                                             <Form.Item name={['successActions', 'sftp', 'host']}
                                                                                        label={t('settings.backup.sftp_host')}
@@ -672,7 +676,7 @@ const BackupSetting = () => {
                                                                             </Form.Item>
                                                                         )}
                                                                         {authType === 'privateKey' && (
-                                                                            <Space direction="vertical" style={{width: '100%'}}>
+                                                                            <Space orientation="vertical" style={{width: '100%'}}>
                                                                                 <Form.Item name={['successActions', 'sftp', 'privateKey']}
                                                                                            label={t('assets.private_key')}
                                                                                            rules={requiredUnlessSaved(hasSavedSecret.sftpPrivateKey)}>
@@ -700,7 +704,7 @@ const BackupSetting = () => {
 
                                             <Divider style={{margin: '4px 0'}}/>
 
-                                            <Space direction="vertical" style={{width: '100%'}}>
+                                            <Space orientation="vertical" style={{width: '100%'}}>
                                                 <Form.Item name={['successActions', 'webdav', 'enabled']}
                                                            label={t('settings.backup.upload_to_webdav')}
                                                            valuePropName="checked">
@@ -713,10 +717,10 @@ const BackupSetting = () => {
                                                             return null;
                                                         }
                                                         return (
-                                                            <Space direction="vertical" style={{width: '100%'}}>
+                                                            <Space orientation="vertical" style={{width: '100%'}}>
                                                                 <Alert type="warning"
                                                                        showIcon
-                                                                       message={t('settings.backup.webdav_chinese_path_tip')}/>
+                                                                       title={t('settings.backup.webdav_chinese_path_tip')}/>
                                                                 <Space wrap align="start">
                                                                     <Form.Item name={['successActions', 'webdav', 'endpoint']}
                                                                                label={t('settings.backup.webdav_endpoint')}
@@ -769,7 +773,7 @@ const BackupSetting = () => {
                 {task && activeTaskId && (
                     <Alert
                         type={task.status === 'failed' ? 'error' : 'info'}
-                        message={task.message || task.status}
+                        title={task.message || task.status}
                     />
                 )}
 
@@ -788,9 +792,9 @@ const BackupSetting = () => {
                             key: 'legacy',
                             label: t('settings.backup.legacy_import'),
                             children: (
-                                <Space direction="vertical">
+                                <Space orientation="vertical">
                                     <Alert type="warning"
-                                           message={t('settings.backup.legacy_import_tip')}/>
+                                           title={t('settings.backup.legacy_import_tip')}/>
                                     <Space>
                                         <Button loading={legacyImporting} icon={<Upload size={16}/>} onClick={() => {
                                             document.getElementById('legacy-backup-upload')?.click();

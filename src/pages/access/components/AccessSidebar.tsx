@@ -3,7 +3,7 @@ import {Input} from 'antd';
 import {ResizablePanel} from '@/components/ui/resizable';
 import {ScrollArea, ScrollBar} from '@/components/ui/scroll-area';
 import {cn} from '@/lib/utils';
-import {ImperativePanelHandle} from 'react-resizable-panels';
+import {PanelImperativeHandle as ImperativePanelHandle} from 'react-resizable-panels';
 import {useTranslation} from 'react-i18next';
 import {useQuery} from '@tanstack/react-query';
 import portalApi, {TreeDataNodeWithExtra} from '@/api/portal-api';

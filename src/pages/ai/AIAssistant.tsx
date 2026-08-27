@@ -5,7 +5,6 @@ import {
     Drawer,
     Empty,
     Input,
-    List,
     Modal,
     Popconfirm,
     Progress,
@@ -479,14 +478,13 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
                             {!sessionId && (
                                 <Select
                                     allowClear
-                                    showSearch
+                                    showSearch={{optionFilterProp: 'label'}}
                                     variant="borderless"
                                     size="small"
                                     className="max-w-64"
                                     loading={assetsQuery.isLoading}
                                     placeholder={t('ai_assistant.select_asset')}
                                     value={assetId || undefined}
-                                    optionFilterProp="label"
                                     onChange={(value) => setAssetId(value ?? '')}
                                     options={(assetsQuery.data ?? []).map((item) => ({label: item.alias || item.name, value: item.id}))}
                                 />
@@ -746,36 +744,37 @@ const HistoryModal = ({open, search, conversations, currentId, loading, loadingI
                     <Button danger loading={clearing} disabled={!hasConversations} icon={<Trash2Icon className="h-4 w-4"/>}>{t('actions.clear')}</Button>
                 </Popconfirm>
             </div>
-            <List
-                className="max-h-[55vh] overflow-y-auto"
-                loading={loading}
-                dataSource={conversations}
-                locale={{emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('ai_assistant.no_history')}/>}}
-                renderItem={(item) => (
-                    <List.Item
-                        className="cursor-pointer"
+            <div className="max-h-[55vh] overflow-y-auto">
+                {loading ? (
+                    <div className="flex justify-center py-8"><Spin/></div>
+                ) : conversations.length === 0 ? (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('ai_assistant.no_history')}/>
+                ) : conversations.map((item) => (
+                    <div
+                        key={item.id}
+                        className="flex cursor-pointer items-center gap-3 border-b border-gray-100 px-2 py-3 last:border-b-0 dark:border-white/10"
                         onClick={() => onLoad(item)}
-                        actions={[
-                            <Popconfirm key="delete" title={t('ai_assistant.delete_confirm')} onConfirm={() => onDelete(item.id)}>
-                                <Button
-                                    danger
-                                    type="text"
-                                    size="small"
-                                    loading={deletingId === item.id}
-                                    icon={<Trash2Icon className="h-4 w-4"/>}
-                                    onClick={(event) => event.stopPropagation()}
-                                />
-                            </Popconfirm>,
-                        ]}
                     >
-                        <List.Item.Meta
-                            title={<Typography.Text ellipsis className={item.id === currentId ? 'text-blue-500' : undefined}>{item.title || t('ai_assistant.new_chat')}</Typography.Text>}
-                            description={new Date(item.updatedAt).toLocaleString()}
-                        />
+                        <div className="min-w-0 flex-1">
+                            <Typography.Text ellipsis className={item.id === currentId ? 'text-blue-500' : undefined}>
+                                {item.title || t('ai_assistant.new_chat')}
+                            </Typography.Text>
+                            <div className="text-xs text-gray-500">{new Date(item.updatedAt).toLocaleString()}</div>
+                        </div>
                         {loadingId === item.id && <Spin size="small"/>}
-                    </List.Item>
-                )}
-            />
+                        <Popconfirm title={t('ai_assistant.delete_confirm')} onConfirm={() => onDelete(item.id)}>
+                            <Button
+                                danger
+                                type="text"
+                                size="small"
+                                loading={deletingId === item.id}
+                                icon={<Trash2Icon className="h-4 w-4"/>}
+                                onClick={(event) => event.stopPropagation()}
+                            />
+                        </Popconfirm>
+                    </div>
+                ))}
+            </div>
         </Modal>
     );
 };

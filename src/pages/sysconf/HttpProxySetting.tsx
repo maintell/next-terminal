@@ -91,7 +91,7 @@ const HttpProxySetting = ({get, set}: SettingProps) => {
         </Form.Item>
     </div>;
 
-    return <Space direction="vertical" size="large" style={{width: '100%'}}>
+    return <Space orientation="vertical" size="large" style={{width: '100%'}}>
         <div>
             <Alert type="info" title={t('settings.http_proxy.readonly_tip')} style={{marginBottom: 12}}/>
             <Spin spinning={configQuery.isLoading}>

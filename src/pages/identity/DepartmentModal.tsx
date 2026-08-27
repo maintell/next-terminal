@@ -105,12 +105,12 @@ const DepartmentModal = ({id, open, confirmLoading, handleCancel, handleOk}: Dep
                     <TreeSelect
                         placeholder={t('identity.department.parent_placeholder')}
                         allowClear
-                        showSearch
+                        showSearch={{
+                            filterTreeNode: (input, node) =>
+                                (node?.title as string)?.toLowerCase().includes(input.toLowerCase()),
+                        }}
                         treeDefaultExpandAll
                         treeData={departmentTree ? buildTreeSelectData(departmentTree, department?.id) : []}
-                        filterTreeNode={(input, node) =>
-                            (node?.title as string)?.toLowerCase().includes(input.toLowerCase())
-                        }
                     />
                 </Form.Item>
 

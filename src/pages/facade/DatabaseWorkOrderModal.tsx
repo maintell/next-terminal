@@ -38,12 +38,11 @@ const DatabaseWorkOrderModal = ({
         required: true
       }]}>
     <Select
-          showSearch={true}
+          showSearch={{filterOption: (input, option) => (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())}}
           options={assets.map(item => ({
             label: item.name,
             value: item.id
-          }))}
-          filterOption={(input, option) => (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())} />
+          }))} />
       </Form.Item>
                 <Form.Item label={t('db.asset.database')} name='database' rules={[{
         required: true

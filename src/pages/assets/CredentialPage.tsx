@@ -85,7 +85,7 @@ const CredentialPage = () => {
         modal.warning({
             title: hasReferences ? t('assets.credential_delete_referenced_title') : t('general.failed'),
             content: (
-                <Space direction="vertical" size={12}>
+                <Space orientation="vertical" size={12}>
                     {assetNames.length > 0 && (
                         <div>
                             <div>{t('assets.credential_delete_referenced_assets')}</div>

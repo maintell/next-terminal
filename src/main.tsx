@@ -6,6 +6,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import dayjs from "dayjs";
 import {LicenseProvider} from "@/hook/LicenseContext";
 import {UploadManagerProvider} from "@/pages/access/upload/UploadManagerProvider";
+import {App as AntdApp} from "antd";
 
 // 启用 relativeTime 插件
 dayjs.extend(relativeTime);
@@ -27,11 +28,13 @@ const queryClient = new QueryClient({
 });
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-    <QueryClientProvider client={queryClient}>
-        <LicenseProvider>
-            <UploadManagerProvider>
-                <App/>
-            </UploadManagerProvider>
-        </LicenseProvider>
-    </QueryClientProvider>
+    <AntdApp>
+        <QueryClientProvider client={queryClient}>
+            <LicenseProvider>
+                <UploadManagerProvider>
+                    <App/>
+                </UploadManagerProvider>
+            </LicenseProvider>
+        </QueryClientProvider>
+    </AntdApp>
 )

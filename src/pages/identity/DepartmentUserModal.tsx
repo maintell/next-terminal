@@ -1,5 +1,5 @@
 import {type Key, useEffect, useState} from 'react';
-import {message, Modal, Transfer} from "antd";
+import {App, Modal, Transfer} from "antd";
 import {useTranslation} from "react-i18next";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import departmentApi from "@/api/department-api";
@@ -24,6 +24,7 @@ const DepartmentUserModal = ({
                              }: DepartmentUserModalProps) => {
 
     const {t} = useTranslation();
+    const {message} = App.useApp();
 
     const [targetKeys, setTargetKeys] = useState<string[]>([]);
 
@@ -99,10 +100,10 @@ const DepartmentUserModal = ({
                     option.title.toLowerCase().includes(inputValue.toLowerCase()) ||
                     Boolean(option.description && option.description.toLowerCase().includes(inputValue.toLowerCase()))
                 }
-                listStyle={{
+                styles={{section: {
                     width: 250,
                     height: 300,
-                }}
+                }}}
             />
         </Modal>
     );

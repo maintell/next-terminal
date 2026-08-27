@@ -84,7 +84,7 @@ const AccessPolicyRules = ({active, groupId}: AccessPolicyRulesProps) => {
     ];
 
     return (
-        <Space direction="vertical" size="middle" style={{width: '100%'}}>
+        <Space orientation="vertical" size="middle" style={{width: '100%'}}>
             <div>
                 <Link to={`/access-policy/${groupId}/rules/new`}>
                     <Button type="primary">{t('identity.policy.new_rule')}</Button>

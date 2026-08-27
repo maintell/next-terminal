@@ -204,14 +204,16 @@ const WebsiteBatchEditDrawer = ({websiteIds, open, onClose, onSuccess}: Props) =
                             noStyle
                             rules={[{required: updateOriginTimeout, type: 'number', min: 1, max: 3600}]}
                         >
-                            <InputNumber
-                                disabled={!updateOriginTimeout}
-                                precision={0}
-                                min={1}
-                                max={3600}
-                                addonAfter={t('general.second')}
-                                className="w-48"
-                            />
+                            <Space.Compact className="w-48">
+                                <InputNumber
+                                    disabled={!updateOriginTimeout}
+                                    precision={0}
+                                    min={1}
+                                    max={3600}
+                                    className="flex-1"
+                                />
+                                <Space.Addon>{t('general.second')}</Space.Addon>
+                            </Space.Compact>
                         </Form.Item>
                     </div>
 

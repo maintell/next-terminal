@@ -265,7 +265,7 @@ const AccessRequestUserPage = () => {
                 onCancel={() => setOpen(false)}
                 onOk={() => form.submit()}
                 confirmLoading={createMutation.isPending}
-                destroyOnClose
+                            destroyOnHidden
             >
                 <Form<CreateAccessRequestRequest>
                     form={form}
@@ -289,7 +289,10 @@ const AccessRequestUserPage = () => {
                     </Form.Item>
                     <Form.Item label={t('access_request.resource')} name="resourceId" rules={[{required: true}]}>
                         <Select
-                            showSearch
+                            showSearch={{
+                                filterOption: (input, option) =>
+                                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
+                            }}
                             allowClear
                             loading={resourcesQuery.isFetching}
                             options={(resourcesQuery.data || []).map(item => {
@@ -314,9 +317,6 @@ const AccessRequestUserPage = () => {
                                     form.setFieldValue('resourceType', selected.resourceType);
                                 }
                             }}
-                            filterOption={(input, option) =>
-                                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-                            }
                         />
                     </Form.Item>
                     <Form.Item label={t('access_request.duration_minutes')} name="durationMinutes" rules={[{required: true}]}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Form, message, Popover, Upload} from "antd";
+import {App, Form, Popover, Upload} from "antd";
 import {useQuery} from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { TrashIcon, UploadIcon } from "lucide-react";
@@ -15,6 +15,7 @@ interface LogoSelectorProps {
 
 const LogoSelector: React.FC<LogoSelectorProps> = ({ logo, onLogoChange, extra }) => {
     const { t } = useTranslation();
+    const {message} = App.useApp();
 
     const logosQuery = useQuery({
         queryKey: ['get-logos'],

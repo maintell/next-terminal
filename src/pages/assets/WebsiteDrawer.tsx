@@ -18,7 +18,7 @@ import {
 import {WebsiteFormData} from "@/pages/assets/website-drawer/types";
 import {normalizePublicIPRules, parseURL} from "@/pages/assets/website-drawer/utils";
 import {useMutation} from "@tanstack/react-query";
-import {Button, Drawer, Form, Input, message, Space, Tabs} from 'antd';
+import {App, Button, Drawer, Form, Input, Space, Tabs} from 'antd';
 import dayjs from "dayjs";
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from "react-i18next";
@@ -38,6 +38,7 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
   id,
   groupId
 }) => {
+  const {message} = App.useApp();
   const {t} = useTranslation();
   const {license, isLoading: licenseLoading} = useLicense();
   const hasPremiumFeatures = !licenseLoading && license.hasPremiumFeatures();

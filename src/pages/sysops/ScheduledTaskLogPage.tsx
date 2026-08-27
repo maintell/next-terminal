@@ -208,7 +208,7 @@ const ScheduledTaskLogPage = ({open, jobId, handleCancel}: Props) => {
             placement="right"
             size={window.innerWidth * 0.9}
             closable={true}
-            maskClosable={true}
+            mask={{closable: true}}
             onClose={handleCancel}
             open={open}
             styles={{body: {padding: '12px'}}}

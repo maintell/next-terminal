@@ -105,7 +105,7 @@ const UserExternalIdentity = ({active, userId}: UserExternalIdentityProps) => {
             title: t('identity.user.external_identity.identifier'),
             key: 'identifier',
             render: (_, record) => (
-                <Space direction="vertical" size={0} className="w-full">
+                <Space orientation="vertical" size={0} className="w-full">
                     {renderIdentifier(record.providerKey)}
                     {renderIdentifier(record.subject, 'secondary')}
                 </Space>

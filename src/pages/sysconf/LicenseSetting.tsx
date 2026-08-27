@@ -241,7 +241,7 @@ const LicenseSetting = () => {
                                 <Button
                                     type="link"
                                     icon={<ExportOutlined/>}
-                                    href={'https://www.next-terminal.com/license'}
+                                    href={'https://license.next-terminal.com/license'}
                                     target={'_blank'}
                                 >
                                     {t('settings.license.binding')}
@@ -300,19 +300,15 @@ const LicenseSetting = () => {
                                         tooltip={t('settings.license.domain_tip')}
                                         rules={[{validator: validateLicenseDomain}]}
                                     >
-                                        <Input
-                                            placeholder="nt.example.com"
-                                            addonAfter={
-                                                <Button
-                                                    type="link"
-                                                    size="small"
-                                                    icon={<AimOutlined/>}
-                                                    onClick={handleAutoDetectDomain}
-                                                >
-                                                    {t('settings.license.auto_detect_domain')}
-                                                </Button>
-                                            }
-                                        />
+                                        <Space.Compact block>
+                                            <Input placeholder="nt.example.com"/>
+                                            <Button
+                                                icon={<AimOutlined/>}
+                                                onClick={handleAutoDetectDomain}
+                                            >
+                                                {t('settings.license.auto_detect_domain')}
+                                            </Button>
+                                        </Space.Compact>
                                     </Form.Item>
                                 }
                                 <Space className={cn(isMobile && 'flex-wrap')} size={isMobile ? 'small' : 'middle'}>

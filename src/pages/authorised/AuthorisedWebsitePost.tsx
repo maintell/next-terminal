@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react";
-import {Checkbox, DatePicker, Form, message, Modal, Space} from "antd";
+import {App, Checkbox, DatePicker, Form, Modal, Space} from "antd";
 import {CheckboxChangeEvent} from "antd/es/checkbox";
 import dayjs from "dayjs";
 import {useTranslation} from "react-i18next";
@@ -18,6 +18,7 @@ interface AuthorisedWebsitePostProps {
 const AuthorisedWebsitePost = ({open, onCancel, onSuccess}: AuthorisedWebsitePostProps) => {
     const [form] = Form.useForm();
     const {t} = useTranslation();
+    const {message} = App.useApp();
     const [expiredAtDayjs, setExpiredAtDayjs] = useState<dayjs.Dayjs | null>();
     const [expiredAtNoLimit, setExpiredAtNoLimit] = useState<boolean>(true);
     const navigate = useNavigate();

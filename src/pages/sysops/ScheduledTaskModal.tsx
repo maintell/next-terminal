@@ -1,7 +1,7 @@
 import {useFormRequest} from "@/hook/use-antd-form-query";
 import {useState} from 'react';
 import {useTranslation} from "react-i18next";
-import {Col, Modal, Popover, Row, Form, Input, Select} from 'antd';
+import {Col, Modal, Popover, Row, Form, Input, Select, Space} from 'antd';
 import scheduledTaskApi, {ScheduledTask} from "@/api/scheduled-task-api";
 import assetApi from "@/api/asset-api";
 import ScheduledTaskRuntime from "@/pages/sysops/ScheduledTaskRuntime";
@@ -73,18 +73,21 @@ const ScheduledTaskModal = ({
                     <Form.Item label={t('sysops.spec')} name={'spec'} rules={[{
                         required: true
                     }]} tooltip={t('sysops.spec_tooltip')}>
-                        <Input
-                            value={spec}
-                            onChange={e => {
-                                setSpec(e.target.value);
-                            }}
-                            addonAfter={<div className={'cursor-pointer'}>
+                        <Space.Compact block>
+                            <Input
+                                value={spec}
+                                onChange={e => {
+                                    setSpec(e.target.value);
+                                }}
+                            />
+                            <div className={'flex cursor-pointer items-center rounded-r-md border border-l-0 px-3'}>
                                 <Popover content={<ScheduledTaskRuntime open={runtimeOpen} spec={spec} />} title={t('sysops.spec_run_time')} trigger="click" placement="rightTop" open={runtimeOpen} onOpenChange={open => {
                                     setRuntimeOpen(open);
                                 }}>
                                     {t('sysops.spec_run')}
                                 </Popover>
-                            </div>} />
+                            </div>
+                        </Space.Compact>
                     </Form.Item>
                 </Col>
             </Row>

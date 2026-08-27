@@ -63,9 +63,12 @@ const ProFormTreeSelect = ({
                 disabled={disabled}
                 loading={loading}
                 placeholder={placeholder}
-                treeNodeFilterProp="title"
                 variant={fieldProps?.variant}
                 {...fieldProps}
+                showSearch={fieldProps?.showSearch ? {
+                    ...(typeof fieldProps.showSearch === 'object' ? fieldProps.showSearch : {}),
+                    treeNodeFilterProp: 'title',
+                } : fieldProps?.showSearch}
                 treeData={fieldProps?.treeData ?? treeData}
             />
         </Form.Item>

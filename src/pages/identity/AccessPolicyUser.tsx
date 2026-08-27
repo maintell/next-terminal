@@ -58,7 +58,7 @@ const AccessPolicyUser = ({active, id}: AccessPolicyUserProps) => {
 
     return (
         <Spin spinning={usersQuery.isLoading || bindingsQuery.isLoading}>
-            <Space direction="vertical" size="middle">
+            <Space orientation="vertical" size="middle">
                 <Transfer
                     dataSource={items}
                     titles={[t('identity.user.available'), t('identity.user.selected')]}
@@ -67,7 +67,7 @@ const AccessPolicyUser = ({active, id}: AccessPolicyUserProps) => {
                     render={item => item.title}
                     showSearch
                     disabled={!hasPremiumFeatures || saveMutation.isPending}
-                    listStyle={{width: 300, height: 400}}
+                    styles={{section: {width: 300, height: 400}}}
                 />
                 <Space>
                     <Button

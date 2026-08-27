@@ -194,14 +194,15 @@ const AgentGatewayRegister = ({
 
                 <div>{t('gateways.register_token')}</div>
                 <Select
-                    showSearch
-                    placeholder={t('gateways.register_token_placeholder')}
-                    filterOption={(input, option) => {
-                        const searchText = input.toLowerCase();
-                        const optionText = option?.label?.toLowerCase() || '';
-                        const optionValue = option?.value?.toLowerCase() || '';
-                        return optionText.includes(searchText) || optionValue.includes(searchText);
+                    showSearch={{
+                        filterOption: (input, option) => {
+                            const searchText = input.toLowerCase();
+                            const optionText = option?.label?.toLowerCase() || '';
+                            const optionValue = option?.value?.toLowerCase() || '';
+                            return optionText.includes(searchText) || optionValue.includes(searchText);
+                        },
                     }}
+                    placeholder={t('gateways.register_token_placeholder')}
                     options={tokenQuery.data?.map((item) => {
                         return {
                             label: item.id,

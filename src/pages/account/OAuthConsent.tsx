@@ -62,7 +62,7 @@ const OAuthConsent: React.FC = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen p-4">
-                <Spin size="large" tip={t('general.loading')}/>
+                <Spin size="large" description={t('general.loading')}/>
             </div>
         );
     }

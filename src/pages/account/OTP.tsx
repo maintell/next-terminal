@@ -7,7 +7,7 @@ MobileOutlined,
 SafetyOutlined
 } from '@ant-design/icons';
 import { useQuery } from "@tanstack/react-query";
-import { Alert,Card,Col,List,Row,Space,Steps,Tag,Typography } from "antd";
+import { Alert,Card,Col,Row,Space,Steps,Tag,Typography } from "antd";
 import { useEffect,useState } from 'react';
 import { useTranslation } from "react-i18next";
 import accountApi from "../../api/account-api";
@@ -59,17 +59,14 @@ const OTP = () => {
         ];
 
         return (
-            <List
-                dataSource={features}
-                renderItem={(item) => (
-                    <List.Item>
-                        <List.Item.Meta
-                            avatar={item.icon}
-                            title={item.title}
-                        />
-                    </List.Item>
-                )}
-            />
+            <div className="space-y-3">
+                {features.map((item) => (
+                    <div key={item.title} className="flex items-center gap-3 py-1">
+                        {item.icon}
+                        <span>{item.title}</span>
+                    </div>
+                ))}
+            </div>
         );
     };
 
@@ -119,7 +116,7 @@ const OTP = () => {
 
         return (
             <Steps
-                direction="vertical"
+                orientation="vertical"
                 current={-1}
                 items={steps}
                 style={{marginTop: 16}}

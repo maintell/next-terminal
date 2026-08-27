@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Form, InputNumber, message, Popconfirm, Space, Switch, Table} from "antd";
+import {App, Button, Form, InputNumber, Popconfirm, Space, Switch, Table} from "antd";
 import type {TableProps} from "antd";
 import {useTranslation} from "react-i18next";
 import {useMutation, useQuery} from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import websiteTempAllowApi, {WebsiteTempAllowEntry} from "@/api/website-temp-all
 
 const TempAllowView: React.FC = () => {
     const {t} = useTranslation();
+    const {message} = App.useApp();
     const form = Form.useFormInstance();
     const websiteId = Form.useWatch('id', form);
     const tempAllowEnabled = Form.useWatch(['tempAllow', 'enabled'], form);

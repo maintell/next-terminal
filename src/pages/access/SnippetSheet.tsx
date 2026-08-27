@@ -96,8 +96,7 @@ const SnippetSheet = ({open, onClose, onUse, placement, size, mask, maskClosable
                     onClose={onClose}
                     open={open}
                     size={drawerSize}
-                    mask={mask}
-                    maskClosable={maskClosable}
+                    mask={{enabled: mask, closable: maskClosable}}
                     push={false}
                     styles={drawerPlacement === 'bottom' ? MOBILE_TOOL_DRAWER_STYLES : undefined}
                     extra={

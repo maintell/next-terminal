@@ -8,13 +8,13 @@ import { StyleProvider } from '@ant-design/cssinjs';
 import { LockOutlined,UserOutlined } from "@ant-design/icons";
 import { startAuthentication } from "@simplewebauthn/browser";
 import { useMutation,useQuery } from "@tanstack/react-query";
-import { Button,ConfigProvider,Divider,Form,Input,Select,Space,Spin,Typography } from "antd";
+import { Alert,Button,ConfigProvider,Divider,Form,Input,Select,Space,Spin,Typography } from "antd";
 import i18n from "i18next";
 import { LanguagesIcon,Moon,Sun } from "lucide-react";
 import { useEffect,useState } from 'react';
 import { useTranslation } from "react-i18next";
 import { useNavigate,useSearchParams } from "react-router-dom";
-import accountApi,{ LoginResult,LoginStatus } from "../../api/account-api";
+import accountApi,{ LoginAccount,LoginResult,LoginStatus } from "../../api/account-api";
 
 const {Title} = Typography;
 
@@ -23,6 +23,11 @@ export enum LoginStep {
     Default = "default",
     OTP = "otp",
 }
+
+type LoginError = {
+    code?: number;
+    message?: string;
+};
 
 const LoginPage = () => {
     const [optForm] = Form.useForm();
@@ -68,7 +73,7 @@ const LoginPage = () => {
         }
     }, [queryLoginStatus.data]);
 
-    let mutation = useMutation({
+    let mutation = useMutation<LoginResult, LoginError, LoginAccount>({
         mutationFn: accountApi.login,
         onSuccess: data => {
             afterLoginSuccess(data, true);
@@ -204,9 +209,26 @@ const LoginPage = () => {
                 const showWechat = loginStatus?.wechatWorkEnabled;
                 const showOidc = loginStatus?.oidcEnabled;
                 const hasAlternatives = showWebauthn || showWechat || showOidc;
+                const loginError = mutation.error;
+                const isLoginLocked = loginError?.code === 10007;
 
                 return <div>
                     <Title level={3}>{t('account.login.action')}</Title>
+
+                    {loginError && (
+                        <div className="mb-4">
+                            <Alert
+                                type="error"
+                                showIcon
+                                title={isLoginLocked
+                                    ? t('account.login.too_many_failures.title')
+                                    : t('account.login.failed')}
+                                description={isLoginLocked
+                                    ? t('account.login.too_many_failures.description')
+                                    : loginError.message || t('account.login.unknown_error')}
+                            />
+                        </div>
+                    )}
 
                     {/* 密码登录表单 */}
                     {showPassword && (

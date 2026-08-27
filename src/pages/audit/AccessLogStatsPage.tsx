@@ -405,7 +405,7 @@ const AccessLogStatsPage = () => {
                                         cursor={false}
                                         content={
                                             <ChartTooltipContent
-                                                labelFormatter={(value) => dayjs(value).format('YYYY-MM-DD HH:mm')}
+                                                labelFormatter={(value) => dayjs(String(value)).format('YYYY-MM-DD HH:mm')}
                                                 indicator="dot"
                                             />
                                         }

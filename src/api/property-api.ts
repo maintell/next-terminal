@@ -73,7 +73,7 @@ class PropertyApi {
     }
 
     getLatestVersion = async () => {
-        let data = await requests.get(`/${this.group}/latest-version?noerror`);
+        let data = await requests.get(`/${this.group}/latest-version`, {errorMode: 'silent'});
         return data as LatestVersion;
     }
 

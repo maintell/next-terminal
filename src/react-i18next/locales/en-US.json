@@ -1150,6 +1150,11 @@
       "back": "Back",
       "processing": "Processing login...",
       "failed": "Login failed",
+      "unknown_error": "An unknown error occurred while signing in. Please try again later.",
+      "too_many_failures": {
+        "title": "Too many sign-in attempts",
+        "description": "The account or your current IP address has been temporarily locked after multiple failed sign-in attempts. Wait for the lock to expire, or contact your system administrator to unlock it sooner."
+      },
       "oidc_error": "OIDC login failed, please try again",
       "wechat_work_error": "WeCom login failed, please try again",
       "back_to_login": "Back to Login"
@@ -1620,11 +1625,11 @@
     "auto_fetch_favicon": "Auto Fetch Icon",
     "auto_fetch_favicon_failed": "Failed to fetch icon, please check if the target address is correct",
     "public_header_whitelist": "Request Header Allowlist",
-    "public_header_whitelist_tip": "One header name per line; case-insensitive.",
-    "public_header_whitelist_placeholder": "X-Bypass-Token\nX-Internal-Request",
+    "public_header_whitelist_tip": "Click Add, then enter a header name; case-insensitive.",
+    "public_header_whitelist_placeholder": "For example: X-Bypass-Token",
     "public_path_whitelist": "Public paths",
-    "public_path_whitelist_tip": "One path per line; * matches any sequence, ? matches one character, and paths without wildcards match exactly.",
-    "public_path_whitelist_placeholder": "/public/*\n/health",
+    "public_path_whitelist_tip": "Click Add, then enter a path; * matches any sequence, ? matches one character, and paths without wildcards match exactly.",
+    "public_path_whitelist_placeholder": "For example: /public/*",
     "detect_os_success": "OS detected and icon updated",
     "detect_os_failed": "OS detection failed",
     "wol_send": "Send WOL",

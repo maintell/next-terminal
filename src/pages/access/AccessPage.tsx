@@ -11,7 +11,7 @@ import {StyleProvider} from '@ant-design/cssinjs';
 import {beforeUnload, generateRandomId, handleKeyDown} from '@/utils/utils';
 import {useAccessContentSize} from '@/pages/access/hooks/use-access-size';
 import {useSearchParams} from 'react-router-dom';
-import {ImperativePanelHandle} from 'react-resizable-panels';
+import {PanelImperativeHandle as ImperativePanelHandle} from 'react-resizable-panels';
 import AccessSshChooser from '@/pages/access/AccessSshChooser';
 import AccessTerminalBulk from '@/pages/access/AccessTerminalBulk';
 import MultiFactorAuthentication from '@/pages/account/MultiFactorAuthentication';

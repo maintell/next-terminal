@@ -1,6 +1,6 @@
 import {useMutation, useQuery} from "@tanstack/react-query";
 import accountApi, {OidcUserConsentItem} from "@/api/account-api";
-import {App, Button, Empty, List, Space, Tag, Typography} from "antd";
+import {App, Button, Empty, Space, Spin, Tag, Typography} from "antd";
 import {KeyIcon, Trash2Icon} from "lucide-react";
 import dayjs from "dayjs";
 import {useTranslation} from "react-i18next";
@@ -60,18 +60,17 @@ const OidcServerAuthorizations = () => {
             </div>
 
             <div className={'mt-4'}>
-                {consentsQuery.data?.length === 0 ? (
+                {consentsQuery.isLoading ? (
+                    <div className="flex justify-center py-8"><Spin/></div>
+                ) : consentsQuery.data?.length === 0 ? (
                     <Empty
                         description={t('account.oidc_server_no_authorizations')}
                         image={Empty.PRESENTED_IMAGE_SIMPLE}
                     />
                 ) : (
-                    <List
-                        itemLayout="horizontal"
-                        dataSource={consentsQuery.data}
-                        loading={consentsQuery.isLoading}
-                        renderItem={(item) => (
-                            <div className={'border rounded-md p-4 flex items-center justify-between mb-2'}>
+                    <div>
+                        {consentsQuery.data?.map((item) => (
+                            <div key={item.clientId} className={'border rounded-md p-4 flex items-center justify-between mb-2'}>
                                 <div className={'space-y-2 flex-1'}>
                                     <div className={'flex items-center gap-4'}>
                                         <KeyIcon className={'h-4 w-4'}/>
@@ -103,8 +102,8 @@ const OidcServerAuthorizations = () => {
                                     </Button>
                                 </div>
                             </div>
-                        )}
-                    />
+                        ))}
+                    </div>
                 )}
             </div>
         </div>

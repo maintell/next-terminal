@@ -75,7 +75,7 @@ const InfoPage = () => {
                 'page-container',
                 isMobile && 'px-4',
             )}>
-                <Tabs tabPosition={isMobile ? 'top' : 'left'}
+                <Tabs tabPlacement={isMobile ? 'top' : 'start'}
                     // tabBarStyle={{width: 150}}
                       items={items}
                       activeKey={activeKey}

@@ -215,7 +215,7 @@ const SystemMonitorPage = () => {
                 <Alert
                     showIcon
                     type="error"
-                    message={t('sysops.monitoring.load_failed')}
+                    title={t('sysops.monitoring.load_failed')}
                     description={(overviewQuery.error as Error).message}
                 />
             )}
@@ -226,7 +226,7 @@ const SystemMonitorPage = () => {
                         <Alert
                             showIcon
                             type="error"
-                            message={t('sysops.monitoring.critical_alert')}
+                            title={t('sysops.monitoring.critical_alert')}
                             description={t('sysops.monitoring.critical_alert_desc')}
                         />
                     )}
@@ -328,7 +328,7 @@ const SystemMonitorPage = () => {
                                         {alertStates.map(renderAlertState)}
                                     </div>
                                 ) : (
-                                    <Alert showIcon type="success" message={t('sysops.monitoring.no_alerts')}/>
+                                    <Alert showIcon type="success" title={t('sysops.monitoring.no_alerts')}/>
                                 )}
                             </div>
                         </Col>

@@ -93,7 +93,6 @@ export const NetIOChart: React.FC<PercentageChartProps> = ({title, data,}) => {
                             fill={`url(#fill-tx)`}
                             stroke={`var(--color-tx)`}
                             stackId="a"
-                            animateNewValues={false}
                         />
 
                         <Area
@@ -102,7 +101,6 @@ export const NetIOChart: React.FC<PercentageChartProps> = ({title, data,}) => {
                             fill={`url(#fill-rx)`}
                             stroke={`var(--color-rx)`}
                             stackId="a"
-                            animateNewValues={false}
                         />
 
                         <ChartLegend content={<ChartLegendContent/>}/>

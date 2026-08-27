@@ -26,7 +26,7 @@ const AccessWolDialog: React.FC<AccessWolDialogProps> = ({
     const [countdown, setCountdown] = useState(0); // 当前倒计时值
     const [checkLoading, setCheckLoading] = useState(false);
     const [wakingLoading, setWakingLoading] = useState(false);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // 重置所有状态
     const resetState = () => {

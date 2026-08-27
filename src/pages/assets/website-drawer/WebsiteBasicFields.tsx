@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Form, Input, InputNumber, message, Radio, Select, Switch} from "antd";
+import {App, Button, Form, Input, InputNumber, Radio, Select, Space, Switch} from "antd";
 import {useMutation} from "@tanstack/react-query";
 import {useTranslation} from "react-i18next";
 import {RefreshCwIcon} from "lucide-react";
@@ -17,6 +17,7 @@ const WebsiteBasicFields: React.FC<WebsiteBasicFieldsProps> = ({
     showEntrance = true
 }) => {
     const {t} = useTranslation();
+    const {message} = App.useApp();
     const form = Form.useFormInstance();
     const logo = Form.useWatch('logo', form);
     const scheme = Form.useWatch('scheme', form);
@@ -184,7 +185,10 @@ const WebsiteBasicFields: React.FC<WebsiteBasicFieldsProps> = ({
                 extra={t('assets.origin_timeout_tip')}
                 rules={[{required: true}]}
             >
-                <InputNumber precision={0} min={1} max={3600} addonAfter={t('general.second')} style={{width: "100%"}}/>
+                <Space.Compact block>
+                    <InputNumber precision={0} min={1} max={3600} style={{width: "100%"}}/>
+                    <Space.Addon>{t('general.second')}</Space.Addon>
+                </Space.Compact>
             </Form.Item>
 
             <Form.Item

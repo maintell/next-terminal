@@ -157,7 +157,7 @@ const GeoDataSetting = () => {
             <section>
                 <Typography.Title level={5}>{t('settings.geodata.current_database')}</Typography.Title>
                 {!database?.available && (
-                    <Alert type="warning" showIcon message={t('settings.geodata.unavailable')}/>
+                    <Alert type="warning" showIcon title={t('settings.geodata.unavailable')}/>
                 )}
                 {database?.available && (
                     <Descriptions bordered size="small" column={{xs: 1, sm: 2}}>

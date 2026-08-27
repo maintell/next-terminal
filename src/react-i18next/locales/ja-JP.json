@@ -1150,6 +1150,11 @@
       "back": "前に戻る",
       "processing": "ログイン処理中...",
       "failed": "ログイン失敗",
+      "unknown_error": "ログイン中に不明なエラーが発生しました。しばらくしてからもう一度お試しください",
+      "too_many_failures": {
+        "title": "ログイン試行回数が多すぎます",
+        "description": "ログインに複数回失敗したため、アカウントまたは現在の IP アドレスが一時的にロックされています。ロックが自動的に解除されるまで待つか、システム管理者に解除を依頼してください。"
+      },
       "oidc_error": "OIDC ログインに失敗しました。再試行してください",
       "wechat_work_error": "企業微信ログインに失敗しました。再試行してください",
       "back_to_login": "ログインページに戻る"
@@ -1612,11 +1617,11 @@
     "auto_fetch_favicon": "アイコン自動取得",
     "auto_fetch_favicon_failed": "アイコンの取得に失敗しました。対象URLを確認してください",
     "public_header_whitelist": "リクエストヘッダーのホワイトリスト",
-    "public_header_whitelist_tip": "1 行に 1 つのヘッダー名を入力します。大文字・小文字は区別されません。",
-    "public_header_whitelist_placeholder": "X-Bypass-Token\nX-Internal-Request",
+    "public_header_whitelist_tip": "追加をクリックしてヘッダー名を入力します。大文字・小文字は区別されません。",
+    "public_header_whitelist_placeholder": "例：X-Bypass-Token",
     "public_path_whitelist": "公開パス",
-    "public_path_whitelist_tip": "1 行に 1 つのパスを入力します。* は任意の文字列、? は任意の 1 文字、ワイルドカードのないパスは完全一致です。",
-    "public_path_whitelist_placeholder": "/public/*\n/health",
+    "public_path_whitelist_tip": "追加をクリックしてパスを入力します。* は任意の文字列、? は任意の 1 文字、ワイルドカードのないパスは完全一致です。",
+    "public_path_whitelist_placeholder": "例：/public/*",
     "detect_os_success": "OS検出成功、アイコンを更新しました",
     "detect_os_failed": "OS検出に失敗しました",
     "wol_send": "WOL送信",

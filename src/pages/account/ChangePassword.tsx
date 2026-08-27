@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Button, Form, Input, message, Typography} from "antd";
+import {App, Button, Form, Input, Typography} from "antd";
 import accountApi from "../../api/account-api";
 import {ValidateStatus} from "antd/es/form/FormItem";
 import {useTranslation} from "react-i18next";
@@ -12,6 +12,7 @@ const {Title} = Typography;
 const ChangePassword = () => {
 
     let {t} = useTranslation();
+    const {message} = App.useApp();
     let [newPassword1, setNewPassword1] = useState('');
     let [newPassword2, setNewPassword2] = useState('');
     let [newPasswordStatus, setNewPasswordStatus] = useState<ValidateStatus>();

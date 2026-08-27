@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {useQuery} from "@tanstack/react-query";
 import accountApi from "../../api/account-api";
-import {Alert, App, Button, Divider, Form, Input, QRCode, Steps, Typography} from "antd";
+import {Alert, App, Button, Divider, Form, Input, QRCode, Space, Steps, Typography} from "antd";
 import {
     CopyOutlined,
     EyeInvisibleOutlined,
@@ -114,7 +114,7 @@ const OTPBinding = ({refetch}: Binding2faProps) => {
                                 {t('account.otp_manual_setup_desc')}
                             </Paragraph>
 
-                            <Input.Group compact>
+                            <Space.Compact block>
                                 <Input
                                     value={totpQuery.data?.secret}
                                     readOnly
@@ -132,7 +132,7 @@ const OTPBinding = ({refetch}: Binding2faProps) => {
                                     style={{width: '40px'}}
                                     type="primary"
                                 />
-                            </Input.Group>
+                            </Space.Compact>
                         </div>
                     </div>
                 </div>

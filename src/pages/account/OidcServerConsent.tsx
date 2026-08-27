@@ -106,7 +106,7 @@ const OidcServerConsent: React.FC = () => {
                 minHeight: '100vh',
                 padding: '16px',
             }}>
-                <Spin size="large" tip={t('general.loading')}/>
+                <Spin size="large" description={t('general.loading')}/>
             </div>
         );
     }

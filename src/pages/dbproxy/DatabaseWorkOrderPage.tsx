@@ -262,7 +262,10 @@ const DatabaseWorkOrderPage = () => {
                     <Space wrap>
                         <Select
                             allowClear
-                            showSearch
+                            showSearch={{
+                                filterOption: (input, option) =>
+                                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
+                            }}
                             placeholder={t('menus.resource.submenus.database_asset')}
                             loading={databaseAssetsQuery.isLoading}
                             value={assetId}
@@ -271,9 +274,6 @@ const DatabaseWorkOrderPage = () => {
                                 label: item.name,
                                 value: item.id,
                             }))}
-                            filterOption={(input, option) =>
-                                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-                            }
                             onChange={(value) => {
                                 setAssetId(value);
                                 resetTableToFirstPage();

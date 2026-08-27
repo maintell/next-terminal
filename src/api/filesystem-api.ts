@@ -72,15 +72,19 @@ class FileSystemApi {
     }
 
     getUploadTask = async (filesystemId: string, taskId: string) => {
-        return await requests.get(`/${this.group}/${filesystemId}/upload/tasks/${taskId}?noerr=true`) as UploadTask;
+        return await requests.get(`/${this.group}/${filesystemId}/upload/tasks/${taskId}`, {
+            errorMode: 'silent',
+        }) as UploadTask;
     }
 
     deleteUploadTask = async (filesystemId: string, taskId: string) => {
-        await requests.delete(`/${this.group}/${filesystemId}/upload/tasks/${taskId}?noerr=true`);
+        await requests.delete(`/${this.group}/${filesystemId}/upload/tasks/${taskId}`, {errorMode: 'silent'});
     }
 
     cancelUploadTask = async (filesystemId: string, taskId: string) => {
-        await requests.post(`/${this.group}/${filesystemId}/upload/tasks/${taskId}/cancel?noerr=true`);
+        await requests.post(`/${this.group}/${filesystemId}/upload/tasks/${taskId}/cancel`, undefined, {
+            errorMode: 'silent',
+        });
     }
 
     chmod = async (sessionId: string, filename: string, mode: number) => {

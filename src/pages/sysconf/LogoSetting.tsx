@@ -1,6 +1,6 @@
 import { logoApi } from "@/api/logo-api";
 import { useQuery } from "@tanstack/react-query";
-import { message,Popconfirm,Tooltip,TreeDataNode,Upload } from "antd";
+import { App,Popconfirm,Tooltip,TreeDataNode,Upload } from "antd";
 import { RcFile } from "antd/es/upload";
 import { UploadIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -13,6 +13,7 @@ interface TreeSelectDataNode {
 
 const LogoSetting = () => {
     let {t} = useTranslation();
+    const {message} = App.useApp();
 
     let logosQuery = useQuery({
         queryKey: ['system-logos'],

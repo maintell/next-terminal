@@ -1,7 +1,7 @@
 import {useState} from 'react';
 import {useMutation, useQuery} from "@tanstack/react-query";
 import accountApi, {WebauthnCredential} from "@/api/account-api";
-import {App, Button, List, Typography} from "antd";
+import {App, Button, Typography} from "antd";
 import {useTranslation} from "react-i18next";
 import {startRegistration} from "@simplewebauthn/browser";
 import {KeySquareIcon, PencilLineIcon, Trash2Icon} from "lucide-react";
@@ -117,11 +117,9 @@ const Passkey = () => {
                 </Button>
             </div>
             <div>
-                <List
-                    itemLayout="horizontal"
-                    dataSource={webauthnCredentialsQuery.data}
-                    renderItem={(item) => (
-                        <div className={'border rounded-md p-4 flex items-center justify-between mb-2'}>
+                <div>
+                    {webauthnCredentialsQuery.data?.map((item) => (
+                        <div key={item.id} className={'border rounded-md p-4 flex items-center justify-between mb-2'}>
                             <div className={'space-y-2'}>
                                 <div className={'flex items-center gap-4'}>
                                     <KeySquareIcon className={'h-4 w-4'}/>
@@ -154,8 +152,8 @@ const Passkey = () => {
                                 />
                             </div>
                         </div>
-                    )}
-                />
+                    ))}
+                </div>
             </div>
 
             <PasskeyModal

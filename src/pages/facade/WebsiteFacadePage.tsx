@@ -1,7 +1,7 @@
 import portalApi,{ WebsiteUser } from "@/api/portal-api";
 import strings from "@/utils/strings";
 import { useQuery } from "@tanstack/react-query";
-import { Empty,message,Segmented,Tooltip } from "antd";
+import { App,Empty,Segmented,Tooltip } from "antd";
 import { useEffect,useState,type Key } from 'react';
 import { useTranslation } from "react-i18next";
 import FacadeCardSkeleton from './components/FacadeCardSkeleton';
@@ -29,6 +29,7 @@ const getInitialWebsiteViewMode = (): WebsiteViewMode => {
 const WebsiteFacadePage = () => {
 
     let {t} = useTranslation();
+    const {message} = App.useApp();
     let [websites, setWebsites] = useState<WebsiteUser[]>();
     let [search, setSearch] = useState<string>('');
     let [selectedGroupKey, setSelectedGroupKey] = useState<string>('');

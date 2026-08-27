@@ -1,3 +1,4 @@
+import {ApiError, getErrorMessage, isAccessControlError, isApiError} from "@/api/core/api-error";
 import eventEmitter from "@/api/core/event-emitter";
 
 export const baseUrl = () => {
@@ -16,7 +17,6 @@ export const baseWebSocketUrl = () => {
 // 清理 localStorage 中的残留 token
 localStorage.removeItem('X-Auth-Token');
 
-const accessControlErrorCodes = new Set([10010, 10011, 10025, 10026]);
 let accessControlRedirecting = false;
 
 const redirectToAccessDenied = (errorCode: number) => {
@@ -30,158 +30,152 @@ const redirectToAccessDenied = (errorCode: number) => {
     window.location.replace(`${target.pathname}${target.search}`);
 };
 
-const handleError = async (error: any, url?: string) => {
+export type ApiErrorMode = 'global' | 'local' | 'silent';
+
+export interface RequestOptions {
+    errorMode?: ApiErrorMode;
+}
+
+const parseResponse = async <T>(response: Response): Promise<T> => {
+    if (response.headers.get('Content-Type')?.includes('application/json')) {
+        return await response.json() as T;
+    }
+    return await response.text() as T;
+};
+
+const createHttpError = async (response: Response): Promise<ApiError> => {
+    let message = response.statusText;
+    let code = 0;
+
+    if (response.headers.get('Content-Type')?.includes('application/json')) {
+        try {
+            const data = await response.json() as {message?: unknown; code?: unknown};
+            if (typeof data.message === 'string' && data.message) {
+                message = data.message;
+            }
+            code = Number(data.code) || 0;
+        } catch {
+            // 响应体无法解析时保留 HTTP 状态文本。
+        }
+    } else {
+        const responseText = await response.text();
+        if (responseText) {
+            message = responseText;
+        }
+    }
+
+    return new ApiError(message || 'Request failed', {
+        status: response.status,
+        statusText: response.statusText,
+        code,
+        kind: 'http',
+    });
+};
+
+const normalizeError = (error: unknown): ApiError => {
+    if (isApiError(error)) {
+        return error;
+    }
+
     if (error instanceof TypeError) {
-        switch (error.message) {
-            case 'Failed to fetch':
-                eventEmitter.emit("NETWORK:UN_CONNECT");
-                break;
-        }
-        return;
+        eventEmitter.emit("NETWORK:UN_CONNECT");
+        return new ApiError(error.message, {
+            kind: 'network',
+            cause: error,
+        });
     }
 
-    let noerr = url?.includes('noerr');
+    return new ApiError(getErrorMessage(error), {
+        kind: 'unknown',
+        cause: error,
+    });
+};
 
-    if (!noerr && error.status === 418) {
+const handleCrossPageError = (error: ApiError, errorMode: ApiErrorMode): boolean => {
+    if (errorMode === 'global' && error.status === 418) {
         eventEmitter.emit("API:REDIRECT", "/setup");
-        return Promise.reject({
-            status: error.status,
-            statusText: error.statusText,
-            message: 'Redirect to setup',
-            code: 418,
-        });
+        return true;
     }
-    if (!noerr && error.status === 401) {
+    if (errorMode === 'global' && error.status === 401) {
         eventEmitter.emit("API:UN_AUTH");
-        return Promise.reject({
-            status: error.status,
-            statusText: error.statusText,
-            message: 'Unauthorized',
-            code: 401,
-        });
+        return true;
     }
-    let response = error.response;
-    let msg = '';
-    let errorCode = 0;
-    if (response?.headers.get('Content-Type')?.includes('application/json')) {
-        let data = await response?.json();
-        msg = data['message'];
-        errorCode = Number(data['code']) || 0;
-    } else {
-        msg = error.response?.text();
+    if (isAccessControlError(error)) {
+        redirectToAccessDenied(error.code);
+        return true;
     }
+    return false;
+};
 
-    if (accessControlErrorCodes.has(errorCode)) {
-        redirectToAccessDenied(errorCode);
-        return Promise.reject({
-            status: error.status,
-            statusText: error.statusText,
-            message: msg,
-            code: errorCode,
-        });
-    }
-
-    if (!noerr) {
-        eventEmitter.emit("API:VALIDATE_ERROR", errorCode, msg);
-    }
-    return Promise.reject({
-        status: error.status,
-        statusText: error.statusText,
-        message: msg,
-        code: errorCode,
-    })
-}
-
-const handleResponse = (response: Response) => {
-    if (response.ok) {
-        if (response.headers.get('Content-Type')?.includes('application/json')) {
-            return response.json();
+const execute = async <T>(url: string, init: RequestInit, options: RequestOptions = {}): Promise<T> => {
+    try {
+        const response = await fetch(baseUrl() + url, init);
+        if (!response.ok) {
+            throw await createHttpError(response);
         }
-        return response.text();
-    } else {
-        return Promise.reject({
-            status: response.status,
-            statusText: response.statusText,
-            response: response
-        })
+        return await parseResponse<T>(response);
+    } catch (error) {
+        const apiError = normalizeError(error);
+        const errorMode = options.errorMode ?? 'global';
+        const handled = handleCrossPageError(apiError, errorMode);
+        if (!handled && errorMode === 'global' && apiError.kind !== 'network') {
+            eventEmitter.emit("API:VALIDATE_ERROR", apiError.code, apiError.message);
+        }
+        throw apiError;
     }
-}
+};
 
-class request {
-    async get(url: string) {
-        return fetch(baseUrl() + url, {
+class Request {
+    async get<T = any>(url: string, options?: RequestOptions): Promise<T> {
+        return await execute<T>(url, {
             method: "GET",
-        }).then(response => {
-            return handleResponse(response);
-        }).catch(async error => {
-            return await handleError(error, url);
-        })
+        }, options);
     }
 
-    async post(url: string, body?: any | undefined) {
-        return fetch(baseUrl() + url, {
+    async post<T = any>(url: string, body?: unknown, options?: RequestOptions): Promise<T> {
+        return await execute<T>(url, {
             method: "POST",
             headers: {
                 'content-type': 'application/json',
             },
             body: JSON.stringify(body),
-        }).then(response => {
-            return handleResponse(response);
-        }).catch(async error => {
-            return await handleError(error, url);
-        })
+        }, options);
     }
 
-    async postForm(url: string, body?: any | undefined) {
-        return fetch(baseUrl() + url, {
+    async postForm<T = any>(url: string, body?: BodyInit, options?: RequestOptions): Promise<T> {
+        return await execute<T>(url, {
             method: "POST",
-            body: body,
-        }).then(response => {
-            return handleResponse(response);
-        }).catch(async error => {
-            return await handleError(error, url);
-        })
+            body,
+        }, options);
     }
 
-    async put(url: string, body?: any | undefined) {
-        return fetch(baseUrl() + url, {
+    async put<T = any>(url: string, body?: unknown, options?: RequestOptions): Promise<T> {
+        return await execute<T>(url, {
             method: "PUT",
             headers: {
                 'content-type': 'application/json',
             },
             body: JSON.stringify(body),
-        }).then(response => {
-            return handleResponse(response);
-        }).catch(async error => {
-            return await handleError(error, url);
-        })
+        }, options);
     }
 
-    async patch(url: string, body?: any | undefined) {
-        return fetch(baseUrl() + url, {
+    async patch<T = any>(url: string, body?: unknown, options?: RequestOptions): Promise<T> {
+        return await execute<T>(url, {
             method: "PATCH",
             headers: {
                 'content-type': 'application/json',
             },
             body: JSON.stringify(body),
-        }).then(response => {
-            return handleResponse(response);
-        }).catch(async error => {
-            return await handleError(error, url);
-        })
+        }, options);
     }
 
-    async delete(url: string) {
-        return fetch(baseUrl() + url, {
+    async delete<T = any>(url: string, options?: RequestOptions): Promise<T> {
+        return await execute<T>(url, {
             method: "DELETE",
-        }).then(response => {
-            return handleResponse(response);
-        }).catch(async error => {
-            return await handleError(error, url);
-        })
+        }, options);
     }
 }
 
-let requests = new request();
+const requests = new Request();
 
 export default requests;

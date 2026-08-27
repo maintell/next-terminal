@@ -85,7 +85,7 @@ const GatewayChainEditor = ({name = 'gatewayChain', disabled}: GatewayChainEdito
         <Form.Item label={t('assets.gateway')}>
             <Form.List name={name}>
                 {(fields, {add, remove, move}) => (
-                    <Space direction="vertical" className="w-full" size={8}>
+                    <Space orientation="vertical" className="w-full" size={8}>
                         {fields.map((field, index) => {
                             const gatewayType = gatewayChain?.[field.name]?.gatewayType;
                             const canMoveUp = index > 0 && canMoveGateway(index, index - 1);

@@ -214,10 +214,10 @@ class PortalApi {
     }
 
     createRdpProxyTicket = async (assetId: string, securityToken?: string) => {
-        return await requests.post(`/${this.group}/rdp-proxy/tickets?noerr`, {
+        return await requests.post(`/${this.group}/rdp-proxy/tickets`, {
             assetId,
             securityToken: securityToken ?? '',
-        }) as RdpProxyTicket;
+        }, {errorMode: 'local'}) as RdpProxyTicket;
     }
 
     getAssetAuthorization = async (authorizeId: string) => {

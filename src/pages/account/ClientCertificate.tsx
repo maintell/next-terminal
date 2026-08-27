@@ -1,4 +1,4 @@
-import {Button, Descriptions, Empty, Modal, Popconfirm, Space, Tag, Typography, message} from "antd";
+import {App, Button, Descriptions, Empty, Popconfirm, Space, Tag, Typography} from "antd";
 import {useTranslation} from "react-i18next";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import accountApi, {UserClientCertInfo} from "@/api/account-api";
@@ -6,6 +6,7 @@ import times from "@/components/time/times";
 
 const ClientCertificate = () => {
     const {t} = useTranslation();
+    const {message, modal} = App.useApp();
 
     const certQuery = useQuery({
         queryKey: ['client-cert'],
@@ -35,7 +36,7 @@ const ClientCertificate = () => {
 
     const handleGenerate = () => {
         const hasCert = !!certQuery.data;
-        Modal.confirm({
+        modal.confirm({
             title: hasCert ? t('account.client_cert_regenerate') : t('account.client_cert_generate'),
             content: t('account.client_cert_once_tip'),
             okText: t('actions.confirm'),

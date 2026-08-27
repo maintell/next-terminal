@@ -97,7 +97,7 @@ const AgentGatewayPage = () => {
         modal.warning({
             title: hasReferences ? t('gateways.gateway_delete_referenced_title') : t('general.failed'),
             content: (
-                <Space direction="vertical" size={12}>
+                <Space orientation="vertical" size={12}>
                     {referenceGroups.map((group) => group.names.length > 0 && (
                         <div key={group.title}>
                             <div>{group.title}</div>

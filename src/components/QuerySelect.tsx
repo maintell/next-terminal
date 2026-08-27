@@ -16,12 +16,18 @@ const QuerySelect = ({request, params, queryKey, options, loading, optionFilterP
         request,
         params,
     );
+    const showSearch = props.showSearch
+        ? {
+            ...(typeof props.showSearch === 'object' ? props.showSearch : {}),
+            optionFilterProp,
+        }
+        : props.showSearch;
 
     return (
         <Select
             {...props}
             loading={loading ?? query.isFetching}
-            optionFilterProp={optionFilterProp}
+            showSearch={showSearch}
             options={options ?? query.data ?? []}
         />
     );

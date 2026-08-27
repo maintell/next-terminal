@@ -7,7 +7,7 @@ import AccessPage from "@/pages/access/AccessPage";
 import eventEmitter from "@/api/core/event-emitter";
 import {baseUrl} from "@/api/core/requests";
 import {useTranslation} from "react-i18next";
-import {message} from "antd";
+import {App as AntdApp} from "antd";
 
 import TerminalPage from "@/pages/access/TerminalPage";
 import GuacamolePage from "@/pages/access/GuacamolePage";
@@ -190,6 +190,7 @@ const router = createBrowserRouter([
 
 function App() {
     let {t} = useTranslation();
+    const {message} = AntdApp.useApp();
 
     useEffect(() => {
         let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;

@@ -248,7 +248,7 @@ const AIProfileModal = ({mode, open, profile, confirmLoading, onCancel, onSave}:
                 <Form.Item label={t('settings.ai.models')} extra={t('settings.ai.models_tip')}>
                     <Form.List name="models">
                         {(fields, {add, remove}) => (
-                            <Space direction="vertical" className="w-full" size="small">
+                            <Space orientation="vertical" className="w-full" size="small">
                                 {fields.map((field) => (
                                     <Space.Compact key={field.key} className="w-full">
                                         <Form.Item name={field.name} className="mb-0 flex-1">

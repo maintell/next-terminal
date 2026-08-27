@@ -2,7 +2,7 @@ import QuerySelect from "@/components/QuerySelect";
 import {useEffect, useState} from "react";
 import commandFilterApi from "@/api/command-filter-api";
 import strategyApi from "@/api/strategy-api";
-import {Checkbox, DatePicker, Form, message, Modal, Space} from "antd";
+import {App, Checkbox, DatePicker, Form, Modal, Space} from "antd";
 import {CheckboxChangeEvent} from "antd/es/checkbox";
 import dayjs from "dayjs";
 import {useTranslation} from "react-i18next";
@@ -22,6 +22,7 @@ interface AuthorisedAssetPostProps {
 const AuthorisedAssetPost = ({open, onCancel, onSuccess}: AuthorisedAssetPostProps) => {
     const [form] = Form.useForm();
     const {t} = useTranslation();
+    const {message} = App.useApp();
     const [expiredAtDayjs, setExpiredAtDayjs] = useState<dayjs.Dayjs | null>();
     const [expiredAtNoLimit, setExpiredAtNoLimit] = useState<boolean>(true);
     const navigate = useNavigate();
