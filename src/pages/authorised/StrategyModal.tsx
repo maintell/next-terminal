@@ -3,7 +3,7 @@ import {Modal, Space, Form, Input, Switch} from 'antd';
 import { useTranslation } from "react-i18next";
 import strategyApi from "@/api/strategy-api";
 const api = strategyApi;
-export interface StrategyProps {
+interface StrategyProps {
   open: boolean;
   handleOk: (values: any) => void;
   handleCancel: () => void;

@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import strings from '@/utils/strings';
 const api = roleApi;
-export interface RoleProps {
+interface RoleProps {
   open: boolean;
   handleOk: (values: any) => void;
   handleCancel: () => void;

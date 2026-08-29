@@ -10,6 +10,12 @@ interface Props {
     label: string;
     placeholder: string;
     confirmLoading: boolean;
+    required?: boolean;
+    multiline?: boolean;
+    maxLength?: number;
+    showCount?: boolean;
+    okText?: string;
+    cancelText?: string;
 }
 
 const PromptModal = ({
@@ -19,9 +25,15 @@ const PromptModal = ({
                          onCancel,
                          label,
                          placeholder,
-                     confirmLoading,
-                     value
-                 }: Props) => {
+                         confirmLoading,
+                         value,
+                         required = true,
+                         multiline = false,
+                         maxLength,
+                         showCount,
+                         okText,
+                         cancelText,
+                     }: Props) => {
     const [form] = Form.useForm();
     useEffect(() => {
         if (open) {
@@ -37,12 +49,23 @@ const PromptModal = ({
             });
         }} onCancel={() => {
             onCancel();
-        }} confirmLoading={confirmLoading}>
+        }} confirmLoading={confirmLoading} okText={okText} cancelText={cancelText}>
             <Form form={form} layout="vertical">
-                <Form.Item name={'prompt'} label={label} required={true}>
-                    <Input
-                        placeholder={placeholder}
-                        autoFocus={true} />
+                <Form.Item name={'prompt'} label={label} required={required}>
+                    {multiline ? (
+                        <Input.TextArea
+                            rows={3}
+                            maxLength={maxLength}
+                            showCount={showCount}
+                            placeholder={placeholder}
+                            autoFocus={true}/>
+                    ) : (
+                        <Input
+                            maxLength={maxLength}
+                            showCount={showCount}
+                            placeholder={placeholder}
+                            autoFocus={true}/>
+                    )}
                 </Form.Item>
             </Form>
         </Modal>

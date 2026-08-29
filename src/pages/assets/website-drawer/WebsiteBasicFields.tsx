@@ -100,6 +100,7 @@ const WebsiteBasicFields: React.FC<WebsiteBasicFieldsProps> = ({
                 </Form.Item>
 
                 <ProFormTreeSelect
+                    queryKey={['website-groups']}
                     label={t('assets.group')}
                     name="groupId"
                     request={groupsRequest}

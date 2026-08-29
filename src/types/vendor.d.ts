@@ -84,6 +84,7 @@ declare module '@dushixiang/guacamole-common-js' {
 declare module 'asciinema-player' {
     interface Player {
         dispose(): void;
+        seek(position: number): void;
     }
 
     export function create(src: string, element: HTMLElement | null, options?: Record<string, unknown>): Player;

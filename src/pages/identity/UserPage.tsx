@@ -64,7 +64,6 @@ const UserPage = () => {
             await api.updateById(values['id'], values);
         } else {
             let result = await api.create(values) as unknown as CreateUserResult;
-            console.log(result);
             modal.success({
                 title: t('identity.user.new_user_result'),
                 content: <div>

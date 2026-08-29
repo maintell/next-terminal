@@ -1,11 +1,9 @@
-import {atom} from "jotai/index";
-import {useAtom} from "jotai/index";
-import type {MapToken, SeedToken} from "antd/es/theme/interface";
-import {theme} from "antd";
+import {theme, type ThemeConfig} from "antd";
+import {useSyncExternalStore} from "react";
 
-type ConfigTheme = {
+export type ConfigTheme = {
     isDark: boolean
-    algorithm: (token: SeedToken) => MapToken,
+    algorithm: NonNullable<ThemeConfig['algorithm']>,
     backgroundColor?: string,
 }
 
@@ -44,18 +42,31 @@ const getInitialIsDark = () => {
     }
 };
 
-const isDarkAtom = atom(getInitialIsDark());
+let currentIsDark = getInitialIsDark();
+const listeners = new Set<() => void>();
 
-const configAtom = atom(
-    (get) => get(isDarkAtom) ? DarkTheme : DefaultTheme,
-    (get, set, update: ConfigTheme | ((previousTheme: ConfigTheme) => ConfigTheme)) => {
-        const previousTheme = get(isDarkAtom) ? DarkTheme : DefaultTheme;
-        const nextTheme = typeof update === 'function' ? update(previousTheme) : update;
-        set(isDarkAtom, nextTheme.isDark);
-        localStorage.setItem(themeStorageKey, JSON.stringify({isDark: nextTheme.isDark}));
-    },
-);
+const subscribe = (listener: () => void) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+};
+
+const getSnapshot = () => currentIsDark;
 
 export function useNTTheme() {
-    return useAtom(configAtom)
+    const isDark = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+    const config = isDark ? DarkTheme : DefaultTheme;
+
+    const setTheme = (update: ConfigTheme | ((previousTheme: ConfigTheme) => ConfigTheme)) => {
+        const previousTheme = currentIsDark ? DarkTheme : DefaultTheme;
+        const nextTheme = typeof update === 'function' ? update(previousTheme) : update;
+        if (currentIsDark === nextTheme.isDark) {
+            return;
+        }
+
+        currentIsDark = nextTheme.isDark;
+        localStorage.setItem(themeStorageKey, JSON.stringify({isDark: currentIsDark}));
+        listeners.forEach(listener => listener());
+    };
+
+    return [config, setTheme] as const;
 }

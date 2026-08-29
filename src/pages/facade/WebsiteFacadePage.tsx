@@ -1,6 +1,6 @@
-import portalApi,{ WebsiteUser } from "@/api/portal-api";
+import portalApi, {WebsiteUser} from "@/api/portal-api";
 import strings from "@/utils/strings";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation,useQuery } from "@tanstack/react-query";
 import { App,Empty,Segmented,Tooltip } from "antd";
 import { useEffect,useState,type Key } from 'react';
 import { useTranslation } from "react-i18next";
@@ -30,11 +30,9 @@ const WebsiteFacadePage = () => {
 
     let {t} = useTranslation();
     const {message} = App.useApp();
-    let [websites, setWebsites] = useState<WebsiteUser[]>();
     let [search, setSearch] = useState<string>('');
     let [selectedGroupKey, setSelectedGroupKey] = useState<string>('');
     let [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
-    let [allowLoading, setAllowLoading] = useState<string>('');
     let [viewMode, setViewMode] = useState<WebsiteViewMode>(getInitialWebsiteViewMode);
 
     let queryWebsites = useQuery({
@@ -51,12 +49,6 @@ const WebsiteFacadePage = () => {
     });
 
     useEffect(() => {
-        if (queryWebsites.data) {
-            setWebsites(queryWebsites.data);
-        }
-    }, [queryWebsites.data]);
-
-    useEffect(() => {
         if (queryWebsiteGroupTree.data) {
             const allExpandedKeys = getAllKeys(queryWebsiteGroupTree.data);
             if (allExpandedKeys.length > 0) {
@@ -65,21 +57,16 @@ const WebsiteFacadePage = () => {
         }
     }, [queryWebsiteGroupTree.data]);
 
-    const allowTempIP = async (websiteId: string) => {
-        try {
-            setAllowLoading(websiteId);
-            const data = await portalApi.allowWebsiteIP(websiteId) as any;
+    const allowTempIPMutation = useMutation({
+        mutationFn: portalApi.allowWebsiteIP,
+        onSuccess: (data) => {
             const expiresIn = data?.expiresIn || 0;
             const minutes = Math.max(1, Math.ceil(expiresIn / 60));
             message.success(t('assets.temp_allow_success', { minutes }));
-        } catch (error) {
-            // error handled globally
-        } finally {
-            setAllowLoading('');
-        }
-    };
+        },
+    });
 
-    let filteredWebsites = websites || [];
+    let filteredWebsites = queryWebsites.data ?? [];
     const searchValue = search.trim().toLowerCase();
 
     // 按分组过滤
@@ -120,7 +107,7 @@ const WebsiteFacadePage = () => {
 
     const renderWebsiteRow = (item: WebsiteUser) => {
         const tempAllowEnabled = Boolean(item.attrs?.tempAllowEnabled);
-        const isAllowing = allowLoading === item.id;
+        const isAllowing = allowTempIPMutation.isPending && allowTempIPMutation.variables === item.id;
 
         return (
             <div
@@ -172,7 +159,7 @@ const WebsiteFacadePage = () => {
                         <button
                             type="button"
                             disabled={isAllowing}
-                            onClick={() => allowTempIP(item.id)}
+                            onClick={() => allowTempIPMutation.mutate(item.id)}
                             className={'hidden cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs text-slate-400 transition-colors hover:text-[#1A73E8] disabled:cursor-not-allowed disabled:opacity-50 sm:flex'}
                         >
                             {isAllowing ? (
@@ -199,7 +186,7 @@ const WebsiteFacadePage = () => {
 
     const renderWebsiteCard = (item: WebsiteUser) => {
         const tempAllowEnabled = Boolean(item.attrs?.tempAllowEnabled);
-        const isAllowing = allowLoading === item.id;
+        const isAllowing = allowTempIPMutation.isPending && allowTempIPMutation.variables === item.id;
 
         return (
             <div
@@ -254,7 +241,7 @@ const WebsiteFacadePage = () => {
                         <button
                             type="button"
                             disabled={isAllowing}
-                            onClick={() => allowTempIP(item.id)}
+                            onClick={() => allowTempIPMutation.mutate(item.id)}
                             className={'flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs text-slate-400 transition-colors hover:text-[#1A73E8] disabled:cursor-not-allowed disabled:opacity-50'}
                         >
                             {isAllowing ? (

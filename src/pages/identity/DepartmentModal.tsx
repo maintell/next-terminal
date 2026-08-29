@@ -4,7 +4,7 @@ import { Form,Input,InputNumber,Modal,TreeSelect } from "antd";
 import { useEffect,useState } from 'react';
 import { useTranslation } from "react-i18next";
 
-export interface DepartmentModalProps {
+interface DepartmentModalProps {
     id?: string
     open: boolean
     confirmLoading: boolean

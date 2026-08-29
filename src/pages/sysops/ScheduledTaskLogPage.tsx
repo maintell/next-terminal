@@ -206,7 +206,7 @@ const ScheduledTaskLogPage = ({open, jobId, handleCancel}: Props) => {
         <Drawer
             title={t('sysops.logs.label')}
             placement="right"
-            size={window.innerWidth * 0.9}
+            size="90vw"
             closable={true}
             mask={{closable: true}}
             onClose={handleCancel}

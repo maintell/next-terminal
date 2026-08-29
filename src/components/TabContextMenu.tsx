@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 interface TabContextMenuProps {
   children: React.ReactNode;
   tabKey: string;
-  currentActiveKey: string;
   allTabs: Array<{ key: string; label: string }>;
   onCloseLeft: (key: string) => void;
   onCloseRight: (key: string) => void;
@@ -14,12 +13,12 @@ interface TabContextMenuProps {
   onReconnect: (key: string) => void;
   onDuplicateSession: (key: string) => void;
   canDuplicateSession?: boolean;
+  canReconnect?: boolean;
 }
 
-const TabContextMenu: React.FC<TabContextMenuProps> = ({
+const TabContextMenu = ({
   children,
   tabKey,
-  currentActiveKey: _currentActiveKey,
   allTabs,
   onCloseLeft,
   onCloseRight,
@@ -28,7 +27,8 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({
   onReconnect,
   onDuplicateSession,
   canDuplicateSession = false,
-}) => {
+  canReconnect = false,
+}: TabContextMenuProps) => {
   const { t } = useTranslation();
 
   const currentIndex = allTabs.findIndex(tab => tab.key === tabKey);
@@ -70,11 +70,11 @@ const TabContextMenu: React.FC<TabContextMenuProps> = ({
       label: t('access.tabs.copySession'),
       onClick: () => onDuplicateSession(tabKey),
     }] : []),
-    {
+    ...(canReconnect ? [{
       key: 'reconnect',
       label: t('assets.resize_methods.reconnect'),
       onClick: () => onReconnect(tabKey),
-    },
+    }] : []),
   ];
 
   return (

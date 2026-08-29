@@ -63,7 +63,7 @@ const AgentGatewayStat = ({open, id, updatedAt, onClose}: Props) => {
             }
             onClose={onClose}
             open={open}
-            size={Math.min(1200, window.innerWidth - 100)}
+            size="min(90vw, 1200px)"
         >
             <div className="flex flex-col gap-4">
                 <Card

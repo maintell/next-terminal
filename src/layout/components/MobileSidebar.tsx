@@ -4,7 +4,7 @@ import LayoutSidebarLogo from './LayoutSidebarLogo';
 import {ScrollArea} from '@/components/ui/scroll-area';
 
 interface MobileSidebarProps {
-    visible: boolean;
+    open: boolean;
     onClose: () => void;
     filteredMenus: MenuProps['items'];
     current: string;
@@ -18,7 +18,7 @@ interface MobileSidebarProps {
  * 包含 Logo 和 Menu
  */
 const MobileSidebar: React.FC<MobileSidebarProps> = ({
-                                                         visible,
+                                                         open,
                                                          onClose,
                                                          filteredMenus,
                                                          current,
@@ -31,7 +31,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
             title={null}
             placement="left"
             onClose={onClose}
-            open={visible}
+            open={open}
             styles={{
                 body: {padding: 0}
             }}

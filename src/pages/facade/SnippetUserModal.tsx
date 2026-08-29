@@ -3,7 +3,7 @@ import {Modal, Form, Input, Radio} from 'antd';
 import { useTranslation } from "react-i18next";
 import snippetUserApi from "@/api/snippet-user-api";
 const api = snippetUserApi;
-export interface SnippetProps {
+interface SnippetProps {
   open: boolean;
   handleOk: (values: any) => void;
   handleCancel: () => void;

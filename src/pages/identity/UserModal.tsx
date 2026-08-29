@@ -6,7 +6,7 @@ import userApi from "../../api/user-api";
 import departmentApi from "../../api/department-api";
 import {useTranslation} from "react-i18next";
 import ProFormTreeSelect from "@/components/ProFormTreeSelect";
-export interface UserModalProps {
+interface UserModalProps {
     open: boolean;
     handleOk: (values: any) => void;
     handleCancel: () => void;
@@ -99,6 +99,7 @@ const UserModal = ({
                     }
                     return <Form.Item label={t('menus.identity.submenus.role')} name='roles'>
                         <QuerySelect
+                            queryKey={['roles']}
                             mode='multiple'
                             request={async () => {
                                 let items = await roleApi.getAll();
@@ -113,7 +114,7 @@ const UserModal = ({
                 }}
             </Form.Item>
 
-            <ProFormTreeSelect label={t('menus.identity.submenus.department')} name='departments' fieldProps={{
+            <ProFormTreeSelect queryKey={['department-tree']} label={t('menus.identity.submenus.department')} name='departments' fieldProps={{
                 multiple: true,
                 treeCheckable: true,
                 showCheckedStrategy: 'SHOW_ALL',

@@ -25,21 +25,13 @@ const AccessSshChooser = ({handleOk, handleCancel, open}: Props) => {
     let {t} = useTranslation();
     let [keyword, setKeyword] = useState('');
     let treeQuery = useQuery({
-        queryKey: ['ssh', 'chooser'],
+        queryKey: ['ssh', 'chooser', keyword],
         queryFn: () => {
             return portalApi.getAssetsTree('ssh', keyword)
         },
         enabled: open === true,
     });
 
-    useEffect(() => {
-        if (open === false) {
-            return;
-        }
-        treeQuery.refetch();
-    }, [open, keyword]);
-
-    const [treeData, setTreeData] = useState<TreeDataNodeWithExtra[]>([]);
     let [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
     const [sshAssetKeys, setSshAssetKeys] = useState<string[]>([]);
 
@@ -60,14 +52,12 @@ const AccessSshChooser = ({handleOk, handleCancel, open}: Props) => {
 
     useEffect(() => {
         if (treeQuery.data) {
-            setTreeData(treeQuery.data);
             let keys1 = getAllKeys(treeQuery.data);
             setExpandedKeys(keys1);
         }
     }, [treeQuery.data]);
 
     const onCheck: TreeProps['onCheck'] = (_checkedKeysValue, {checkedNodes}) => {
-        // console.log('onCheck', checkedKeysValue, checkedNodes);
         let keys = checkedNodes.filter(item => item.isLeaf).map((item) => item.key);
         setSshAssetKeys(keys as string[]);
     };
@@ -83,14 +73,15 @@ const AccessSshChooser = ({handleOk, handleCancel, open}: Props) => {
                     handleOk(sshAssetKeys);
                 }}
                 onCancel={() => {
-                    // 
                     handleCancel();
                 }}
             >
                 <div className={'space-y-4'}>
-                    <Input.Search placeholder="Search" onChange={(e) => {
-                        setKeyword(e.target.value);
-                    }}/>
+                    <Input.Search
+                        allowClear
+                        placeholder={t('general.search_placeholder')}
+                        onSearch={(value) => setKeyword(value.trim())}
+                    />
 
                     <Tree
                         titleRender={(node) => {
@@ -108,15 +99,11 @@ const AccessSshChooser = ({handleOk, handleCancel, open}: Props) => {
                                     </span>
                                 </span>
                         }}
-                        treeData={treeData}
+                        treeData={treeQuery.data ?? []}
                         onExpand={setExpandedKeys}
                         expandedKeys={expandedKeys}
                         checkable={true}
                         onCheck={onCheck}
-                        // autoExpandParent={true}
-                        onSelect={(keys, info) => {
-                            console.log('onSelect', keys, info)
-                        }}
                     />
                 </div>
             </Modal>

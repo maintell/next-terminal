@@ -1,9 +1,7 @@
 import authorisedDatabaseAssetApi from "@/api/authorised-database-asset-api";
 import dayjs from "dayjs";
 import {useEffect, useState} from "react";
-import {App, Checkbox, DatePicker, Form, Modal, Space} from "antd";
-import {CheckboxChangeEvent} from "antd/es/checkbox";
-import {RangePickerProps} from "antd/es/date-picker";
+import {App, Checkbox, DatePicker, Form, Modal, Space, type CheckboxChangeEvent, type DatePickerProps} from "antd";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import {useMutation} from "@tanstack/react-query";
@@ -57,7 +55,7 @@ const AuthorisedDatabaseAssetPost = ({open, onCancel, onSuccess}: AuthorisedData
         setExpiredAtDayjs(date);
     };
 
-    const disabledDate: RangePickerProps["disabledDate"] = current => {
+    const disabledDate: DatePickerProps["disabledDate"] = current => {
         return current && current < dayjs().endOf("day");
     };
 

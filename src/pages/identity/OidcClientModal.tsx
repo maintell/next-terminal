@@ -9,8 +9,8 @@ import React from "react";
 import {Button, Checkbox, Form, FormInstance, Input, Modal, Radio, TreeSelect} from "antd";
 import {useTranslation} from "react-i18next";
 
-export interface OidcClientModalProps {
-    visible: boolean;
+interface OidcClientModalProps {
+    open: boolean;
     onOk: (values: any) => void;
     onCancel: () => void;
     confirmLoading: boolean;
@@ -54,7 +54,7 @@ const toRedirectUriValues = (redirectUris?: RedirectUriItem[]) => {
 };
 
 const OidcClientModal = ({
-    visible,
+    open,
     onOk,
     onCancel,
     confirmLoading,
@@ -65,7 +65,7 @@ const OidcClientModal = ({
     const departmentTreeQuery = useQuery({
         queryKey: ["department-tree"],
         queryFn: () => departmentApi.getTree(),
-        enabled: visible,
+        enabled: open,
     });
 
     const grantTypeOptions = [
@@ -158,6 +158,7 @@ const OidcClientModal = ({
                 ]}
             >
                 <QuerySelect
+                    queryKey={['users']}
                     mode="multiple"
                     showSearch={{filterOption: filterOptionByLabel}}
                     placeholder={t("identity.oidc_client.bound_users_placeholder")}
@@ -294,15 +295,15 @@ const OidcClientModal = ({
 
     useFormRequest(
         form,
-        ["form-request", "web/src/pages/identity/OidcClientModal.tsx", visible, id],
+        ["form-request", "oidc-client", open, id],
         get,
-        {enabled: visible},
+        {enabled: open},
     );
 
     return (
         <Modal
             title={id ? t("actions.edit") : t("actions.new")}
-            open={visible}
+            open={open}
             mask={{closable: false}}
             destroyOnHidden={true}
             onOk={() => {

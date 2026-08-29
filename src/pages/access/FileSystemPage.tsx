@@ -29,9 +29,9 @@ Modal,
 Row,
 Space,
 Table,
-Tooltip
+Tooltip,
+type TableColumnsType
 } from "antd";
-import { ColumnsType } from "antd/es/table";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import { Base64 } from 'js-base64';
@@ -385,11 +385,9 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
         },
     ];
 
-    if (ref) {
-        useImperativeHandle(ref, () => ({
-            changeDir: (s: string) => setCurrentDirectory(s),
-        }));
-    }
+    useImperativeHandle(ref, () => ({
+        changeDir: (s: string) => setCurrentDirectory(s),
+    }));
 
     let filesQuery = useQuery({
         queryKey: ['files', fsId, currentDirectory, hiddenFileVisible],
@@ -401,12 +399,8 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
     });
 
     useEffect(() => {
-        if (open) {
-            setCurrentDirectoryForInput(currentDirectory);
-            filesQuery.refetch();
-            return
-        }
-    }, [hiddenFileVisible, currentDirectory, open]);
+        setCurrentDirectoryForInput(currentDirectory);
+    }, [currentDirectory]);
 
     useEffect(() => {
         if (!open) {
@@ -469,7 +463,7 @@ const FileSystemPage = forwardRef<FileSystem, Props>(({
         }
     }
 
-    const fileColumns: ColumnsType<FileInfo> = [
+    const fileColumns: TableColumnsType<FileInfo> = [
         {
             title: t('fs.attributes.path'),
             dataIndex: 'name',

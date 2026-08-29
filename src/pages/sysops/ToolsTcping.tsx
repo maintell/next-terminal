@@ -1,6 +1,6 @@
 import { baseUrl } from "@/api/core/requests";
 import { Button,Form,Input,InputNumber } from 'antd';
-import { useState } from 'react';
+import { useEffect,useRef,useState } from 'react';
 import { useTranslation } from "react-i18next";
 
 const ToolsTcping = () => {
@@ -12,27 +12,39 @@ const ToolsTcping = () => {
 
     const [logs, setLogs] = useState<string[]>([]);
     const [running, setRunning] = useState(false);
-    let eventSource: EventSource | null = null;
+    const eventSourceRef = useRef<EventSource | null>(null);
+
+    useEffect(() => {
+        return () => {
+            eventSourceRef.current?.close();
+            eventSourceRef.current = null;
+        };
+    }, []);
 
     const onSearch = (host: string, port: number) => {
         if (running) return; // 防止重复启动
         setRunning(true);
         setLogs([]);
 
-        eventSource = new EventSource(`${baseUrl()}/admin/tools/tcping?host=${host}&port=${port}&attempts=${attempts}`);
+        const query = new URLSearchParams({host, port: String(port), attempts: String(attempts)});
+        const eventSource = new EventSource(`${baseUrl()}/admin/tools/tcping?${query}`);
+        eventSourceRef.current = eventSource;
 
         eventSource.onmessage = (event) => {
             setLogs((prevLogs) => [...prevLogs, event.data]);
         };
 
         eventSource.onerror = () => {
-            eventSource?.close();
+            eventSource.close();
+            if (eventSourceRef.current === eventSource) {
+                eventSourceRef.current = null;
+            }
             setRunning(false);
         };
     }
 
     return (
-        <div className={'flex min-h-[calc(100vh-240px)] flex-col gap-4'}>
+        <div className="flex h-full min-h-0 flex-col gap-4">
             <Form layout="inline" className="w-full">
                 <Form.Item
                     label={t('sysops.tools.target')}

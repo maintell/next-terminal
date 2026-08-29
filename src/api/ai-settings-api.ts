@@ -9,7 +9,7 @@ export type AIReasoningEffort = '' | 'none' | 'minimal' | 'low' | 'medium' | 'hi
 
 export const AI_THINKING_BUDGET_MAX = 131072;
 export const AI_CONTEXT_WINDOW_MAX = 2000000;
-export const AI_REASONING_PROTOCOLS: AIReasoningProtocol[] = ['', 'openai', 'thinking_object', 'qwen'];
+const AI_REASONING_PROTOCOLS: AIReasoningProtocol[] = ['', 'openai', 'thinking_object', 'qwen'];
 export const AI_REASONING_EFFORTS: AIReasoningEffort[] = ['', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh'];
 
 export interface BuiltinAPIProfile {
@@ -163,7 +163,7 @@ export const DEFAULT_AI_PROFILE: BuiltinAPIProfile = {
     httpProxy: '',
 };
 
-export const DEFAULT_AI_SETTINGS: AISettings = {
+const DEFAULT_AI_SETTINGS: AISettings = {
     enabled: false,
     disclaimerAccepted: false,
     provider: 'builtin',

@@ -1,6 +1,5 @@
 import type {Terminal} from "@xterm/xterm";
 import {message as staticMessage} from "antd";
-import type {MessageInstance} from "antd/es/message/interface";
 import {
     Receiver,
     ReceiverEvent,
@@ -11,6 +10,7 @@ import {
 
 type TransferDirection = "send" | "receive";
 type Bytes = Uint8Array<ArrayBufferLike>;
+type MessageInstance = ReturnType<typeof staticMessage.useMessage>[0];
 
 interface ZmodemControllerOptions {
     terminal: Terminal;
@@ -116,7 +116,6 @@ function formatFileSize(bytes: number): string {
 }
 
 function sanitizeFilename(name: string): string {
-    // eslint-disable-next-line no-control-regex
     const value = name.trim().replace(/[\\/:*?"<>|\u{0}-\u{1f}]/gu, "_");
     return value || "zmodem-download.bin";
 }

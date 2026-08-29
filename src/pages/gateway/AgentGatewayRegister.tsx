@@ -1,7 +1,7 @@
 import agentGatewayApi,{ RegisterParam } from "@/api/agent-gateway-api";
 import agentGatewayTokenApi from "@/api/agent-gateway-token-api";
 import { baseUrl } from "@/api/core/requests";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation,useQuery } from "@tanstack/react-query";
 import { Input,Modal,Select,Typography } from 'antd';
 import clsx from "clsx";
 import {useEffect, useState} from 'react';
@@ -38,6 +38,7 @@ const AgentGatewayRegister = ({
     let tokenQuery = useQuery({
         queryKey: ['agent-gateway-tokens'],
         queryFn: agentGatewayTokenApi.getAll,
+        enabled: open,
     });
 
     let query = useQuery({
@@ -45,27 +46,22 @@ const AgentGatewayRegister = ({
         queryFn: agentGatewayApi.getRegisterParam,
         enabled: open,
     });
+    const setRegisterAddrMutation = useMutation({
+        mutationFn: agentGatewayApi.setRegisterAddr,
+    });
 
     useEffect(() => {
         if (query.data) {
-            let data = query.data;
+            const data = query.data;
             if (data.endpoint === '') {
-                data.endpoint = window.location.origin;
-                agentGatewayApi.setRegisterAddr(data.endpoint).then(_r => {
-                    setParam(data);
-                });
+                const endpoint = window.location.origin;
+                setParam({...data, endpoint});
+                setRegisterAddrMutation.mutate(endpoint);
             } else {
                 setParam(data);
             }
         }
     }, [query.data]);
-
-    useEffect(() => {
-        if (!open) {
-            return;
-        }
-        tokenQuery.refetch();
-    }, [open]);
 
     const options = [
         {key: 'linux', label: 'Linux', img: linuxImg},

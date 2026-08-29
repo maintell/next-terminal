@@ -52,7 +52,7 @@ const SystemMaintenanceSetting = () => {
         });
     }
 
-    return <Tabs className="setting-tabs" activeKey={activeKey} onChange={handleTabChange} items={items}/>;
+    return <Tabs activeKey={activeKey} onChange={handleTabChange} items={items}/>;
 };
 
 export default SystemMaintenanceSetting;

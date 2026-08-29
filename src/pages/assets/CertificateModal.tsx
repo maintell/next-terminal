@@ -6,7 +6,7 @@ import strings from "@/utils/strings";
 
 const api = certificateApi;
 
-export interface CertificateProps {
+interface CertificateProps {
     open: boolean;
     handleOk: (values: any) => void;
     handleCancel: () => void;

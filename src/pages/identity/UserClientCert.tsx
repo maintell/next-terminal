@@ -62,29 +62,48 @@ const UserClientCert = ({active, userId}: UserClientCertProps) => {
             </div>
 
             {cert ? (
-                <Descriptions column={1} bordered size="small">
-                    <Descriptions.Item label={t('account.client_cert_serial')}>
-                        <Typography.Text code>{cert.serialNumber}</Typography.Text>
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('account.client_cert_fingerprint')}>
-                        <Typography.Text code>{cert.fingerprint}</Typography.Text>
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('general.status')}>
-                        <Tag color={statusColor(cert.status)}>{statusLabel(cert.status)}</Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('account.client_cert_not_before')}>
-                        {cert.notBefore ? times.format(cert.notBefore) : t('general.no')}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('account.client_cert_not_after')}>
-                        {cert.notAfter ? times.format(cert.notAfter) : t('general.no')}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('account.client_cert_last_used')}>
-                        {cert.lastUsedAt ? times.format(cert.lastUsedAt) : t('general.no')}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('general.created_at')}>
-                        {cert.createdAt ? times.format(cert.createdAt) : t('general.no')}
-                    </Descriptions.Item>
-                </Descriptions>
+                <Descriptions
+                    column={1}
+                    bordered
+                    size="small"
+                    items={[
+                        {
+                            key: 'serial',
+                            label: t('account.client_cert_serial'),
+                            children: <Typography.Text code>{cert.serialNumber}</Typography.Text>,
+                        },
+                        {
+                            key: 'fingerprint',
+                            label: t('account.client_cert_fingerprint'),
+                            children: <Typography.Text code>{cert.fingerprint}</Typography.Text>,
+                        },
+                        {
+                            key: 'status',
+                            label: t('general.status'),
+                            children: <Tag color={statusColor(cert.status)}>{statusLabel(cert.status)}</Tag>,
+                        },
+                        {
+                            key: 'not-before',
+                            label: t('account.client_cert_not_before'),
+                            children: cert.notBefore ? times.format(cert.notBefore) : t('general.no'),
+                        },
+                        {
+                            key: 'not-after',
+                            label: t('account.client_cert_not_after'),
+                            children: cert.notAfter ? times.format(cert.notAfter) : t('general.no'),
+                        },
+                        {
+                            key: 'last-used',
+                            label: t('account.client_cert_last_used'),
+                            children: cert.lastUsedAt ? times.format(cert.lastUsedAt) : t('general.no'),
+                        },
+                        {
+                            key: 'created-at',
+                            label: t('general.created_at'),
+                            children: cert.createdAt ? times.format(cert.createdAt) : t('general.no'),
+                        },
+                    ]}
+                />
             ) : (
                 <Empty description={t('account.client_cert_empty')}/>
             )}

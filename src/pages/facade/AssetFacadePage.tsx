@@ -34,7 +34,6 @@ const AssetFacadePage = () => {
 
     let {t} = useTranslation();
     const {message} = App.useApp();
-    let [assets, setAssets] = useState<AssetUser[]>();
     let [search, setSearch] = useState<string>('');
     let [selectedGroupKey, setSelectedGroupKey] = useState<string>('');
     let [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
@@ -82,12 +81,6 @@ const AssetFacadePage = () => {
     };
 
     useEffect(() => {
-        if (queryAssets.data) {
-            setAssets(queryAssets.data);
-        }
-    }, [queryAssets.data]);
-
-    useEffect(() => {
         if (queryAssetGroupTree.data) {
             const allExpandedKeys = getAllKeys(queryAssetGroupTree.data);
             if (allExpandedKeys.length > 0) {
@@ -96,7 +89,7 @@ const AssetFacadePage = () => {
         }
     }, [queryAssetGroupTree.data]);
 
-    let filteredAssets = assets || [];
+    let filteredAssets = queryAssets.data ?? [];
     const searchValue = search.trim().toLowerCase();
 
     // 按分组过滤

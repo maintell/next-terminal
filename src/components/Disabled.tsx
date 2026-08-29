@@ -3,7 +3,7 @@ import { Alert, theme } from 'antd';
 import { useTranslation } from "react-i18next";
 import {cn} from "@/lib/utils";
 
-export interface Props {
+interface Props {
     disabled?: boolean;
     children?: React.ReactNode;
     className?: string;

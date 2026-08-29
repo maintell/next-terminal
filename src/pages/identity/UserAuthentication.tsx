@@ -4,8 +4,7 @@ import userApi, {
 } from "@/api/user-api";
 import times from "@/components/time/times";
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {App, Button, Descriptions, Empty, Popconfirm, Space, Table, Tag, Typography} from "antd";
-import type {ColumnsType} from "antd/es/table";
+import {App, Button, Descriptions, Empty, Popconfirm, Space, Table, Tag, Typography, type TableColumnsType} from "antd";
 import {useTranslation} from "react-i18next";
 
 interface UserAuthenticationProps {
@@ -59,7 +58,7 @@ const UserAuthentication = ({active, userId}: UserAuthenticationProps) => {
         },
     });
 
-    const passkeyColumns: ColumnsType<UserWebauthnCredential> = [
+    const passkeyColumns: TableColumnsType<UserWebauthnCredential> = [
         {
             title: t('general.name'),
             dataIndex: 'name',
@@ -97,7 +96,7 @@ const UserAuthentication = ({active, userId}: UserAuthenticationProps) => {
         },
     ];
 
-    const sshKeyColumns: ColumnsType<UserSSHKeyItem> = [
+    const sshKeyColumns: TableColumnsType<UserSSHKeyItem> = [
         {
             title: t('account.ssh_key_name'),
             dataIndex: 'name',
@@ -155,44 +154,63 @@ const UserAuthentication = ({active, userId}: UserAuthenticationProps) => {
     return (
         <div className="space-y-6">
             <div>
-                <Descriptions bordered size="small" column={1}>
-                    <Descriptions.Item label={t('account.change.password')}>
-                        {user?.passwordSet ? (
+                <Descriptions
+                    bordered
+                    size="small"
+                    column={1}
+                    items={[
+                        {
+                            key: 'password',
+                            label: t('account.change.password'),
+                            children: user?.passwordSet ? (
                             <Tag color="success">{t('identity.user.admin_auth.password_set')}</Tag>
                         ) : (
                             <Tag>{t('identity.user.admin_auth.password_not_set')}</Tag>
-                        )}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('identity.user.otp')}>
-                        <Space>
-                            {user?.enabledTotp ? (
-                                <Tag color="success">{t('general.enabled')}</Tag>
-                            ) : (
-                                <Tag>{t('general.disabled')}</Tag>
-                            )}
-                            {user?.enabledTotp && (
-                                <Popconfirm
-                                    title={t('identity.user.reset_otp.confirm_title')}
-                                    onConfirm={() => resetTotpMutation.mutate()}
-                                >
-                                    <Button size="small" danger loading={resetTotpMutation.isPending}>
-                                        {t('identity.user.reset_otp.action')}
-                                    </Button>
-                                </Popconfirm>
-                            )}
-                        </Space>
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('account.passkey')}>
-                        <Tag color={passkeyQuery.data?.length ? 'success' : undefined}>
-                            {passkeyQuery.data?.length ?? 0}
-                        </Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('account.ssh_key')}>
-                        <Tag color={sshKeyQuery.data?.length ? 'success' : undefined}>
-                            {sshKeyQuery.data?.length ?? 0}
-                        </Tag>
-                    </Descriptions.Item>
-                </Descriptions>
+                            ),
+                        },
+                        {
+                            key: 'otp',
+                            label: t('identity.user.otp'),
+                            children: (
+                                <Space>
+                                    {user?.enabledTotp ? (
+                                        <Tag color="success">{t('general.enabled')}</Tag>
+                                    ) : (
+                                        <Tag>{t('general.disabled')}</Tag>
+                                    )}
+                                    {user?.enabledTotp && (
+                                        <Popconfirm
+                                            title={t('identity.user.reset_otp.confirm_title')}
+                                            onConfirm={() => resetTotpMutation.mutate()}
+                                        >
+                                            <Button size="small" danger loading={resetTotpMutation.isPending}>
+                                                {t('identity.user.reset_otp.action')}
+                                            </Button>
+                                        </Popconfirm>
+                                    )}
+                                </Space>
+                            ),
+                        },
+                        {
+                            key: 'passkey',
+                            label: t('account.passkey'),
+                            children: (
+                                <Tag color={passkeyQuery.data?.length ? 'success' : undefined}>
+                                    {passkeyQuery.data?.length ?? 0}
+                                </Tag>
+                            ),
+                        },
+                        {
+                            key: 'ssh-key',
+                            label: t('account.ssh_key'),
+                            children: (
+                                <Tag color={sshKeyQuery.data?.length ? 'success' : undefined}>
+                                    {sshKeyQuery.data?.length ?? 0}
+                                </Tag>
+                            ),
+                        },
+                    ]}
+                />
             </div>
 
             <div>

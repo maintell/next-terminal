@@ -1,13 +1,13 @@
 import { useFormRequest } from "@/hook/use-antd-form-query";
 import {useState} from 'react';
 import { useTranslation } from "react-i18next";
-import {Alert, Button, Result, Spin, Typography, Form, Input} from "antd";
+import {Alert, Button, Result, Spin, Typography, Form, Input, type FormItemProps} from "antd";
 import { useQuery } from "@tanstack/react-query";
 import brandingApi from "@/api/branding-api";
 import userApi from "@/api/user-api";
-import { ValidateStatus } from "antd/es/form/FormItem";
 import { StyleProvider } from '@ant-design/cssinjs';
 import strings from "@/utils/strings";
+type ValidateStatus = FormItemProps['validateStatus'];
 const {
   Title
 } = Typography;

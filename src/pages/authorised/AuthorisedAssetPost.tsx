@@ -2,11 +2,9 @@ import QuerySelect from "@/components/QuerySelect";
 import {useEffect, useState} from "react";
 import commandFilterApi from "@/api/command-filter-api";
 import strategyApi from "@/api/strategy-api";
-import {App, Checkbox, DatePicker, Form, Modal, Space} from "antd";
-import {CheckboxChangeEvent} from "antd/es/checkbox";
+import {App, Checkbox, DatePicker, Form, Modal, Space, type CheckboxChangeEvent, type DatePickerProps} from "antd";
 import dayjs from "dayjs";
 import {useTranslation} from "react-i18next";
-import {RangePickerProps} from "antd/es/date-picker";
 import authorisedAssetApi from "@/api/authorised-asset-api";
 import {useNavigate} from "react-router-dom";
 import {useMutation} from "@tanstack/react-query";
@@ -59,12 +57,11 @@ const AuthorisedAssetPost = ({open, onCancel, onSuccess}: AuthorisedAssetPostPro
         }
     };
 
-    const handleTimeLimitChange = (date: dayjs.Dayjs | null, dateString: string | null) => {
-        console.log(date, dateString);
+    const handleTimeLimitChange = (date: dayjs.Dayjs | null) => {
         setExpiredAtDayjs(date);
     };
 
-    const disabledDate: RangePickerProps["disabledDate"] = current => {
+    const disabledDate: DatePickerProps["disabledDate"] = current => {
         // Can not select days before today and today
         return current && current < dayjs().endOf("day");
     };
@@ -124,6 +121,7 @@ const AuthorisedAssetPost = ({open, onCancel, onSuccess}: AuthorisedAssetPostPro
                     <>
                         <Form.Item label={t("menus.authorised.submenus.command_filter")} name="commandFilterId">
                             <QuerySelect
+                                queryKey={['command-filters']}
                                 showSearch={true}
                                 request={async () => {
                                     const items = await commandFilterApi.getAll();
@@ -139,6 +137,7 @@ const AuthorisedAssetPost = ({open, onCancel, onSuccess}: AuthorisedAssetPostPro
 
                         <Form.Item label={t("authorised.label.strategy")} name="strategyId">
                             <QuerySelect
+                                queryKey={['strategies']}
                                 showSearch={true}
                                 request={async () => {
                                     const items = await strategyApi.getAll();

@@ -1,26 +1,11 @@
 import QuerySelect from "@/components/QuerySelect";
 import React, {useEffect} from 'react';
-import {Form, Input, InputNumber, Select, Space, Switch, Tabs, type TabsProps} from "antd";
+import {Form, Input, InputNumber, Select, Space, Switch, type TabsProps} from "antd";
 import {useTranslation} from "react-i18next";
 import DisplaySettings from './DisplaySettings';
 import SecuritySettings from './SecuritySettings';
 import WOLSettings from '../../../components/WOLSettings';
 import storageApi from "@/api/storage-api";
-
-interface AssetAdvancedSettingsProps {
-    protocol: string;
-}
-
-export type AssetAdvancedSection = 'security_settings'
-    | 'display_settings'
-    | 'audio_settings'
-    | 'domain'
-    | 'PDU'
-    | 'remote-app'
-    | 'rdp-drive'
-    | 'terminal_settings'
-    | 'ai_settings'
-    | 'wol-settings';
 
 export const DefaultTerminalConnectTimeout = 15;
 
@@ -92,7 +77,7 @@ const RdpDriveSettings = () => {
         </Form.Item>
         <Form.Item name={["attrs", "drive-path"]} label={t('assets.rdp_drive_path')}
                    extra={t('assets.rdp_drive_path_extra')}>
-            <QuerySelect request={loadStorageShares}/>
+            <QuerySelect queryKey={['storage-shares']} request={loadStorageShares}/>
         </Form.Item>
     </>;
 };
@@ -296,15 +281,3 @@ export const getAssetAdvancedItems = (protocol: string, t: (key: string) => stri
     }
     return items;
 };
-
-const AssetAdvancedSettings: React.FC<AssetAdvancedSettingsProps> = ({protocol}) => {
-    const {t} = useTranslation();
-    const items = getAssetAdvancedItems(protocol, t) ?? [];
-
-    if (items.length === 0) {
-        return null;
-    }
-    return <Tabs tabPlacement="start" items={items}/>;
-};
-
-export default AssetAdvancedSettings;

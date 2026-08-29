@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { cn } from "@/lib/utils";
 
 interface MarkdownRendererProps {
@@ -6,79 +6,69 @@ interface MarkdownRendererProps {
     isMobile?: boolean;
 }
 
+const processInlineElements = (text: string, isMobile: boolean): React.ReactNode[] => {
+    const parts: React.ReactNode[] = [];
+    let remaining = text;
+    let partIndex = 0;
+
+    while (remaining.length > 0) {
+        const boldMatch = remaining.match(/\*\*(.*?)\*\*|__(.*?)__/);
+        const italicMatch = remaining.match(/\*(.*?)\*|_(.*?)_/);
+        const codeMatch = remaining.match(/`(.*?)`/);
+
+        const matches = [
+            boldMatch ? {match: boldMatch, type: 'bold', start: boldMatch.index!} : null,
+            italicMatch ? {match: italicMatch, type: 'italic', start: italicMatch.index!} : null,
+            codeMatch ? {match: codeMatch, type: 'code', start: codeMatch.index!} : null,
+        ].filter(Boolean).sort((a, b) => a!.start - b!.start);
+
+        if (matches.length === 0) {
+            if (remaining.trim()) {
+                parts.push(<span key={partIndex++}>{remaining}</span>);
+            }
+            break;
+        }
+
+        const nextMatch = matches[0]!;
+        if (nextMatch.start > 0) {
+            const beforeText = remaining.substring(0, nextMatch.start);
+            if (beforeText.trim()) {
+                parts.push(<span key={partIndex++}>{beforeText}</span>);
+            }
+        }
+
+        const matchedText = nextMatch.match[1] || nextMatch.match[2] || '';
+        switch (nextMatch.type) {
+            case 'bold':
+                parts.push(<strong key={partIndex++} className="font-bold">{matchedText}</strong>);
+                break;
+            case 'italic':
+                parts.push(<em key={partIndex++} className="italic">{matchedText}</em>);
+                break;
+            case 'code':
+                parts.push(
+                    <code key={partIndex++} className={cn(
+                        'bg-gray-100 dark:bg-gray-800 px-1 rounded',
+                        isMobile ? 'text-xs' : 'text-sm'
+                    )}>
+                        {matchedText}
+                    </code>
+                );
+                break;
+        }
+
+        remaining = remaining.substring(nextMatch.start + nextMatch.match[0].length);
+    }
+
+    return parts.length > 0 ? parts : [text];
+};
+
 /**
  * 轻量级 Markdown 渲染器组件
  * 支持: 标题、列表、代码块、引用、粗体、斜体、行内代码
  */
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ text, isMobile = false }) => {
-    
-    // 处理行内标记（加粗、斜体、代码）
-    const processInlineElements = useMemo(() => {
-        return (text: string): React.ReactNode[] => {
-            const parts: React.ReactNode[] = [];
-            let remaining = text;
-            let partIndex = 0;
-            
-            while (remaining.length > 0) {
-                // 查找下一个标记的位置
-                const boldMatch = remaining.match(/\*\*(.*?)\*\*|__(.*?)__/);
-                const italicMatch = remaining.match(/\*(.*?)\*|_(.*?)_/);
-                const codeMatch = remaining.match(/`(.*?)`/);
-                
-                const matches = [
-                    boldMatch ? { match: boldMatch, type: 'bold', start: boldMatch.index! } : null,
-                    italicMatch ? { match: italicMatch, type: 'italic', start: italicMatch.index! } : null,
-                    codeMatch ? { match: codeMatch, type: 'code', start: codeMatch.index! } : null,
-                ].filter(Boolean).sort((a, b) => a!.start - b!.start);
-                
-                if (matches.length === 0) {
-                    // 没有更多标记，添加剩余文本
-                    if (remaining.trim()) {
-                        parts.push(<span key={partIndex++}>{remaining}</span>);
-                    }
-                    break;
-                }
-                
-                const nextMatch = matches[0]!;
-                
-                // 添加标记前的文本
-                if (nextMatch.start > 0) {
-                    const beforeText = remaining.substring(0, nextMatch.start);
-                    if (beforeText.trim()) {
-                        parts.push(<span key={partIndex++}>{beforeText}</span>);
-                    }
-                }
-                
-                // 添加标记内容
-                const matchedText = nextMatch.match[1] || nextMatch.match[2] || '';
-                switch (nextMatch.type) {
-                    case 'bold':
-                        parts.push(<strong key={partIndex++} className="font-bold">{matchedText}</strong>);
-                        break;
-                    case 'italic':
-                        parts.push(<em key={partIndex++} className="italic">{matchedText}</em>);
-                        break;
-                    case 'code':
-                        parts.push(
-                            <code key={partIndex++} className={cn(
-                                'bg-gray-100 dark:bg-gray-800 px-1 rounded',
-                                isMobile ? 'text-xs' : 'text-sm'
-                            )}>
-                                {matchedText}
-                            </code>
-                        );
-                        break;
-                }
-                
-                // 更新剩余文本
-                remaining = remaining.substring(nextMatch.start + nextMatch.match[0].length);
-            }
-            
-            return parts.length > 0 ? parts : [text];
-        };
-    }, [isMobile]);
-    
-    const elements = useMemo(() => {
+    const elements = (() => {
         if (!text) return null;
         
         const lines = text.split('\n');
@@ -146,7 +136,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ text, isMobi
                 flushList();
                 const level = trimmed.match(/^#+/)?.[0].length || 1;
                 const text = trimmed.replace(/^#+\s*/, '');
-                const content = processInlineElements(text);
+                const content = processInlineElements(text, isMobile);
                 
                 if (level === 1) {
                     result.push(
@@ -182,7 +172,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ text, isMobi
             // 无序列表 - * +
             if (/^[-*+]\s/.test(trimmed)) {
                 const text = trimmed.replace(/^[-*+]\s/, '');
-                const content = processInlineElements(text);
+                const content = processInlineElements(text, isMobile);
                 if (!currentList || currentList.type !== 'ul') {
                     flushList();
                     currentList = { type: 'ul', items: [] };
@@ -194,7 +184,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ text, isMobi
             // 有序列表 1. 2. 3.
             if (/^\d+\.\s/.test(trimmed)) {
                 const text = trimmed.replace(/^\d+\.\s/, '');
-                const content = processInlineElements(text);
+                const content = processInlineElements(text, isMobile);
                 if (!currentList || currentList.type !== 'ol') {
                     flushList();
                     currentList = { type: 'ol', items: [] };
@@ -207,7 +197,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ text, isMobi
             if (trimmed.startsWith('>')) {
                 flushList();
                 const text = trimmed.replace(/^>\s*/, '');
-                const content = processInlineElements(text);
+                const content = processInlineElements(text, isMobile);
                 result.push(
                     <blockquote key={index} className={cn(
                         'border-l-4 border-gray-300 pl-4 italic mb-3',
@@ -221,7 +211,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ text, isMobi
             
             // 普通段落
             flushList();
-            const content = processInlineElements(trimmed);
+            const content = processInlineElements(trimmed, isMobile);
             result.push(
                 <p key={index} className={cn(
                     'mb-2 leading-relaxed',
@@ -235,8 +225,7 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ text, isMobi
         flushList(); // 处理最后的列表
         
         return result;
-    }, [text, isMobile, processInlineElements]);
+    })();
     
     return <div className="markdown-content">{elements}</div>;
 };
-

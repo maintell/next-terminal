@@ -160,23 +160,39 @@ const GeoDataSetting = () => {
                     <Alert type="warning" showIcon title={t('settings.geodata.unavailable')}/>
                 )}
                 {database?.available && (
-                    <Descriptions bordered size="small" column={{xs: 1, sm: 2}}>
-                        <Descriptions.Item label={t('settings.geodata.database_type')}>
-                            {database.databaseType}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={t('settings.geodata.file_size')}>
-                            {formatSize(database.fileSize)}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={t('settings.geodata.build_time')}>
-                            {formatTime(database.buildTime)}
-                        </Descriptions.Item>
-                        <Descriptions.Item label={t('settings.geodata.modified_at')}>
-                            {formatTime(database.modifiedAt)}
-                        </Descriptions.Item>
-                        <Descriptions.Item label="SHA256" span={2}>
-                            <Typography.Text copyable className="break-all">{database.sha256}</Typography.Text>
-                        </Descriptions.Item>
-                    </Descriptions>
+                    <Descriptions
+                        bordered
+                        size="small"
+                        column={{xs: 1, sm: 2}}
+                        items={[
+                            {
+                                key: 'database-type',
+                                label: t('settings.geodata.database_type'),
+                                children: database.databaseType,
+                            },
+                            {
+                                key: 'file-size',
+                                label: t('settings.geodata.file_size'),
+                                children: formatSize(database.fileSize),
+                            },
+                            {
+                                key: 'build-time',
+                                label: t('settings.geodata.build_time'),
+                                children: formatTime(database.buildTime),
+                            },
+                            {
+                                key: 'modified-at',
+                                label: t('settings.geodata.modified_at'),
+                                children: formatTime(database.modifiedAt),
+                            },
+                            {
+                                key: 'sha256',
+                                label: 'SHA256',
+                                span: 2,
+                                children: <Typography.Text copyable className="break-all">{database.sha256}</Typography.Text>,
+                            },
+                        ]}
+                    />
                 )}
             </section>
 

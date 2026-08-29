@@ -24,12 +24,21 @@ const CommandFilterInfo = ({id}: Props) => {
     return (
         <div className={'page-detail-info'}>
             <Spin spinning={commandFilterQuery.isLoading}>
-                <Descriptions column={1}>
-                    <Descriptions.Item label={t("general.name")}>{commandFilter?.name}</Descriptions.Item>
-                    <Descriptions.Item label={t('general.created_at')}>
-                        {commandFilter?.createdAt ? times.format(commandFilter.createdAt) : '-'}
-                    </Descriptions.Item>
-                </Descriptions>
+                <Descriptions
+                    column={1}
+                    items={[
+                        {
+                            key: 'name',
+                            label: t('general.name'),
+                            children: commandFilter?.name,
+                        },
+                        {
+                            key: 'created-at',
+                            label: t('general.created_at'),
+                            children: commandFilter?.createdAt ? times.format(commandFilter.createdAt) : '-',
+                        },
+                    ]}
+                />
             </Spin>
         </div>
     );

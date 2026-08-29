@@ -1,4 +1,3 @@
-import React from 'react';
 import {Tooltip} from 'antd';
 import {Palette, PanelLeftCloseIcon, PanelLeftOpenIcon, Settings, TerminalIcon} from 'lucide-react';
 import brandingApi from '@/api/branding-api';
@@ -19,7 +18,7 @@ interface AccessHeaderProps {
  * AccessHeader 组件
  * 显示顶部导航栏，包括 Logo、品牌名称和操作按钮
  */
-const AccessHeader = React.memo(({
+const AccessHeader = ({
                                      isSidebarCollapsed,
                                      onToggleSidebar,
                                      onThemeClick,
@@ -37,7 +36,7 @@ const AccessHeader = React.memo(({
     const iconButtonClassName = 'flex h-7 w-7 items-center justify-center rounded-md text-white/80 transition-colors hover:bg-white/10 hover:text-white';
 
     return (
-        <div className={'flex h-10 items-center bg-[#313131] text-white'}>
+        <div className={'flex h-10 shrink-0 items-center bg-[#313131] text-white'}>
             <div
                 className={'flex h-full shrink-0 items-center gap-2 px-2'}
                 style={{width: `${ACCESS_SIDEBAR_DEFAULT_SIZE}%`}}
@@ -88,8 +87,6 @@ const AccessHeader = React.memo(({
             </div>
         </div>
     );
-});
-
-AccessHeader.displayName = 'AccessHeader';
+};
 
 export default AccessHeader;

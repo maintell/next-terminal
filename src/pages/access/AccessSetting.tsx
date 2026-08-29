@@ -7,13 +7,11 @@ import {getAvailableFonts} from "@/utils/utils";
 import {App, Button, Checkbox, ConfigProvider, Form, InputNumber} from 'antd';
 import accessSettingApi from "@/api/access-setting-api";
 import {ScrollArea} from "@/components/ui/scroll-area";
-import {useWindowSize} from "react-use";
 import {useMutation} from "@tanstack/react-query";
 
 const AccessSetting = () => {
     let {t} = useTranslation();
     const [form] = Form.useForm();
-    let {height} = useWindowSize();
     let [terminalTheme, setTerminalTheme] = useTerminalTheme();
     let {message} = App.useApp();
     const [availableFonts, setAvailableFonts] = useState<string[]>([]);
@@ -78,9 +76,7 @@ const AccessSetting = () => {
         return setting;
     };
     useFormRequest(form, ["form-request", "web/src/pages/access/AccessSetting.tsx"], get, true);
-    return <ScrollArea style={{
-        height: height - 80
-    }}>
+    return <ScrollArea className="h-full">
         <div className={'m-8'}>
             <div className={'text-lg font-bold'}>{t('menus.setting.label')}</div>
 

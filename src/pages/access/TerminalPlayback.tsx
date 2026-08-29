@@ -1,8 +1,7 @@
-import { useEffect,useState } from 'react';
+import { useEffect,useRef,useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-// @ts-ignore
 import { baseUrl } from "@/api/core/requests";
-import sessionApi,{ Session,SessionCommand } from "@/api/session-api";
+import sessionApi,{ SessionCommand } from "@/api/session-api";
 import IPRegion from "@/components/IPRegion";
 import sessionCommandApi from "@/api/session-command-api";
 import times from "@/components/time/times";
@@ -10,8 +9,7 @@ import { maybe } from "@/utils/maybe";
 import { renderSize } from "@/utils/utils";
 import { StyleProvider } from '@ant-design/cssinjs';
 import { useQuery } from "@tanstack/react-query";
-import { Button,ConfigProvider,Descriptions,Drawer,Table,Tabs,TabsProps,theme } from "antd";
-import { ColumnsType } from "antd/es/table";
+import { Button,ConfigProvider,Descriptions,Drawer,Table,Tabs,TabsProps,theme,type TableColumnsType } from "antd";
 import * as AsciinemaPlayer from 'asciinema-player';
 import 'asciinema-player/dist/bundle/asciinema-player.css';
 import { TerminalSquare } from "lucide-react";
@@ -26,38 +24,31 @@ const TerminalPlayback = () => {
     const sessionId = maybe(searchParams.get('sessionId'), '');
 
     let [open, setOpen] = useState(false);
-    let [cmds, setCmds] = useState<SessionCommand[]>([]);
-    let [session, setSession] = useState<Session>();
-
-    let [player, setPlayer] = useState<ReturnType<typeof AsciinemaPlayer.create>>();
+    const playerRef = useRef<ReturnType<typeof AsciinemaPlayer.create>>(null);
+    const playerElementRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         let url = `${baseUrl()}/admin/sessions/${sessionId}/recording`;
-        let playerElement = document.getElementById('player');
-        let player = AsciinemaPlayer.create(url, playerElement, {
+        const player = AsciinemaPlayer.create(url, playerElementRef.current, {
             fit: 'both',
             autoPlay: true,
             terminalFontFamily: 'monaco, Consolas, "Lucida Console", monospace'
         });
-        setPlayer(player);
+        playerRef.current = player;
         return () => {
+            playerRef.current = null;
             player.dispose();
         }
     }, [sessionId]);
 
     let sessionQuery = useQuery({
-        queryKey: ['session'],
-        queryFn: () => sessionApi.getById(sessionId)
+        queryKey: ['session', sessionId],
+        queryFn: () => sessionApi.getById(sessionId),
+        enabled: !!sessionId,
     });
 
-    useEffect(() => {
-        if (sessionQuery.data) {
-            setSession(sessionQuery.data);
-        }
-    }, [sessionQuery.data]);
-
     let cmdQuery = useQuery({
-        queryKey: ['cmd'],
+        queryKey: ['session-commands', sessionId],
         queryFn: () => {
             return sessionCommandApi.getPaging({
                 pageIndex: 1,
@@ -66,16 +57,13 @@ const TerminalPlayback = () => {
                 sortField: "createdAt",
                 sortOrder: "asc",
             })
-        }
+        },
+        enabled: !!sessionId,
     });
+    const session = sessionQuery.data;
+    const cmds = cmdQuery.data?.items ?? [];
 
-    useEffect(() => {
-        if (cmdQuery.data) {
-            setCmds(cmdQuery.data.items);
-        }
-    }, [cmdQuery.data]);
-
-    const cmdColumns: ColumnsType<SessionCommand> = [
+    const cmdColumns: TableColumnsType<SessionCommand> = [
         {
             title: t('sysops.logs.exec_at'),
             key: 'createdAt',
@@ -110,8 +98,7 @@ const TerminalPlayback = () => {
                         onClick: () => {
                             let connected = session?.connectedAt ? session?.connectedAt : 0;
                             let pos = (cmd.createdAt - connected) / 1000;
-                            // @ts-ignore
-                            player?.seek(pos - 0.5);
+                            playerRef.current?.seek(Math.max(0, pos - 0.5));
                         }
                     }
                 }}
@@ -170,7 +157,7 @@ const TerminalPlayback = () => {
     return (
         <div className={'fixed inset-0 flex items-center justify-center overflow-hidden bg-[#191919]'}>
             <div
-                id='player'
+                ref={playerElementRef}
                 className={'w-full h-full overflow-hidden'}
             />
 

@@ -13,26 +13,23 @@ interface Props {
 const AssetTreeChoose = ({assetIds, open, onClose}: Props) => {
     let {t} = useTranslation();
 
-    const [treeData, setTreeData] = useState<TreeDataNode[]>([]);
     let [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
     let [selectedKey, setSelectedKey] = useState('');
 
     let query = useQuery({
-        queryKey: ['assets/groups'],
+        queryKey: ['assets', 'groups'],
         queryFn: assetApi.getGroups,
+        enabled: open,
     });
 
     useEffect(() => {
-        if (open) {
-            query.refetch();
-        } else {
+        if (!open) {
             setSelectedKey('');
         }
     }, [open]);
 
     useEffect(() => {
         if (query.data) {
-            setTreeData(query.data);
             let keys1 = getAllKeys(query.data);
             setExpandedKeys(keys1);
         }
@@ -66,7 +63,7 @@ const AssetTreeChoose = ({assetIds, open, onClose}: Props) => {
                     open={open}>
                 <Tree
                     blockNode
-                    treeData={treeData}
+                    treeData={query.data ?? []}
                     expandedKeys={expandedKeys}
                     onExpand={setExpandedKeys}
                     selectedKeys={[selectedKey]}

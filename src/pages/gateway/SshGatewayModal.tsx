@@ -48,7 +48,7 @@ const SshGatewayModal = ({
                     <Form.Item label={t('menus.resource.submenus.credential')} name='credentialId' rules={[{
                         required: true
                     }]}>
-                        <QuerySelect request={async () => {
+                        <QuerySelect queryKey={['credentials']} request={async () => {
                             let credentials = await credentialApi.getAll();
                             return credentials.map(item => {
                                 return {
@@ -219,7 +219,7 @@ const SshGatewayModal = ({
                         <Form.Item label={t('menus.resource.submenus.credential')} name='credentialId' rules={[{
                             required: true
                         }]}>
-                            <QuerySelect request={async () => {
+                            <QuerySelect queryKey={['credentials']} request={async () => {
                                 let credentials = await credentialApi.getAll();
                                 return credentials.map(item => {
                                     return {
@@ -237,6 +237,7 @@ const SshGatewayModal = ({
                             required: true
                         }]}>
                             <QuerySelect
+                                queryKey={['ssh-gateway-available-assets']}
                                 showSearch={true}
                                 optionFilterProp='label'
                                 request={async () => {

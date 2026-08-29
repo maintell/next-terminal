@@ -24,6 +24,7 @@ const booleanKeys = [
     'mail-insecure-skip-verify',
     'recording-s3-use-ssl',
     'recording-s3-path-style',
+    'recording-s3-force-payload-signing',
     'swap-red-blue',
 ]
 

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Form, Input, Modal, Select } from 'antd';
 import { useTranslation } from "react-i18next";
-import portalApi, { DatabaseAssetUser } from "@/api/portal-api.ts";
-export interface DatabaseWorkOrderModalProps {
+import portalApi from "@/api/portal-api.ts";
+import {useQuery} from "@tanstack/react-query";
+interface DatabaseWorkOrderModalProps {
   open: boolean;
   handleOk: (values: any) => void;
   handleCancel: () => void;
@@ -18,13 +19,15 @@ const DatabaseWorkOrderModal = ({
     t
   } = useTranslation();
   const [form] = Form.useForm();
-  const [assets, setAssets] = useState<DatabaseAssetUser[]>([]);
+  const assetsQuery = useQuery({
+    queryKey: ['portal-database-assets'],
+    queryFn: () => portalApi.databaseAssets(),
+    enabled: open,
+  });
   useEffect(() => {
     if (!open) {
       form.resetFields();
-      return;
     }
-    portalApi.databaseAssets().then(setAssets).catch(() => setAssets([]));
   }, [form, open]);
   return <Modal title={t('db.work_order.new')} open={open} mask={{
     closable: false
@@ -39,7 +42,8 @@ const DatabaseWorkOrderModal = ({
       }]}>
     <Select
           showSearch={{filterOption: (input, option) => (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())}}
-          options={assets.map(item => ({
+          loading={assetsQuery.isPending}
+          options={(assetsQuery.data ?? []).map(item => ({
             label: item.name,
             value: item.id
           }))} />

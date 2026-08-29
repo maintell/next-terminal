@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import strings from "../../utils/strings";
 import './DragWeekTime.css';
 
-export type WeekMapping = {
+type WeekMapping = {
     [key: string]: string;
 };
 
-export interface TimePeriod {
+interface TimePeriod {
     key: number
     value: string
 }
@@ -43,7 +43,7 @@ const formatWeekTime = (col: number) => {
     return `${begin}~${end}`
 }
 
-export interface Item {
+interface Item {
     week: string
     value: string
     begin: string
@@ -72,7 +72,7 @@ const splicing = (arr: Item[]) => {
     return result.join('')
 }
 
-export interface DragWeekTimeProps {
+interface DragWeekTimeProps {
     onChange?: (timePeriods: TimePeriod[]) => void
     value?: TimePeriod[]
 }

@@ -31,7 +31,7 @@ const AccountTypeForm: React.FC<AccountTypeFormProps> = ({
         return <Form.Item label={t('menus.resource.submenus.credential')} name='credentialId' rules={[{
             required: true
         }]}>
-            <QuerySelect showSearch request={async () => {
+            <QuerySelect queryKey={['credentials']} showSearch request={async () => {
                 let credentials = await credentialApi.getAll();
                 return credentials.map(item => ({
                     label: item.name,

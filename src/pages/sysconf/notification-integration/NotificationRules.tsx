@@ -145,6 +145,11 @@ const NotificationRuleModal = ({
         queryFn: notificationChannelApi.getAll,
         enabled: open,
     });
+    const ruleQuery = useQuery({
+        queryKey: ['notification-rule', id],
+        queryFn: () => notificationRuleApi.getById(id!),
+        enabled: open && !!id,
+    });
 
     useEffect(() => {
         if (!open) {
@@ -162,10 +167,10 @@ const NotificationRuleModal = ({
             });
             return;
         }
-        notificationRuleApi.getById(id).then(data => {
-            form.setFieldsValue(data);
-        });
-    }, [form, id, open]);
+        if (ruleQuery.data) {
+            form.setFieldsValue(ruleQuery.data);
+        }
+    }, [form, id, open, ruleQuery.data]);
 
     const handleOk = async () => {
         const values = await form.validateFields();

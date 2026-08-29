@@ -1,6 +1,6 @@
 import { Form, Input, Modal } from "antd";
 import { useTranslation } from "react-i18next";
-export interface Props {
+interface Props {
   open: boolean;
   handleOk: (values: any) => void;
   handleCancel: () => void;

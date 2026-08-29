@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import {fileURLToPath} from 'url';
 
-const projectRoot = path.resolve(process.cwd(), 'web');
+const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const srcRoot = path.join(projectRoot, 'src');
 const localesDir = path.join(srcRoot, 'react-i18next', 'locales');
 const locales = ['zh-CN', 'en-US', 'zh-TW', 'ja-JP'];

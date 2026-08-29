@@ -1,8 +1,6 @@
-import {useEffect, useState} from 'react';
 import "@xterm/xterm/css/xterm.css";
 import XtermThemes from "@/color-theme/XtermThemes";
 import {ScrollArea} from "@/components/ui/scroll-area";
-import {useWindowSize} from "react-use";
 import {useTerminalTheme} from "@/pages/access/hooks/use-terminal-theme";
 import {useTranslation} from 'react-i18next';
 import {useLicense} from "@/hook/LicenseContext";
@@ -13,66 +11,28 @@ import type {ITheme} from "@xterm/xterm";
 
 const themes = XtermThemes;
 
-const text = `
-\u001b[1;32mnext\u001b[0m@\u001b[1;32mterminal\u001b[0m$ ls
-\u001b[1;34mdrwxr-xr-x\u001b[0m 1 root  \u001b[1;34mboot\u001b[0m
-\u001b[1;34mdrwxr-xr-x\u001b[0m 1 root  \u001b[1;34mdata\u001b[0m
-\u001b[1;34mdrwxr-xr-x\u001b[0m 1 root  \u001b[1;34mdev\u001b[0m
-\u001b[1;34mdrwxr-xr-x\u001b[0m 1 root  \u001b[1;34metc\u001b[0m
-`;
-
 interface ThemeRendererProps {
     theme: ITheme;
-    text: string;
 }
 
-const ThemeRendererV2 = ({theme, text}: ThemeRendererProps) => {
-    const [renderedText, setRenderedText] = useState('');
-
-    const ansiColorMap: Record<string, keyof ITheme> = {
-        '1;32': 'brightGreen',
-        '1;34': 'brightBlue'
-    };
-
-    const renderAnsiText = (text: string) => {
-        const lines = text.split('\n');
-        let output = '';
-
-        lines.forEach(line => {
-            let renderedLine = '';
-
-            const ansiRegex = /\u001b\[(\d+);(\d+)m(.*?)\u001b\[0m/g;
-            let match;
-            let lastIndex = 0;
-
-            while ((match = ansiRegex.exec(line)) !== null) {
-                renderedLine += line.substring(lastIndex, match.index);
-
-                const color = ansiColorMap[`${match[1]};${match[2]}`];
-                if (color) {
-                    renderedLine += `<span style="color: ${theme[color]}">${match[3]}</span>`;
-                } else {
-                    renderedLine += match[3];
-                }
-
-                lastIndex = ansiRegex.lastIndex;
-            }
-
-            renderedLine += line.substring(lastIndex);
-            output += `<div>${renderedLine}</div>`;
-        });
-
-        setRenderedText(output);
-    };
-
-    useEffect(() => {
-        renderAnsiText(text);
-    }, []);
-
+const ThemeRenderer = ({theme}: ThemeRendererProps) => {
+    const directories = ['boot', 'data', 'dev', 'etc'];
     return (
-        <div style={{backgroundColor: theme.background, color: theme.foreground}}>
-            <pre>
-                <div dangerouslySetInnerHTML={{__html: renderedText}}/>
+        <div style={{backgroundColor: theme.background, color: theme.foreground}} className="overflow-hidden">
+            <pre className="m-0 text-xs leading-5">
+                <div>
+                    <span style={{color: theme.brightGreen}}>next</span>
+                    @
+                    <span style={{color: theme.brightGreen}}>terminal</span>
+                    $ ls
+                </div>
+                {directories.map((directory) => (
+                    <div key={directory}>
+                        <span style={{color: theme.brightBlue}}>drwxr-xr-x</span>
+                        {' 1 root  '}
+                        <span style={{color: theme.brightBlue}}>{directory}</span>
+                    </div>
+                ))}
             </pre>
         </div>
     );
@@ -81,14 +41,11 @@ const ThemeRendererV2 = ({theme, text}: ThemeRendererProps) => {
 const AccessTheme = () => {
 
     let [accessTheme, setAccessTheme] = useTerminalTheme();
-    let {height} = useWindowSize();
     let {t} = useTranslation();
     let { license } = useLicense();
 
     return (
-        <ScrollArea style={{
-            height: height - 80,
-        }}>
+        <ScrollArea className="h-full">
             <div className={'flex items-center justify-center'}>
                 <div className={'m-8'}>
                     <Disabled disabled={!license.hasPremiumFeatures()}>
@@ -139,8 +96,7 @@ const AccessTheme = () => {
                                         <div className={'p-4 rounded-lg mt-4 overflow-hidden'} style={{
                                             backgroundColor: item.value.background
                                         }}>
-                                            {/*<ThemeRender theme={item.value}/>*/}
-                                            <ThemeRendererV2 theme={item.value} text={text}/>
+                                            <ThemeRenderer theme={item.value}/>
                                         </div>
                                     </div>
                                 </Card>

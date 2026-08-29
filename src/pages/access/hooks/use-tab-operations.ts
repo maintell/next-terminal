@@ -1,9 +1,9 @@
-import {cloneElement, isValidElement, useCallback, useState} from 'react';
 import type {DragEndEvent} from '@dnd-kit/core';
 import {arrayMove} from '@dnd-kit/sortable';
+import {cloneElement, isValidElement, useReducer} from 'react';
 import {generateRandomId} from '@/utils/utils';
 
-interface TabItem {
+export interface TabItem {
     key: string;
     label: string;
     children: React.ReactNode;
@@ -18,175 +18,163 @@ interface AddTabOptions {
     meta?: TabItem['meta'];
 }
 
+interface AccessTabsState {
+    items: TabItem[];
+    activeKey: string;
+}
+
+type AccessTabsAction =
+    | {type: 'ADD'; tab: TabItem}
+    | {type: 'REMOVE'; key: string}
+    | {type: 'SET_ACTIVE'; key: string}
+    | {type: 'CLOSE_LEFT'; key: string}
+    | {type: 'CLOSE_RIGHT'; key: string}
+    | {type: 'CLOSE_ALL'}
+    | {type: 'CLOSE_OTHERS'; key: string}
+    | {type: 'REPLACE'; key: string; tab: TabItem}
+    | {type: 'INSERT_AFTER'; key: string; tab: TabItem}
+    | {type: 'REORDER'; activeKey: string; overKey: string};
+
+const initialState: AccessTabsState = {items: [], activeKey: ''};
+
+const accessTabsReducer = (state: AccessTabsState, action: AccessTabsAction): AccessTabsState => {
+    switch (action.type) {
+        case 'ADD': {
+            const exists = state.items.some((item) => item.key === action.tab.key);
+            return {
+                items: exists ? state.items : [...state.items, action.tab],
+                activeKey: action.tab.key,
+            };
+        }
+        case 'REMOVE': {
+            const targetIndex = state.items.findIndex((item) => item.key === action.key);
+            if (targetIndex < 0) {
+                return state;
+            }
+            const items = state.items.filter((item) => item.key !== action.key);
+            if (state.activeKey !== action.key) {
+                return {...state, items};
+            }
+            const nextIndex = Math.max(0, targetIndex - 1);
+            return {items, activeKey: items[nextIndex]?.key ?? ''};
+        }
+        case 'SET_ACTIVE':
+            return state.activeKey === action.key ? state : {...state, activeKey: action.key};
+        case 'CLOSE_LEFT': {
+            const targetIndex = state.items.findIndex((item) => item.key === action.key);
+            if (targetIndex <= 0) {
+                return state;
+            }
+            const items = state.items.slice(targetIndex);
+            const activeKey = items.some((item) => item.key === state.activeKey) ? state.activeKey : action.key;
+            return {items, activeKey};
+        }
+        case 'CLOSE_RIGHT': {
+            const targetIndex = state.items.findIndex((item) => item.key === action.key);
+            if (targetIndex < 0 || targetIndex === state.items.length - 1) {
+                return state;
+            }
+            const items = state.items.slice(0, targetIndex + 1);
+            const activeKey = items.some((item) => item.key === state.activeKey) ? state.activeKey : action.key;
+            return {items, activeKey};
+        }
+        case 'CLOSE_ALL':
+            return initialState;
+        case 'CLOSE_OTHERS': {
+            const target = state.items.find((item) => item.key === action.key);
+            return target ? {items: [target], activeKey: target.key} : state;
+        }
+        case 'REPLACE':
+            return {
+                items: state.items.map((item) => item.key === action.key ? action.tab : item),
+                activeKey: action.tab.key,
+            };
+        case 'INSERT_AFTER': {
+            const targetIndex = state.items.findIndex((item) => item.key === action.key);
+            if (targetIndex < 0) {
+                return state;
+            }
+            return {
+                items: [
+                    ...state.items.slice(0, targetIndex + 1),
+                    action.tab,
+                    ...state.items.slice(targetIndex + 1),
+                ],
+                activeKey: action.tab.key,
+            };
+        }
+        case 'REORDER': {
+            const activeIndex = state.items.findIndex((item) => item.key === action.activeKey);
+            const overIndex = state.items.findIndex((item) => item.key === action.overKey);
+            if (activeIndex < 0 || overIndex < 0 || activeIndex === overIndex) {
+                return state;
+            }
+            return {...state, items: arrayMove(state.items, activeIndex, overIndex)};
+        }
+    }
+};
+
 const buildSessionTabKey = (assetId: string) => `${generateRandomId()}_${assetId}`;
 
 const recreateTabChildren = (tab: TabItem, newKey: string) => {
     if (tab.meta?.recreate) {
         return tab.meta.recreate(newKey);
     }
-
-    if (isValidElement(tab.children)) {
-        return cloneElement(tab.children);
-    }
-
-    return tab.children;
+    return isValidElement(tab.children) ? cloneElement(tab.children) : tab.children;
 };
 
-/**
- * 标签页操作管理 Hook
- * 管理标签页的添加、移除、拖拽排序和右键菜单操作
- */
-export function useTabOperations(activeKey: string, setActiveKey: (key: string) => void) {
-    const [items, setItems] = useState<TabItem[]>([]);
+/** 页面局部的标签页状态。items 与 activeKey 由同一个 reducer 原子更新。 */
+export function useTabOperations() {
+    const [state, dispatch] = useReducer(accessTabsReducer, initialState);
 
-    // 添加标签页
-    const addTab = useCallback((key: string, label: string, children: React.ReactNode, options?: AddTabOptions) => {
-        setItems(prev => {
-            const exists = prev.some(item => item.key === key);
-            if (exists) {
-                return prev;
-            }
-            return [...prev, {label, children, key, meta: options?.meta}];
-        });
-        setActiveKey(key);
-    }, [setActiveKey]);
+    const setActiveKey = (key: string) => dispatch({type: 'SET_ACTIVE', key});
+    const addTab = (key: string, label: string, children: React.ReactNode, options?: AddTabOptions) => {
+        dispatch({type: 'ADD', tab: {key, label, children, meta: options?.meta}});
+    };
+    const removeTab = (key: string) => dispatch({type: 'REMOVE', key});
+    const handleCloseLeft = (key: string) => dispatch({type: 'CLOSE_LEFT', key});
+    const handleCloseRight = (key: string) => dispatch({type: 'CLOSE_RIGHT', key});
+    const handleCloseAll = () => dispatch({type: 'CLOSE_ALL'});
+    const handleCloseOthers = (key: string) => dispatch({type: 'CLOSE_OTHERS', key});
 
-    // 移除标签页
-    const removeTab = useCallback((targetKey: string) => {
-        setItems(prev => {
-            let newActiveKey = activeKey;
-            let lastIndex = -1;
-            prev.forEach((item, i) => {
-                if (item.key === targetKey) {
-                    lastIndex = i - 1;
-                }
-            });
-            const newPanes = prev.filter((item) => item.key !== targetKey);
-            if (newPanes.length && newActiveKey === targetKey) {
-                if (lastIndex >= 0) {
-                    newActiveKey = newPanes[lastIndex].key;
-                } else {
-                    newActiveKey = newPanes[0].key;
-                }
-            }
-            setActiveKey(newActiveKey);
-            return newPanes;
-        });
-    }, [activeKey, setActiveKey]);
-
-    // 关闭左侧标签页
-    const handleCloseLeft = useCallback((targetKey: string) => {
-        setItems(prev => {
-            const targetIndex = prev.findIndex(item => item.key === targetKey);
-            if (targetIndex <= 0) return prev;
-
-            const leftTabs = prev.slice(0, targetIndex);
-            const remainingTabs = prev.slice(targetIndex);
-
-            if (leftTabs.some(tab => tab.key === activeKey)) {
-                setActiveKey(targetKey);
-            }
-
-            return remainingTabs;
-        });
-    }, [activeKey, setActiveKey]);
-
-    // 关闭右侧标签页
-    const handleCloseRight = useCallback((targetKey: string) => {
-        setItems(prev => {
-            const targetIndex = prev.findIndex(item => item.key === targetKey);
-            if (targetIndex < 0 || targetIndex >= prev.length - 1) return prev;
-
-            const leftTabs = prev.slice(0, targetIndex + 1);
-
-            if (!leftTabs.some(tab => tab.key === activeKey)) {
-                setActiveKey(targetKey);
-            }
-
-            return leftTabs;
-        });
-    }, [activeKey, setActiveKey]);
-
-    // 关闭所有标签页
-    const handleCloseAll = useCallback(() => {
-        setItems([]);
-        setActiveKey('');
-    }, [setActiveKey]);
-
-    // 关闭其他标签页
-    const handleCloseOthers = useCallback((targetKey: string) => {
-        setItems(prev => {
-            const targetTab = prev.find(item => item.key === targetKey);
-            if (!targetTab) return prev;
-
-            setActiveKey(targetKey);
-            return [targetTab];
-        });
-    }, [setActiveKey]);
-
-    // 重连标签页
-    const handleReconnect = useCallback((targetKey: string) => {
-        setItems(prev => {
-            const targetTab = prev.find(item => item.key === targetKey);
-            if (!targetTab) return prev;
-
-            const newKey = targetTab.meta?.type === 'session' && targetTab.meta.assetId
-                ? buildSessionTabKey(targetTab.meta.assetId)
-                : targetKey + '_refresh_' + Date.now();
-            const newTab = {
-                ...targetTab,
-                key: newKey,
-                children: recreateTabChildren(targetTab, newKey),
-            };
-
-            setActiveKey(newKey);
-            return prev.map(item =>
-                item.key === targetKey ? newTab : item
-            );
-        });
-    }, [setActiveKey]);
-
-    // 复制会话标签页
-    const handleDuplicateSession = useCallback((targetKey: string) => {
-        setItems(prev => {
-            const targetIndex = prev.findIndex(item => item.key === targetKey);
-            if (targetIndex < 0) return prev;
-
-            const targetTab = prev[targetIndex];
-            if (targetTab.meta?.type !== 'session' || !targetTab.meta.assetId) {
-                return prev;
-            }
-
-            const newKey = buildSessionTabKey(targetTab.meta.assetId);
-            const newTab: TabItem = {
-                ...targetTab,
-                key: newKey,
-                children: recreateTabChildren(targetTab, newKey),
-            };
-
-            setActiveKey(newKey);
-
-            return [
-                ...prev.slice(0, targetIndex + 1),
-                newTab,
-                ...prev.slice(targetIndex + 1),
-            ];
-        });
-    }, [setActiveKey]);
-
-    // 拖拽结束处理
-    const onDragEnd = useCallback(({active, over}: DragEndEvent) => {
-        if (active.id !== over?.id) {
-            setItems((prev) => {
-                const activeIndex = prev.findIndex((i) => i.key === active.id);
-                const overIndex = prev.findIndex((i) => i.key === over?.id);
-                return arrayMove(prev, activeIndex, overIndex);
-            });
+    const handleReconnect = (key: string) => {
+        const target = state.items.find((item) => item.key === key);
+        if (!target) {
+            return;
         }
-    }, []);
+        const newKey = target.meta?.type === 'session' && target.meta.assetId
+            ? buildSessionTabKey(target.meta.assetId)
+            : `${key}_refresh_${Date.now()}`;
+        dispatch({
+            type: 'REPLACE',
+            key,
+            tab: {...target, key: newKey, children: recreateTabChildren(target, newKey)},
+        });
+    };
+
+    const handleDuplicateSession = (key: string) => {
+        const target = state.items.find((item) => item.key === key);
+        if (target?.meta?.type !== 'session' || !target.meta.assetId) {
+            return;
+        }
+        const newKey = buildSessionTabKey(target.meta.assetId);
+        dispatch({
+            type: 'INSERT_AFTER',
+            key,
+            tab: {...target, key: newKey, children: recreateTabChildren(target, newKey)},
+        });
+    };
+
+    const onDragEnd = ({active, over}: DragEndEvent) => {
+        if (over && active.id !== over.id) {
+            dispatch({type: 'REORDER', activeKey: String(active.id), overKey: String(over.id)});
+        }
+    };
 
     return {
-        items,
+        items: state.items,
+        activeKey: state.activeKey,
+        setActiveKey,
         addTab,
         removeTab,
         handleCloseLeft,

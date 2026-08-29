@@ -7,7 +7,7 @@ interface IPRegionProps {
     regionInfo?: RegionInfo;
 }
 
-export const localizedRegion = (regionInfo: RegionInfo | undefined, language: string) => {
+const localizedRegion = (regionInfo: RegionInfo | undefined, language: string) => {
     const names = regionInfo?.names;
     if (!names) {
         return '';

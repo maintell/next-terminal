@@ -4,7 +4,7 @@ import {App, Form, Input, Modal, Radio} from 'antd';
 import {useTranslation} from "react-i18next";
 import dnsProviderApi from "@/api/dns-provider-api";
 
-export interface Props {
+interface Props {
     open: boolean;
     handleOk: (values: any) => void;
     handleCancel: () => void;

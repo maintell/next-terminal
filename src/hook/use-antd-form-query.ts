@@ -1,4 +1,4 @@
-import {useEffect, useMemo} from 'react';
+import {useEffect} from 'react';
 import {useQuery} from '@tanstack/react-query';
 import type {FormInstance} from 'antd';
 
@@ -38,10 +38,8 @@ export const useSelectRequest = <T = any>(
     request?: (params?: Record<string, any>) => Promise<T[]>,
     params?: Record<string, any>,
 ) => {
-    const paramsKey = useMemo(() => params ?? {}, [JSON.stringify(params ?? {})]);
-
     return useQuery({
-        queryKey: [...queryKey, paramsKey],
+        queryKey: [...queryKey, params ?? {}],
         queryFn: async () => request ? request(params) : [],
         enabled: !!request,
     });

@@ -24,39 +24,52 @@ const UserInfo = ({active, id}: UserInfoProps) => {
     return (
         <div className={'page-detail-info'}>
             <Spin spinning={userQuery.isLoading}>
-                <Descriptions column={1}>
-                    <Descriptions.Item label={t('gateways.username')}>{user?.username}</Descriptions.Item>
-                    <Descriptions.Item label={t('identity.user.nickname')}>{user?.nickname}</Descriptions.Item>
-                    <Descriptions.Item label={t('identity.user.mail')}>{user?.mail}</Descriptions.Item>
-                    <Descriptions.Item label={t('general.remark')}>{user?.remark}</Descriptions.Item>
-                    <Descriptions.Item label={t('identity.user.status')}>
-                        {user?.status === 'disabled' ? (
+                <Descriptions
+                    column={1}
+                    items={[
+                        {key: 'username', label: t('gateways.username'), children: user?.username},
+                        {key: 'nickname', label: t('identity.user.nickname'), children: user?.nickname},
+                        {key: 'mail', label: t('identity.user.mail'), children: user?.mail},
+                        {key: 'remark', label: t('general.remark'), children: user?.remark},
+                        {
+                            key: 'status',
+                            label: t('identity.user.status'),
+                            children: user?.status === 'disabled' ? (
                             <Tag color="error">{t('general.disabled')}</Tag>
                         ) : (
                             <Tag color="success">{t('general.enabled')}</Tag>
-                        )}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('identity.user.otp')}>
-                        {user?.enabledTotp ? (
+                            ),
+                        },
+                        {
+                            key: 'otp',
+                            label: t('identity.user.otp'),
+                            children: user?.enabledTotp ? (
                             <Tag color="success">{t('general.enabled')}</Tag>
                         ) : (
                             <Tag color="error">{t('general.disabled')}</Tag>
-                        )}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('actions.authorized')}>
-                        <Space size={12} wrap>
-                            <NLink to={`/authorised-asset?userId=${id}`}>
-                                {`${t('menus.resource.submenus.asset')}${t('actions.authorized')}`}
-                            </NLink>
-                            <NLink to={`/authorised-website?userId=${id}`}>
-                                {`${t('menus.resource.submenus.website')}${t('actions.authorized')}`}
-                            </NLink>
-                        </Space>
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('general.created_at')}>
-                        {user?.createdAt ? times.format(user.createdAt) : '-'}
-                    </Descriptions.Item>
-                </Descriptions>
+                            ),
+                        },
+                        {
+                            key: 'authorized',
+                            label: t('actions.authorized'),
+                            children: (
+                                <Space size={12} wrap>
+                                    <NLink to={`/authorised-asset?userId=${id}`}>
+                                        {`${t('menus.resource.submenus.asset')}${t('actions.authorized')}`}
+                                    </NLink>
+                                    <NLink to={`/authorised-website?userId=${id}`}>
+                                        {`${t('menus.resource.submenus.website')}${t('actions.authorized')}`}
+                                    </NLink>
+                                </Space>
+                            ),
+                        },
+                        {
+                            key: 'created-at',
+                            label: t('general.created_at'),
+                            children: user?.createdAt ? times.format(user.createdAt) : '-',
+                        },
+                    ]}
+                />
             </Spin>
         </div>
     );

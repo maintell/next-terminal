@@ -3,15 +3,13 @@ import {App, ConfigProvider, theme} from 'antd';
 import {useMutation} from '@tanstack/react-query';
 import './AccessPage.css';
 import {ResizableHandle, ResizablePanelGroup} from '@/components/ui/resizable';
-import {ThemeProvider} from '@/components/theme-provider';
+import AccessDarkTheme from '@/pages/access/components/AccessDarkTheme';
 import AccessTheme from '@/pages/access/AccessTheme';
 import AccessSetting from '@/pages/access/AccessSetting';
-import {useAccessTab} from '@/pages/access/hooks/use-access-tab';
 import {StyleProvider} from '@ant-design/cssinjs';
-import {beforeUnload, generateRandomId, handleKeyDown} from '@/utils/utils';
-import {useAccessContentSize} from '@/pages/access/hooks/use-access-size';
+import {beforeUnload, generateRandomId} from '@/utils/utils';
 import {useSearchParams} from 'react-router-dom';
-import {PanelImperativeHandle as ImperativePanelHandle} from 'react-resizable-panels';
+import type {Layout, PanelImperativeHandle as ImperativePanelHandle} from 'react-resizable-panels';
 import AccessSshChooser from '@/pages/access/AccessSshChooser';
 import AccessTerminalBulk from '@/pages/access/AccessTerminalBulk';
 import MultiFactorAuthentication from '@/pages/account/MultiFactorAuthentication';
@@ -30,13 +28,14 @@ import {LocalStorage, STORAGE_KEYS} from '@/utils/storage';
 import AccessTerminal from '@/pages/access/AccessTerminal';
 import AccessGuacamole from '@/pages/access/AccessGuacamole';
 import {
-    ACCESS_HEADER_HEIGHT,
+    ACCESS_CONTENT_PANEL_ID,
     ACCESS_SIDEBAR_COLLAPSED_SIZE,
     ACCESS_SIDEBAR_DEFAULT_SIZE,
     ACCESS_SIDEBAR_MAX_SIZE,
+    ACCESS_SIDEBAR_PANEL_ID,
 } from '@/pages/access/constants';
 
-export interface AccessTabSyncMessage {
+interface AccessTabSyncMessage {
     id: string;
     name: string;
     protocol: string;
@@ -48,15 +47,15 @@ type AccessAddTab = ReturnType<typeof useTabOperations>['addTab'];
 
 const openAccessAssetTab = (msg: AccessTabSyncMessage, addTab: AccessAddTab) => {
     const key = generateRandomId() + '_' + msg.id;
-    const createSessionTab = (tabKey: string) => {
+    const createSessionTab = (_tabKey: string) => {
         switch (msg.protocol) {
             case "ssh":
             case "telnet":
-                return <AccessTerminal assetId={msg.id} tabKey={tabKey}/>;
+                return <AccessTerminal assetId={msg.id}/>;
             case "rdp":
-                return <AccessGuacamole assetId={msg.id} tabKey={tabKey}/>;
+                return <AccessGuacamole assetId={msg.id}/>;
             default:
-                return <AccessGuacamole assetId={msg.id} tabKey={tabKey}/>;
+                return <AccessGuacamole assetId={msg.id}/>;
         }
     };
 
@@ -76,10 +75,9 @@ const openAccessAssetTab = (msg: AccessTabSyncMessage, addTab: AccessAddTab) => 
 
 const AccessPage = () => {
     const {t} = useTranslation();
-    const [activeKey, setActiveKey] = useAccessTab();
-    const [, setContentSize] = useAccessContentSize();
     const [searchParams, setSearchParams] = useSearchParams();
     const leftRef = useRef<ImperativePanelHandle>(null);
+    const processedAssetParamRef = useRef('');
     const initialCollapsed = LocalStorage.get(STORAGE_KEYS.COLLAPSED_STATE, false) ?? false;
     const savedPanelSizes = LocalStorage.get(STORAGE_KEYS.PANEL_SIZES, {
         left: ACCESS_SIDEBAR_DEFAULT_SIZE,
@@ -90,10 +88,15 @@ const AccessPage = () => {
         Math.max(ACCESS_SIDEBAR_DEFAULT_SIZE, savedPanelSizes?.left || ACCESS_SIDEBAR_DEFAULT_SIZE)
     );
     const lastExpandedPanelSizeRef = useRef(initialExpandedLeftPanelSize);
+    const initialLeftPanelSizeRef = useRef(
+        initialCollapsed ? ACCESS_SIDEBAR_COLLAPSED_SIZE : initialExpandedLeftPanelSize
+    );
 
     // 标签页操作
     const {
         items,
+        activeKey,
+        setActiveKey,
         addTab,
         removeTab,
         handleCloseLeft,
@@ -103,24 +106,24 @@ const AccessPage = () => {
         handleReconnect,
         handleDuplicateSession,
         onDragEnd,
-    } = useTabOperations(activeKey, setActiveKey);
+    } = useTabOperations();
 
     // 面板状态管理
     const [isCollapsed, setIsCollapsed] = useState(() => {
         return initialCollapsed;
     });
 
-    const [leftPanelSize, setLeftPanelSize] = useState(() => {
-        return initialCollapsed ? ACCESS_SIDEBAR_COLLAPSED_SIZE : initialExpandedLeftPanelSize;
-    });
+    const handlePanelLayoutChanged = (layout: Layout) => {
+        const leftSize = layout[ACCESS_SIDEBAR_PANEL_ID];
+        const rightSize = layout[ACCESS_CONTENT_PANEL_ID];
+        if (leftSize === undefined || rightSize === undefined) {
+            return;
+        }
 
-    const handlePanelResize = (size: number) => {
-        setLeftPanelSize(size);
-
-        const collapsed = size === ACCESS_SIDEBAR_COLLAPSED_SIZE;
+        const collapsed = leftSize <= ACCESS_SIDEBAR_COLLAPSED_SIZE;
         if (!collapsed) {
-            lastExpandedPanelSizeRef.current = size;
-            const panelSizes = {left: size, right: 100 - size};
+            lastExpandedPanelSizeRef.current = leftSize;
+            const panelSizes = {left: leftSize, right: rightSize};
             LocalStorage.set(STORAGE_KEYS.PANEL_SIZES, panelSizes);
         }
 
@@ -128,8 +131,6 @@ const AccessPage = () => {
             setIsCollapsed(collapsed);
             LocalStorage.set(STORAGE_KEYS.COLLAPSED_STATE, collapsed);
         }
-
-        setContentSize(100 - size);
     };
 
     // 对话框状态管理
@@ -156,53 +157,78 @@ const AccessPage = () => {
 
             setSSHChooserOpen(false);
             const key = generateRandomId();
-            addTab(key, t('access.batch.exec'), <AccessTerminalBulk assetIds={values}/>);
+            addTab(key, t('access.batch.exec'), <AccessTerminalBulk assetIds={values}/>, {
+                meta: {type: 'session'},
+            });
         },
     });
 
-    // 初始化：设置样式和事件监听
+    // 页面占满视口期间隐藏 body 滚动，离开页面时恢复原值。
     useEffect(() => {
+        const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
-        window.addEventListener('beforeunload', beforeUnload, true);
-        document.addEventListener('keydown', handleKeyDown);
-
         return () => {
-            window.removeEventListener('beforeunload', beforeUnload, true);
-            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = previousOverflow;
         };
     }, []);
 
     useEffect(() => {
+        const existingMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+        const previousColor = existingMeta?.content;
+        const created = !existingMeta;
         setThemeColor('#313131');
+        return () => {
+            const currentMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+            if (created) {
+                currentMeta?.remove();
+            } else if (currentMeta && previousColor !== undefined) {
+                currentMeta.content = previousColor;
+            }
+        };
     }, []);
+
+    useEffect(() => {
+        const hasSession = items.some((item) => item.meta?.type === 'session');
+        if (!hasSession) {
+            return;
+        }
+        window.addEventListener('beforeunload', beforeUnload, true);
+        return () => window.removeEventListener('beforeunload', beforeUnload, true);
+    }, [items]);
 
     // 处理 URL 参数自动打开资产
     useEffect(() => {
         const defaultAsset = searchParams.get('asset');
-        if (defaultAsset) {
-            try {
-                const msg = safeDecode(defaultAsset) as AccessTabSyncMessage;
-                if (msg) {
-                    // 检查是否需要 WOL 唤醒
-                    if (msg.status === 'inactive' && msg.wolEnabled) {
-                        setWolAssetInfo({
-                            id: msg.id,
-                            name: msg.name,
-                            protocol: msg.protocol,
-                        });
-                        setWolDialogOpen(true);
-                    } else {
-                        openAccessAssetTab(msg, addTab);
-                    }
-                }
-            } catch (error) {
-                console.warn('Invalid access asset param:', error);
-            }
-
-            const nextParams = new URLSearchParams(searchParams);
-            nextParams.delete('asset');
-            setSearchParams(nextParams, {replace: true});
+        if (!defaultAsset) {
+            processedAssetParamRef.current = '';
+            return;
         }
+        if (processedAssetParamRef.current === defaultAsset) {
+            return;
+        }
+        processedAssetParamRef.current = defaultAsset;
+        try {
+            const msg = safeDecode(defaultAsset) as AccessTabSyncMessage;
+            if (msg) {
+                // 检查是否需要 WOL 唤醒
+                if (msg.status === 'inactive' && msg.wolEnabled) {
+                    setWolAssetInfo({
+                        id: msg.id,
+                        name: msg.name,
+                        protocol: msg.protocol,
+                    });
+                    setWolDialogOpen(true);
+                } else {
+                    openAccessAssetTab(msg, addTab);
+                }
+            }
+        } catch (error) {
+            console.warn('Invalid access asset param:', error);
+        }
+
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('asset');
+        setSearchParams(nextParams, {replace: true});
     }, [addTab, searchParams, setSearchParams]);
 
     // 处理树节点双击
@@ -241,7 +267,7 @@ const AccessPage = () => {
 
     const handleSidebarToggle = () => {
         if (isCollapsed) {
-            leftRef.current?.resize(lastExpandedPanelSizeRef.current);
+            leftRef.current?.resize(`${lastExpandedPanelSizeRef.current}%`);
             return;
         }
         leftRef.current?.collapse();
@@ -260,7 +286,8 @@ const AccessPage = () => {
         addTab(
             key,
             t('access.batch.exec'),
-            <AccessTerminalBulk assetIds={chooseAssetIds} securityToken={securityToken}/>
+            <AccessTerminalBulk assetIds={chooseAssetIds} securityToken={securityToken}/>,
+            {meta: {type: 'session'}},
         );
     };
 
@@ -292,7 +319,7 @@ const AccessPage = () => {
         >
             <App>
                 <StyleProvider hashPriority="high">
-                    <div className={'h-screen w-screen overflow-hidden'}>
+                    <div className={'flex h-dvh w-screen flex-col overflow-hidden'}>
                         <AccessHeader
                             isSidebarCollapsed={isCollapsed}
                             onToggleSidebar={handleSidebarToggle}
@@ -301,13 +328,15 @@ const AccessPage = () => {
                             onBatchSSHClick={handleBatchSSHClick}
                         />
 
-                        <ThemeProvider defaultTheme="dark" storageKey="nt-ui-theme">
-                            <div style={{height: `calc(100vh - ${ACCESS_HEADER_HEIGHT}px)`}}>
-                                <ResizablePanelGroup direction="horizontal">
+                        <AccessDarkTheme>
+                            <div className="min-h-0 flex-1">
+                                <ResizablePanelGroup
+                                    direction="horizontal"
+                                    onLayoutChanged={handlePanelLayoutChanged}
+                                >
                                     <AccessSidebar
                                         isCollapsed={isCollapsed}
-                                        leftPanelSize={leftPanelSize}
-                                        onResize={handlePanelResize}
+                                        leftPanelSize={initialLeftPanelSizeRef.current}
                                         leftRef={leftRef}
                                         onNodeDoubleClick={handleNodeDoubleClick}
                                     />
@@ -317,11 +346,10 @@ const AccessPage = () => {
                                     <AccessTabContainer
                                         items={items}
                                         activeKey={activeKey}
-                                        leftPanelSize={leftPanelSize}
+                                        leftPanelSize={initialLeftPanelSizeRef.current}
                                         onChange={setActiveKey}
                                         onRemove={removeTab}
                                         onDragEnd={onDragEnd}
-                                        onContentResize={setContentSize}
                                         tabOperations={{
                                             handleCloseLeft,
                                             handleCloseRight,
@@ -357,7 +385,7 @@ const AccessPage = () => {
                                     setWolAssetInfo(null);
                                 }}
                             />
-                        </ThemeProvider>
+                        </AccessDarkTheme>
                     </div>
                 </StyleProvider>
             </App>

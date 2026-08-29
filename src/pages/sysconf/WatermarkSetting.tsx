@@ -2,7 +2,6 @@ import {useState} from "react";
 import {Button, Checkbox, ColorPicker, ColorPickerProps, Form, Input, Slider, Switch, theme} from "antd";
 import {useTranslation} from "react-i18next";
 import {generate, green, presetPalettes, red} from "@ant-design/colors";
-import {Color} from "antd/es/color-picker";
 import {useLicense} from "@/hook/LicenseContext";
 import Disabled from "@/components/Disabled";
 import {useMobile} from "@/hook/use-mobile";
@@ -84,7 +83,7 @@ const WatermarkSetting = ({
                     </Form.Item>
                 </div>
                 <Form.Item name="watermark-font-color" label={t('settings.system.watermark.font_color')} required={true}>
-                    <ColorPicker disabled={!watermarkEnabled} presets={presets} onChange={(color: Color) => {
+                    <ColorPicker disabled={!watermarkEnabled} presets={presets} onChange={(color) => {
                         const rgba = color.toRgb();
                         setWatermarkFontColor(`rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`);
                     }}/>

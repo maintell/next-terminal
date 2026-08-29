@@ -36,7 +36,7 @@ export interface UploadTaskRecord {
     serverInitialized: boolean;
 }
 
-export interface EnqueueUploadFile {
+interface EnqueueUploadFile {
     file: File;
     directory: string;
     displayName?: string;

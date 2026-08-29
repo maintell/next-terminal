@@ -28,7 +28,7 @@ const CertView: React.FC = () => {
                 <Form.Item label={t('assets.cert')} name={['cert', 'certId']} rules={[{
                     required: true
                 }]} style={{marginBottom: 0}}>
-                    <QuerySelect placeholder={t('assets.cert')} showSearch request={certificateRequest}/>
+                    <QuerySelect queryKey={['certificates']} placeholder={t('assets.cert')} showSearch request={certificateRequest}/>
                 </Form.Item>
             </div>
         )}

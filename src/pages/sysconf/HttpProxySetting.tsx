@@ -95,21 +95,29 @@ const HttpProxySetting = ({get, set}: SettingProps) => {
         <div>
             <Alert type="info" title={t('settings.http_proxy.readonly_tip')} style={{marginBottom: 12}}/>
             <Spin spinning={configQuery.isLoading}>
-                <Descriptions bordered size="small" column={{xs: 1, sm: 2, xl: 3}}>
-                    <Descriptions.Item label={t('settings.http_proxy.enabled')}>{status(config?.enabled)}</Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.http_enabled')}>{status(config?.httpEnabled)}</Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.http_addr')}>{config?.httpAddr || '-'}</Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.http_redirect_https')}>{status(config?.httpRedirectToHttps)}</Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.https_enabled')}>{status(config?.httpsEnabled)}</Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.https_addr')}>{config?.httpsAddr || '-'}</Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.self_proxy_enabled')}>{status(config?.selfProxyEnabled)}</Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.self_domain')}>{config?.selfDomain || '-'}</Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.ip_extractor')}>{config?.ipExtractor || '-'}</Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.ip_trust_list')} span={2}>
-                        {config?.ipTrustList?.length ? config.ipTrustList.join(', ') : '-'}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('settings.http_proxy.mtls_mode')}>{config?.mtlsClientCertAuthMode || '-'}</Descriptions.Item>
-                </Descriptions>
+                <Descriptions
+                    bordered
+                    size="small"
+                    column={{xs: 1, sm: 2, xl: 3}}
+                    items={[
+                        {key: 'enabled', label: t('settings.http_proxy.enabled'), children: status(config?.enabled)},
+                        {key: 'http-enabled', label: t('settings.http_proxy.http_enabled'), children: status(config?.httpEnabled)},
+                        {key: 'http-address', label: t('settings.http_proxy.http_addr'), children: config?.httpAddr || '-'},
+                        {key: 'http-redirect', label: t('settings.http_proxy.http_redirect_https'), children: status(config?.httpRedirectToHttps)},
+                        {key: 'https-enabled', label: t('settings.http_proxy.https_enabled'), children: status(config?.httpsEnabled)},
+                        {key: 'https-address', label: t('settings.http_proxy.https_addr'), children: config?.httpsAddr || '-'},
+                        {key: 'self-proxy-enabled', label: t('settings.http_proxy.self_proxy_enabled'), children: status(config?.selfProxyEnabled)},
+                        {key: 'self-domain', label: t('settings.http_proxy.self_domain'), children: config?.selfDomain || '-'},
+                        {key: 'ip-extractor', label: t('settings.http_proxy.ip_extractor'), children: config?.ipExtractor || '-'},
+                        {
+                            key: 'ip-trust-list',
+                            label: t('settings.http_proxy.ip_trust_list'),
+                            span: 2,
+                            children: config?.ipTrustList?.length ? config.ipTrustList.join(', ') : '-',
+                        },
+                        {key: 'mtls-mode', label: t('settings.http_proxy.mtls_mode'), children: config?.mtlsClientCertAuthMode || '-'},
+                    ]}
+                />
             </Spin>
         </div>
 

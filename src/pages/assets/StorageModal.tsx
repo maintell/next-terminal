@@ -3,7 +3,7 @@ import {Modal, Form, Input, Switch, InputNumber, Space} from 'antd';
 import { useTranslation } from "react-i18next";
 import storageApi from "@/api/storage-api";
 const api = storageApi;
-export interface SnippetProps {
+interface SnippetProps {
   open: boolean;
   handleOk: (values: any) => void;
   handleCancel: () => void;

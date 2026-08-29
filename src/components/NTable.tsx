@@ -15,7 +15,6 @@ type FormInstance,
 type TableColumnType,
 type TableProps
 } from 'antd';
-import type { SortOrder } from 'antd/es/table/interface';
 import dayjs from 'dayjs';
 import React,{ useEffect,useImperativeHandle,useRef,useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +27,8 @@ type ValueEnumItem = {
     text?: React.ReactNode;
     status?: string;
 };
+
+type SortOrder = NonNullable<TableColumnType<object>['sortOrder']>;
 
 export type NColumn<T extends object> = TableColumnType<T> & {
     hideInSearch?: boolean;
@@ -441,21 +442,22 @@ const NTable = <T extends object, >({
             )}
 
             {showSelectionAlert && (
-                <Alert
-                    className="mb-3"
-                    type="info"
-                    showIcon={false}
-                    title={
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                                {tableAlertRender ? tableAlertRender({selectedRowKeys, selectedRows, onCleanSelected}) : t('general.selected_items', {count: selectedRowKeys.length})}
+                <div className="mb-3">
+                    <Alert
+                        type="info"
+                        showIcon={false}
+                        title={
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    {tableAlertRender ? tableAlertRender({selectedRowKeys, selectedRows, onCleanSelected}) : t('general.selected_items', {count: selectedRowKeys.length})}
+                                </div>
+                                <div>
+                                    {tableAlertOptionRender?.({selectedRowKeys, selectedRows, onCleanSelected})}
+                                </div>
                             </div>
-                            <div>
-                                {tableAlertOptionRender?.({selectedRowKeys, selectedRows, onCleanSelected})}
-                            </div>
-                        </div>
-                    }
-                />
+                        }
+                    />
+                </div>
             )}
 
             {onDragSortEnd || dragSortKey ? (

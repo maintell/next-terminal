@@ -1,13 +1,13 @@
 import {useState} from 'react';
-import {App, Button, Form, Input, Typography} from "antd";
+import {App, Button, Form, Input, Typography, type FormItemProps} from "antd";
 import accountApi from "../../api/account-api";
-import {ValidateStatus} from "antd/es/form/FormItem";
 import {useTranslation} from "react-i18next";
 import {useQuery} from "@tanstack/react-query";
 import {getCurrentUser} from "@/utils/permission";
 import {EyeInvisibleOutlined, EyeTwoTone} from '@ant-design/icons';
 
 const {Title} = Typography;
+type ValidateStatus = FormItemProps['validateStatus'];
 
 const ChangePassword = () => {
 
@@ -46,7 +46,7 @@ const ChangePassword = () => {
             if (newPassword.match(/[A-Z]/)) {
                 characterType++;
             }
-            if (newPassword.match(`[~!@#$%^&*()_+-={}[]|:;"'<>,.?/]`)) {
+            if (/[~!@#$%^&*()_+\-={}\[\]|:;"'<>,.?\/]/.test(newPassword)) {
                 characterType++;
             }
             if (characterType < policy.minCharacterType) {
@@ -60,7 +60,6 @@ const ChangePassword = () => {
 
         // 判断一个字符串是否是回文
         function isPalindrome(s: string): boolean {
-            console.log(`s`, s)
             for (let i = 0; i < s.length / 2; i++) {
                 if (s[i] !== s[s.length - i - 1]) {
                     return false;
@@ -69,20 +68,13 @@ const ChangePassword = () => {
             return true;
         }
 
-        console.log(`policy.mustNotContainPalindrome`, policy.mustNotBePalindrome)
-        console.log(`policy.mustNotContainPalindrome`, policy.mustNotBePalindrome && isPalindrome(newPassword))
         if (policy.mustNotBePalindrome && isPalindrome(newPassword)) {
             return t('settings.security.password.cannot_be_palindrome');
         }
         return '';
     }
 
-    const onNewPasswordChange = async (event: any) => {
-        // let result = await accountApi.passwordPolicyCheck({
-        //     'newPassword': event.target.value,
-        // });
-        // console.log(`passwordPolicyCheck: ${result}`)
-
+    const onNewPasswordChange = (event: any) => {
         setNewPassword1(event.target.value);
         setNewPasswordStatus(validateNewPassword(event.target.value, newPassword2));
 

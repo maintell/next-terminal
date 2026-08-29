@@ -34,6 +34,7 @@ import './ManagerLayout.css';
 const ManagerLayout: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const isFixedWorkspace = location.pathname === '/ai' || location.pathname === '/tools';
 
     // 主题和响应式
     const [ntTheme] = useNTTheme();
@@ -72,7 +73,6 @@ const ManagerLayout: React.FC = () => {
     // 菜单点击处理
     const handleMenuClick = (e: any) => {
         navigate(e.key);
-        infoQuery.refetch();
         if (isMobile) {
             setMobileMenuVisible(false);
         }
@@ -94,6 +94,7 @@ const ManagerLayout: React.FC = () => {
                 <AntdApp>
                     <Layout
                         hasSider={!isMobile}
+                        className={clsx(isFixedWorkspace && 'h-dvh overflow-hidden')}
                         style={{
                             backgroundColor: ntTheme.backgroundColor,
                         }}
@@ -115,7 +116,7 @@ const ManagerLayout: React.FC = () => {
 
                         {/* 移动端抽屉菜单 */}
                         <MobileSidebar
-                            visible={isMobile && mobileMenuVisible}
+                            open={isMobile && mobileMenuVisible}
                             onClose={() => setMobileMenuVisible(false)}
                             filteredMenus={filteredMenus}
                             current={current}
@@ -125,7 +126,10 @@ const ManagerLayout: React.FC = () => {
                         />
 
                         <div
-                            className={'flex-grow flex flex-col min-h-screen min-w-0'}
+                            className={clsx('flex min-w-0 flex-grow flex-col', {
+                                'h-dvh overflow-hidden': isFixedWorkspace,
+                                'min-h-screen': !isFixedWorkspace,
+                            })}
                             style={{
                                 marginLeft: isMobile ? 0 : (collapsed ? 80 : 200),
                             }}
@@ -143,7 +147,9 @@ const ManagerLayout: React.FC = () => {
 
                             {/* 主内容区域 */}
                             <Suspense fallback={<Landing/>}>
-                                <div className={clsx('grow', {
+                                <div className={clsx({
+                                    'flex min-h-0 flex-1 flex-col overflow-hidden': isFixedWorkspace,
+                                    'grow': !isFixedWorkspace,
                                     'mx-4': isMobile,
                                     'mx-8': !isMobile
                                 })}>

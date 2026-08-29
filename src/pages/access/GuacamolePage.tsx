@@ -1,209 +1,97 @@
+import {baseWebSocketUrl} from '@/api/core/requests';
+import {useAccessSessionMutation} from '@/pages/access/hooks/use-access-session';
+import {GuacamoleRuntime} from '@/pages/access/guacamole/guacamole-runtime';
+import {type GuacamoleStatus} from '@/pages/access/guacamole/ErrorAlert';
+import RenderState from '@/pages/access/guacamole/RenderState';
+import useWindowFocus from '@/pages/access/hooks/use-window-focus';
+import {maybe} from '@/utils/maybe';
+import strings from '@/utils/strings';
+import Guacamole from '@dushixiang/guacamole-common-js';
+import qs from 'qs';
 import {useEffect, useRef, useState} from 'react';
-// @ts-ignore
-import Guacamole from "@dushixiang/guacamole-common-js";
-import {useWindowSize} from "react-use";
-import useWindowFocus from "@/pages/access/hooks/use-window-focus";
-import {debounce} from "@/utils/debounce";
-import {isFullScreen} from "@/utils/utils";
-import portalApi, {ExportSession} from "@/api/portal-api";
-import {baseWebSocketUrl} from "@/api/core/requests";
-import qs from "qs";
-import {GuacamoleStatus} from "@/pages/access/guacamole/ErrorAlert";
-import {useSearchParams} from "react-router-dom";
-import {maybe} from "@/utils/maybe";
-import RenderState from "@/pages/access/guacamole/RenderState";
-import {duplicateKeys} from "@/pages/access/guacamole/keys";
-import strings from "@/utils/strings";
+import {useSearchParams} from 'react-router-dom';
 
 const GuacamolePage = () => {
-
     const [searchParams] = useSearchParams();
-    let sharerToken = maybe(searchParams.get('sharerToken'), '');
-    let sessionId = searchParams.get('sessionId') ?? '';
-
-    const terminalRef = useRef<HTMLDivElement>(null);
+    const sharerToken = maybe(searchParams.get('sharerToken'), '');
+    const sessionId = searchParams.get('sessionId') ?? '';
+    const sessionMutation = useAccessSessionMutation({type: 'shared', sessionId, sharerToken});
     const containerRef = useRef<HTMLDivElement>(null);
-    let clientRef = useRef<Guacamole.Client>(null);
-    let sinkRef = useRef<Guacamole.InputSink>(null);
-    let keyboardRef = useRef<Guacamole.Keyboard>(null);
-
-    let {width, height} = useWindowSize();
-    let [displaySize, setDisplaySize] = useState([0, 0]);
-
-    let [state, setState] = useState<number>();
-    let [status, setStatus] = useState<GuacamoleStatus>();
-    let [tunnelState, setTunnelState] = useState<number>();
-
-    let windowFocus = useWindowFocus();
+    const displayRef = useRef<HTMLDivElement>(null);
+    const runtimeRef = useRef<GuacamoleRuntime>(null);
+    const [state, setState] = useState<number>();
+    const [status, setStatus] = useState<GuacamoleStatus>();
+    const [tunnelState, setTunnelState] = useState<number>();
+    const windowFocused = useWindowFocus();
 
     useEffect(() => {
-        if (windowFocus) {
-
+        if (windowFocused) {
+            runtimeRef.current?.focus();
         } else {
-            keyboardRef.current?.reset();
+            runtimeRef.current?.resetKeyboard();
         }
-    }, [windowFocus]);
-
-    // 集中处理 resize + scale
-    const handleResize = () => {
-        const container = isFullScreen()
-            ? {width: window.innerWidth, height: window.innerHeight}
-            : {width: containerRef.current?.offsetWidth ?? 0, height: containerRef.current?.offsetHeight ?? 0};
-        if (container.width === 0 || container.height === 0) return;
-
-        const display = clientRef.current?.getDisplay();
-        const dw = display?.getWidth();
-        const dh = display?.getHeight();
-
-        if (dw !== container.width || dh !== container.height) {
-            display?.onresize(container.width, container.height);
-        }
-
-        if (dw && dh) {
-            const scale = Math.min(container.width / dw, container.height / dh);
-            display.scale(scale);
-        }
-    };
-
-    const debouncedResize = debounce(handleResize, 500);
+    }, [windowFocused]);
 
     useEffect(() => {
-        debouncedResize();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [width, height, displaySize]);
+        const container = containerRef.current;
+        const displayContainer = displayRef.current;
+        if (!container || !displayContainer) {
+            return;
+        }
+        let cancelled = false;
+        const runtime = new GuacamoleRuntime({
+            container,
+            displayContainer,
+            onStateChange: setState,
+            onTunnelStateChange: setTunnelState,
+            onError: setStatus,
+        });
+        runtimeRef.current = runtime;
 
-    const getContainerSize = () => (
-        isFullScreen()
-            ? {width: window.innerWidth, height: window.innerHeight}
-            : {width: containerRef.current?.offsetWidth ?? 0, height: containerRef.current?.offsetHeight ?? 0}
-    );
-
-    const connect = (session: ExportSession) => {
-
-        let tunnel = new Guacamole.WebSocketTunnel(`${baseWebSocketUrl()}/access/graphics`);
-        let client = new Guacamole.Client(tunnel);
-
-        tunnel.onstatechange = setTunnelState;
-        client.onstatechange = setState;
-        client.onerror = setStatus
-
-        const displayEle = terminalRef.current;
-        if (displayEle) {
-            while (displayEle.firstChild) {
-                displayEle.removeChild(displayEle.firstChild);
+        sessionMutation.mutateAsync().then((session) => {
+            if (cancelled) {
+                return;
             }
-        }
-        const element = client.getDisplay().getElement();
-        displayEle?.appendChild(element);
+            document.title = session.assetName;
+            runtime.connect({
+                url: `${baseWebSocketUrl()}/access/graphics`,
+                fixedSize: session.width > 0 && session.height > 0,
+                remoteResize: true,
+                params: (size) => {
+                    const params: Record<string, string | number> = {
+                        width: session.width > 0 ? session.width : size.width,
+                        height: session.height > 0 ? session.height : size.height,
+                        dpi: 96,
+                        sessionId: session.id,
+                    };
+                    if (strings.hasText(sharerToken)) {
+                        params.sharerToken = sharerToken;
+                    }
+                    return qs.stringify(params);
+                },
+            });
+        }).catch((error) => {
+            if (!cancelled) {
+                setStatus({code: error?.code, message: error?.message});
+            }
+        });
 
-        let display = client.getDisplay();
-        display.onresize = function (w: number, h: number) {
-            setDisplaySize([w, h]);
-        }
-
-        const sink = new Guacamole.InputSink();
-        let sinkElement = sink.getElement();
-        // 修复粘贴问题
-        sinkElement.addEventListener("paste", function (e: ClipboardEvent) {
-            // 阻止浏览器默认的按键拆分
-            e.preventDefault();
-        })
-        element.appendChild(sinkElement);
-
-        const keyboard = new Guacamole.Keyboard(document);
-
-        function shouldFilterRepeat(keysym: number): boolean {
-            const twin = duplicateKeys.get(keysym);
-            return twin !== undefined && keyboard.pressed[twin];
-        }
-
-        function handleKeyEvent(pressed: boolean, keysym: number): boolean {
-            if (shouldFilterRepeat(keysym)) return false;
-
-            // console.log(pressed ? 'keydown' : 'keyup', keysym, JSON.stringify(keyboard.pressed));
-            client.sendKeyEvent(pressed ? 1 : 0, keysym);
-
-            if (keysym === 65288) return false; // 65288 = Backspace
-
-            return true;
-        }
-
-        keyboard.onkeydown = (keysym: number) => handleKeyEvent(true, keysym);
-        keyboard.onkeyup = (keysym: number) => handleKeyEvent(false, keysym);
-        keyboardRef.current = keyboard;
-
-        const mouse = new Guacamole.Mouse(element);
-
-        // @ts-ignore
-        mouse.onmousedown = mouse.onmouseup = function (mouseState) {
-            client.sendMouseState(mouseState);
-            sink.focus();
-        }
-
-        // @ts-ignore
-        mouse.onmousemove = function (mouseState) {
-            mouseState.x = mouseState.x / display.getScale();
-            mouseState.y = mouseState.y / display.getScale();
-            client.sendMouseState(mouseState);
+        return () => {
+            cancelled = true;
+            runtimeRef.current = null;
+            runtime.dispose();
         };
-
-        const touch = new Guacamole.Mouse.Touchpad(element); // or Guacamole.Touchscreen
-        // @ts-ignore
-        touch.onmousedown = touch.onmousemove = touch.onmouseup = function (state: any) {
-            client.sendMouseState(state);
-        };
-
-        let dpi = 96 * 2;
-        let {width, height} = getContainerSize();
-        let params: Record<string, any> = {
-            'width': width,
-            'height': height,
-            'dpi': dpi,
-            'sessionId': session.id,
-        };
-        if (strings.hasText(sharerToken)) {
-            params['sharerToken'] = sharerToken;
-        }
-
-        let paramStr = qs.stringify(params);
-        client.connect(paramStr);
-
-        clientRef.current = client;
-        sinkRef.current = sink;
-
-        // console.log(`init client success`)
-    }
-
-    useEffect(() => {
-        portalApi.getSessionById(sessionId, sharerToken)
-            .then((session) => {
-                connect(session);
-            })
-            .catch((e) => {
-                setStatus({
-                    code: e.code,
-                    message: e.message
-                })
-            })
-    }, []);
+    }, [sessionId, sharerToken]);
 
     return (
-        <div className={'bg-[#1b1b1b] overflow-hidden'}
-             style={{
-                 width: width,
-                 height: height,
-             }}
-             ref={containerRef}>
+        <div ref={containerRef} className="relative flex h-dvh w-screen items-center justify-center overflow-hidden bg-[#1b1b1b]">
             <RenderState
                 state={state}
                 status={status}
                 tunnelState={tunnelState ?? Guacamole.Tunnel.State.CONNECTING}
+                overlay
             />
-            <div className={'flex items-center justify-center'}>
-                <div className={''}
-                     ref={terminalRef}
-                />
-            </div>
+            <div ref={displayRef} className="flex h-full w-full items-center justify-center"/>
         </div>
     );
 };

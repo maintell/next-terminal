@@ -543,7 +543,7 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
     }
 
     if (!drawer) {
-        return <div className="h-[calc(100dvh-118px)] min-h-0 overflow-hidden border-y bg-white dark:bg-transparent" style={panelStyle}>{content}</div>;
+        return <div className="h-full min-h-0 overflow-hidden border-y bg-white dark:bg-transparent" style={panelStyle}>{content}</div>;
     }
 
     return (

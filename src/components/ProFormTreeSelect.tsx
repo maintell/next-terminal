@@ -1,6 +1,6 @@
-import {useEffect, useMemo, useRef, useState} from 'react';
 import {Form, TreeSelect} from 'antd';
 import type {FormItemProps} from 'antd';
+import {useSelectRequest} from '@/hook/use-antd-form-query';
 
 type RequestParams = Record<string, any>;
 
@@ -11,6 +11,7 @@ interface ProFormTreeSelectProps extends Omit<FormItemProps, 'children'> {
     params?: RequestParams;
     placeholder?: string;
     request?: (params?: RequestParams) => Promise<any[]>;
+    queryKey?: (string | number | boolean | null | undefined | Record<string, unknown>)[];
 }
 
 const ProFormTreeSelect = ({
@@ -20,48 +21,17 @@ const ProFormTreeSelect = ({
     params,
     placeholder,
     request,
+    queryKey,
     ...formItemProps
 }: ProFormTreeSelectProps) => {
-    const [loading, setLoading] = useState(false);
-    const [treeData, setTreeData] = useState<any[]>([]);
-    const requestRef = useRef(request);
-    const paramsKey = useMemo(() => JSON.stringify(params ?? {}), [params]);
-
-    requestRef.current = request;
-
-    useEffect(() => {
-        if (!requestRef.current) {
-            return;
-        }
-
-        let canceled = false;
-        const loadOptions = async () => {
-            setLoading(true);
-            try {
-                const data = await requestRef.current?.(params);
-                if (!canceled) {
-                    setTreeData(data || []);
-                }
-            } finally {
-                if (!canceled) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        loadOptions();
-
-        return () => {
-            canceled = true;
-        };
-    }, [paramsKey]);
+    const query = useSelectRequest(['pro-form-tree-select', ...(queryKey ?? [])], request, params);
 
     return (
         <Form.Item {...formItemProps}>
             <TreeSelect
                 allowClear={allowClear ?? fieldProps?.allowClear}
                 disabled={disabled}
-                loading={loading}
+                loading={query.isFetching}
                 placeholder={placeholder}
                 variant={fieldProps?.variant}
                 {...fieldProps}
@@ -69,7 +39,7 @@ const ProFormTreeSelect = ({
                     ...(typeof fieldProps.showSearch === 'object' ? fieldProps.showSearch : {}),
                     treeNodeFilterProp: 'title',
                 } : fieldProps?.showSearch}
-                treeData={fieldProps?.treeData ?? treeData}
+                treeData={fieldProps?.treeData ?? query.data ?? []}
             />
         </Form.Item>
     );

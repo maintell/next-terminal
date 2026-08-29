@@ -16,9 +16,9 @@ import {
     Table,
     Tag,
     TimePicker,
-    Typography
+    Typography,
+    type TableColumnsType
 } from "antd";
-import type {ColumnsType} from "antd/es/table";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import dayjs from "dayjs";
 import {Download, Play, RefreshCw, RotateCcw, Save, Trash2, Upload} from "lucide-react";
@@ -26,6 +26,7 @@ import requests from "@/api/core/requests";
 import backupApi, {BackupConfigUpdate, BackupFile, BackupSuccessActions} from "@/api/backup-api";
 import {useTranslation} from "react-i18next";
 import {AssetTreeSelect} from "@/components/shared/QuerySelects";
+import PromptModal from "@/components/PromptModal";
 
 const timeFormat = 'HH:mm';
 
@@ -119,6 +120,7 @@ const BackupSetting = () => {
     const [messageApi, contextHolder] = message.useMessage();
     const [activeTaskId, setActiveTaskId] = useState('');
     const [legacyImporting, setLegacyImporting] = useState(false);
+    const [createBackupModalOpen, setCreateBackupModalOpen] = useState(false);
     const [hasSavedSecret, setHasSavedSecret] = useState({
         s3SecretAccessKey: false,
         sftpPassword: false,
@@ -366,26 +368,12 @@ const BackupSetting = () => {
     };
 
     const handleCreateBackup = () => {
-        let remark = '';
-        modal.confirm({
-            title: t('settings.backup.create_confirm_title'),
-            content: (
-                <Input.TextArea
-                    rows={3}
-                    maxLength={200}
-                    showCount
-                    placeholder={t('general.enter_remark')}
-                    onChange={(event) => {
-                        remark = event.target.value;
-                    }}
-                />
-            ),
-            okText: t('settings.backup.backup_now'),
-            cancelText: t('actions.cancel'),
-            onOk: async () => {
-                await createMutation.mutateAsync(remark);
-            },
-        });
+        setCreateBackupModalOpen(true);
+    };
+
+    const handleCreateBackupConfirm = async (remark: string) => {
+        await createMutation.mutateAsync(remark);
+        setCreateBackupModalOpen(false);
     };
 
     const handleRestore = (file: BackupFile) => {
@@ -431,7 +419,7 @@ const BackupSetting = () => {
         });
     };
 
-    const columns: ColumnsType<BackupFile> = [
+    const columns: TableColumnsType<BackupFile> = [
         {
             title: t('settings.backup.file_name'),
             dataIndex: 'name',
@@ -493,6 +481,22 @@ const BackupSetting = () => {
     return (
         <div>
             {contextHolder}
+            <PromptModal
+                title={t('settings.backup.create_confirm_title')}
+                value=""
+                open={createBackupModalOpen}
+                onOk={handleCreateBackupConfirm}
+                onCancel={() => setCreateBackupModalOpen(false)}
+                label={t('general.remark')}
+                placeholder={t('general.enter_remark')}
+                confirmLoading={createMutation.isPending}
+                required={false}
+                multiline
+                maxLength={200}
+                showCount
+                okText={t('settings.backup.backup_now')}
+                cancelText={t('actions.cancel')}
+            />
             <Space orientation="vertical" style={{width: '100%'}} size={16}>
                 <Alert
                     type="info"

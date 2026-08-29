@@ -1,6 +1,6 @@
 // components/ControlButtons.tsx
 import React from 'react';
-import {Dropdown, FloatButton} from 'antd';
+import {Dropdown, FloatButton, type MenuProps} from 'antd';
 import {
     CopyOutlined,
     ExpandOutlined,
@@ -10,7 +10,6 @@ import {
     WindowsOutlined
 } from '@ant-design/icons';
 import {useTranslation} from 'react-i18next';
-import type {ItemType} from "antd/es/menu/interface";
 
 interface Props {
     sessionId?: string;
@@ -22,7 +21,7 @@ interface Props {
     onSendKeys: (keys: string[]) => void;
 }
 
-const comboMenu: ItemType[] = [
+const comboMenu: MenuProps['items'] = [
     {key: '65507+65513+65535', label: 'Ctrl+Alt+Delete'},
     {key: '65507+65513+65228', label: 'Ctrl+Alt+Backspace'},
     {key: '65515+100', label: 'Window+D'},

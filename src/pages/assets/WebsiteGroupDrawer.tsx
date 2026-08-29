@@ -18,26 +18,23 @@ const WebsiteGroupDrawer: React.FC<WebsiteGroupDrawerProps> = ({
                                                                    onSuccess,
                                                                }) => {
     const {t} = useTranslation();
-    const [treeData, setTreeData] = useState<TreeDataNode[]>([]);
     let [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
     let [selectedKey, setSelectedKey] = useState('');
 
     let query = useQuery({
-        queryKey: ['assets/groups'],
+        queryKey: ['websites', 'groups'],
         queryFn: websiteApi.getGroups,
+        enabled: open,
     });
 
     useEffect(() => {
-        if (open) {
-            query.refetch();
-        } else {
+        if (!open) {
             setSelectedKey('');
         }
     }, [open]);
 
     useEffect(() => {
         if (query.data) {
-            setTreeData(query.data);
             let keys1 = getAllKeys(query.data);
             setExpandedKeys(keys1);
         }
@@ -78,7 +75,7 @@ const WebsiteGroupDrawer: React.FC<WebsiteGroupDrawerProps> = ({
         >
             <Tree
                 blockNode
-                treeData={treeData}
+                treeData={query.data ?? []}
                 expandedKeys={expandedKeys}
                 onExpand={setExpandedKeys}
                 selectedKeys={[selectedKey]}

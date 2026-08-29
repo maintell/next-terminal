@@ -15,12 +15,12 @@ import {
     ACCESS_SIDEBAR_DEFAULT_SIZE,
     ACCESS_SIDEBAR_EXPANDED_MIN_WIDTH,
     ACCESS_SIDEBAR_MAX_SIZE,
+    ACCESS_SIDEBAR_PANEL_ID,
 } from '@/pages/access/constants';
 
 interface AccessSidebarProps {
     isCollapsed: boolean;
     leftPanelSize: number;
-    onResize: (size: number) => void;
     leftRef: React.RefObject<ImperativePanelHandle | null>;
     onNodeDoubleClick: (node: TreeDataNodeWithExtra) => void;
 }
@@ -30,10 +30,9 @@ interface AccessSidebarProps {
  * 左侧资产面板，包含搜索框和资产树
  * 内部管理树数据查询和状态
  */
-const AccessSidebar = React.memo(({
+const AccessSidebar = ({
                                       isCollapsed,
                                       leftPanelSize,
-                                      onResize,
                                       leftRef,
                                       onNodeDoubleClick,
                                   }: AccessSidebarProps) => {
@@ -81,14 +80,14 @@ const AccessSidebar = React.memo(({
 
     return (
         <ResizablePanel
+            id={ACCESS_SIDEBAR_PANEL_ID}
             defaultSize={leftPanelSize}
             minSize={ACCESS_SIDEBAR_DEFAULT_SIZE}
             maxSize={ACCESS_SIDEBAR_MAX_SIZE}
             collapsible={true}
             collapsedSize={ACCESS_SIDEBAR_COLLAPSED_SIZE}
-            onResize={onResize}
             className={cn(
-                "flex h-full flex-col overflow-hidden bg-[#141414] transition-all duration-300 ease-in-out",
+                "flex h-full flex-col overflow-hidden bg-[#141414]",
             )}
             style={{
                 minWidth: isCollapsed ? ACCESS_SIDEBAR_COLLAPSED_MIN_WIDTH : ACCESS_SIDEBAR_EXPANDED_MIN_WIDTH,
@@ -122,8 +121,6 @@ const AccessSidebar = React.memo(({
             </ScrollArea>
         </ResizablePanel>
     );
-});
-
-AccessSidebar.displayName = 'AccessSidebar';
+};
 
 export default AccessSidebar;

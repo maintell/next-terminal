@@ -1,12 +1,11 @@
 import {useEffect, useRef, useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
-// @ts-ignore
 import Guacamole from '@dushixiang/guacamole-common-js';
 import {baseUrl} from "@/api/core/requests";
 import times from '@/components/time/times';
 import {useTranslation} from "react-i18next";
 import {Slider, Tooltip} from "antd";
-import {Pause, Play, Maximize, Minimize, SkipBack, SkipForward, Volume2, VolumeX} from "lucide-react";
+import {Pause, Play, Maximize, Minimize, SkipBack, SkipForward} from "lucide-react";
 
 Guacamole.Layer.prototype.toCanvas = function () {
     const c = this.getCanvas();
@@ -48,16 +47,12 @@ const GuacdPlayback = () => {
     let [opacity, setOpacity] = useState(1);
     let [hasStarted, setHasStarted] = useState(false);
     let [isFullscreen, setIsFullscreen] = useState(false);
-    let [volume, setVolume] = useState(1.0);
-    let [isMuted, setIsMuted] = useState(false);
-    let [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
     const hideTimerRef = useRef<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const displayAreaRef = useRef<HTMLDivElement>(null);
     const displayRef = useRef<HTMLDivElement>(null);
     const displayResizeObserverRef = useRef<ResizeObserver | null>(null);
-    const volumeTimeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
         let recording = init(sessionId);
@@ -100,6 +95,9 @@ const GuacdPlayback = () => {
                 recording.getDisplay().getElement().innerHTML = '';
             }
             displayResizeObserverRef.current?.disconnect();
+            if (hideTimerRef.current) {
+                window.clearTimeout(hideTimerRef.current);
+            }
             document.removeEventListener('keydown', handleKeyDown);
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
         }
@@ -110,8 +108,6 @@ const GuacdPlayback = () => {
         const tunnel = new Guacamole.StaticHTTPTunnel(url);
         const recording = new Guacamole.SessionRecording(tunnel);
 
-        console.log(recording.getDisplay().getDefaultLayer().toCanvas.toString());
-
         const recordingDisplay = recording.getDisplay();
 
         const display = displayRef.current;
@@ -120,11 +116,6 @@ const GuacdPlayback = () => {
             return recording;
         }
         display.appendChild(recordingDisplay.getElement());
-        recording.onload = function () {
-            console.log(`onload`);
-            // 自动播放还得调整一下
-            // togglePlayPause(recording);
-        };
         recording.onplay = () => {
             setPlaying(true);
         }
@@ -190,10 +181,8 @@ const GuacdPlayback = () => {
         }
 
         if (!activeRecording.isPlaying()) {
-            console.log(`play`);
             activeRecording.play();
         } else {
-            console.log(`pause`);
             activeRecording.pause();
         }
     }
@@ -203,9 +192,7 @@ const GuacdPlayback = () => {
             return;
         }
         // Request seek
-        recording.seek(value, () => {
-            console.log('complete');
-        });
+        recording.seek(value, () => undefined);
     }
 
     const renderPlayButton = (className: string) => {
@@ -219,9 +206,7 @@ const GuacdPlayback = () => {
     const seekRelative = (milliseconds: number) => {
         if (!recording) return;
         const newPosition = Math.max(0, Math.min(max, percent + milliseconds));
-        recording.seek(newPosition, () => {
-            console.log('seek complete');
-        });
+        recording.seek(newPosition, () => undefined);
     };
 
     const toggleFullscreen = async () => {
@@ -236,36 +221,6 @@ const GuacdPlayback = () => {
         } catch (error) {
             console.error('Fullscreen toggle failed:', error);
         }
-    };
-
-    const toggleMute = () => {
-        setIsMuted(!isMuted);
-        // 这里可以添加实际的音频静音逻辑
-        // if (recording && recording.getAudio) {
-        //     recording.getAudio().muted = !isMuted;
-        // }
-    };
-
-    const handleVolumeChange = (value: number) => {
-        setVolume(value);
-        setIsMuted(value === 0);
-        // 这里可以添加实际的音量控制逻辑
-        // if (recording && recording.getAudio) {
-        //     recording.getAudio().volume = value;
-        // }
-    };
-
-    const handleVolumeMouseEnter = () => {
-        if (volumeTimeoutRef.current) {
-            clearTimeout(volumeTimeoutRef.current);
-        }
-        setShowVolumeSlider(true);
-    };
-
-    const handleVolumeMouseLeave = () => {
-        volumeTimeoutRef.current = window.setTimeout(() => {
-            setShowVolumeSlider(false);
-        }, 1000);
     };
 
     const handleMouseMove = () => {
@@ -302,9 +257,6 @@ const GuacdPlayback = () => {
                 <div
                     ref={displayRef}
                     className="max-h-full max-w-full flex-none origin-top-left overflow-hidden bg-black shadow-2xl ring-1 ring-white/10 [&>div>div]:origin-top-left [&>div]:origin-top-left"
-                    onClick={() => {
-                        // togglePlayPause()
-                    }}
                 />
             </div>
             
@@ -370,49 +322,6 @@ const GuacdPlayback = () => {
                                 }
                             }}
                     />
-                </div>
-                
-                {/* 音量控制 - 在小屏幕上隐藏 */}
-                <div className={'flex-none hidden lg:block relative'} 
-                     onMouseEnter={handleVolumeMouseEnter}
-                     onMouseLeave={handleVolumeMouseLeave}>
-                    <Tooltip title={isMuted ? t('access.playback.unmute') : t('access.playback.mute')}>
-                        <div className="cursor-pointer" onClick={toggleMute}>
-                            {isMuted || volume === 0 ? 
-                                <VolumeX className="h-4 w-4 text-white/80 hover:text-white transition-colors" /> :
-                                <Volume2 className="h-4 w-4 text-white/80 hover:text-white transition-colors" />
-                            }
-                        </div>
-                    </Tooltip>
-                    
-                    {/* 音量滑块 */}
-                    {showVolumeSlider && (
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-black p-3 border border-white/10">
-                            <div className="h-20 flex items-center">
-                                <Slider
-                                    vertical
-                                    value={isMuted ? 0 : volume * 100}
-                                    max={100}
-                                    onChange={(value) => handleVolumeChange(value / 100)}
-                                    tooltip={{
-                                        formatter: (value) => `${value}%`
-                                    }}
-                                    styles={{
-                                        rail: {
-                                            backgroundColor: 'rgba(255,255,255,0.15)'
-                                        },
-                                        track: {
-                                            backgroundColor: '#22c55e'
-                                        },
-                                        handle: {
-                                            borderColor: '#22c55e',
-                                            boxShadow: '0 0 0 4px rgba(34,197,94,0.15)'
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    )}
                 </div>
                 
                 {/* 全屏按钮 */}

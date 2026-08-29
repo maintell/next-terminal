@@ -19,7 +19,7 @@ import accountApi,{ LoginAccount,LoginResult,LoginStatus } from "../../api/accou
 const {Title} = Typography;
 
 // 定义状态枚举
-export enum LoginStep {
+enum LoginStep {
     Default = "default",
     OTP = "otp",
 }

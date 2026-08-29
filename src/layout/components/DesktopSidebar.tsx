@@ -35,10 +35,9 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
             collapsible
             collapsed={collapsed}
             onCollapse={onCollapse}
-            className={'h-screen x-side z-10'}
+            className="h-dvh x-side z-10"
             theme={isDarkMode ? 'dark' : 'light'}
             style={{
-                height: '100vh',
                 backgroundColor,
                 position: 'fixed',
             }}

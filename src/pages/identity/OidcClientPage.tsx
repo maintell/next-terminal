@@ -328,7 +328,7 @@ const OidcClientPage = () => {
 
             <OidcClientModal
                 id={selectedRowKey}
-                visible={open}
+                open={open}
                 onOk={async (values: any) => {
                     await mutation.mutateAsync(values);
                 }}

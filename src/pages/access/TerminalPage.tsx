@@ -1,155 +1,96 @@
-import { baseWebSocketUrl } from '@/api/core/requests';
-import portalApi,{ ExportSession } from "@/api/portal-api";
-import { maybe } from "@/utils/maybe";
-import strings from "@/utils/strings";
-import { FitAddon } from "@xterm/addon-fit";
-import { Terminal } from "@xterm/xterm";
-import "@xterm/xterm/css/xterm.css";
-import qs from "qs";
-import React,{ useEffect,useRef,useState } from 'react';
-import { useSearchParams } from "react-router-dom";
-import { useInterval } from "react-use";
-import { Message,MessageTypeData,MessageTypePing,MessageTypeResize } from './Terminal';
-import { normalizeTerminalBackspace } from './terminal-backspace';
+import {baseWebSocketUrl} from '@/api/core/requests';
+import {useAccessSessionMutation} from '@/pages/access/hooks/use-access-session';
+import {maybe} from '@/utils/maybe';
+import strings from '@/utils/strings';
+import '@xterm/xterm/css/xterm.css';
+import qs from 'qs';
+import {useEffect, useRef} from 'react';
+import {useSearchParams} from 'react-router-dom';
+import {Message, MessageTypeData} from './Terminal';
+import {normalizeTerminalBackspace} from './terminal-backspace';
+import {TerminalRuntime} from './terminal/terminal-runtime';
 
-export interface TerminalProps {
-    assetId?: string
-    sessionId?: string
-    sharer?: boolean
-}
-
-const TerminalPage = ({}: TerminalProps) => {
-
-    const terminalRef = React.useRef<HTMLDivElement>(null);
-    let websocket = useRef<WebSocket>(null);
-
+const TerminalPage = () => {
+    const terminalElementRef = useRef<HTMLDivElement>(null);
     const [searchParams] = useSearchParams();
-    let sharerToken = maybe(searchParams.get('sharerToken'), '');
-    let sessionId = searchParams.get('sessionId') ?? '';
-
-    let [title, setTitle] = useState('');
-
-    useInterval(() => {
-        if (websocket.current?.readyState === WebSocket.OPEN) {
-            websocket.current.send(new Message(MessageTypePing, Date.now().toString()).toString());
-        }
-    }, 5000);
+    const sharerToken = maybe(searchParams.get('sharerToken'), '');
+    const sessionId = searchParams.get('sessionId') ?? '';
+    const sessionMutation = useAccessSessionMutation({type: 'shared', sessionId, sharerToken});
 
     useEffect(() => {
-        document.title = title;
-    }, [title]);
-
-    const writeErrorMessage = (term: Terminal, message: string) => {
-        term.writeln(`\x1B[1;3;31m${message}\x1B[0m `);
-    }
-
-    const connect = (term: Terminal, session: ExportSession) => {
-        const {id, idle: _idle, assetName} = session;
-        let elementTerm = terminalRef.current;
-        if (!elementTerm) {
-            return
-        }
-        setTitle(assetName);
-        term.open(elementTerm);
-        let fitAddon = new FitAddon();
-        term.loadAddon(fitAddon);
-        fitAddon.fit();
-        term.focus();
-
-        term.attachCustomKeyEventHandler((domEvent) => {
-            if (domEvent.ctrlKey && domEvent.key === 'c' && term.hasSelection()) {
-                return false;
-            }
-            return !(domEvent.ctrlKey && domEvent.key === 'v');
-        })
-
-        term.writeln('trying to connect to the server ...');
-        let cols = term.cols;
-        let rows = term.rows;
-        let params: Record<string, any> = {
-            'cols': cols,
-            'rows': rows,
-            'sessionId': id,
-        };
-        if (strings.hasText(sharerToken)) {
-            params['sharerToken'] = sharerToken;
+        const element = terminalElementRef.current;
+        if (!element) {
+            return;
         }
 
-        let paramStr = qs.stringify(params);
-        const ws = new WebSocket(`${baseWebSocketUrl()}/access/terminal?${paramStr}`);
-        websocket.current = ws;
-        ws.onopen = (_e => {
-            term.clear();
-            if (!strings.hasText(sharerToken)) {
-                term.onResize(function (evt) {
-                    ws.send(new Message(MessageTypeResize, `${evt.cols},${evt.rows}`).toString());
+        const runtime = new TerminalRuntime({
+            container: element,
+            sendResize: !strings.hasText(sharerToken),
+            terminalOptions: {
+                fontFamily: 'monaco, Consolas, "Lucida Console", monospace',
+                fontSize: 15,
+                theme: {background: '#141414'},
+            },
+            configureTerminal: (terminal) => {
+                terminal.attachCustomKeyEventHandler((event) => {
+                    if (event.ctrlKey && event.key === 'c' && terminal.hasSelection()) {
+                        return false;
+                    }
+                    return !(event.ctrlKey && event.key === 'v');
                 });
-            }
-            window.addEventListener("resize", () => {
-                fitAddon && fitAddon.fit();
-            });
-        });
-
-        ws.onerror = (_e) => {
-            writeErrorMessage(term, `websocket error`);
-        }
-
-        ws.onclose = (_e) => {
-            writeErrorMessage(term, `connection is closed.`);
-        }
-
-        term.onData(data => {
-            ws.send(new Message(MessageTypeData, normalizeTerminalBackspace(data, session)).toString());
-        });
-
-        ws.onmessage = (e) => {
-            let msg = Message.parse(e.data);
-            switch (msg.type) {
-                case MessageTypeData:
-                    term.write(msg.content);
-                    break;
-            }
-        }
-        return websocket;
-    }
-
-    const handleUnload = (e: BeforeUnloadEvent) => {
-        const message = "Leave?"; // 英文版的提示信息
-        e.returnValue = message;
-        return message;
-    }
-
-    useEffect(() => {
-        if (websocket.current) return;
-
-        let term = new Terminal({
-            fontFamily: 'monaco, Consolas, "Lucida Console", monospace',
-            fontSize: 15,
-            theme: {
-                background: '#141414'
             },
         });
+        let cancelled = false;
+        runtime.terminal.writeln('trying to connect to the server ...');
 
-        portalApi.getSessionById(sessionId, sharerToken)
-            .then((session) => {
-                connect(term, session);
-            })
-            .catch((e) => {
-                writeErrorMessage(term, `get session err，${e?.message}`);
-            })
+        sessionMutation.mutateAsync().then((session) => {
+            if (cancelled) {
+                return;
+            }
+            document.title = session.assetName;
+            runtime.setInputHandler((data, currentRuntime) => {
+                currentRuntime.sendMessage(MessageTypeData, normalizeTerminalBackspace(data, session));
+            });
+            const params: Record<string, string | number> = {
+                cols: runtime.terminal.cols,
+                rows: runtime.terminal.rows,
+                sessionId: session.id,
+            };
+            if (strings.hasText(sharerToken)) {
+                params.sharerToken = sharerToken;
+            }
+            runtime.connect(`${baseWebSocketUrl()}/access/terminal?${qs.stringify(params)}`, {
+                onOpen: () => runtime.terminal.clear(),
+                onMessage: (event) => {
+                    const message = Message.parse(event.data);
+                    if (message.type === MessageTypeData) {
+                        runtime.terminal.write(message.content);
+                    }
+                },
+                onError: () => runtime.terminal.writeln('\x1B[1;3;31mwebsocket error\x1B[0m '),
+                onClose: () => runtime.terminal.writeln('\x1B[1;3;31mconnection is closed.\x1B[0m '),
+            });
+            runtime.focus();
+            window.addEventListener('beforeunload', handleUnload);
+        }).catch((error) => {
+            if (!cancelled) {
+                runtime.terminal.writeln(`\x1B[1;3;31mget session err，${error?.message}\x1B[0m `);
+            }
+        });
 
-        window.addEventListener('beforeunload', handleUnload);
+        const handleUnload = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+        };
         return () => {
+            cancelled = true;
             window.removeEventListener('beforeunload', handleUnload);
-        }
-
-    }, []);
+            runtime.dispose();
+        };
+    }, [sessionId, sharerToken]);
 
     return (
-        <div className={'overflow-hidden'}>
-            <div ref={terminalRef}
-                 className={'h-screen w-screen p-2 bg-[#141414]'}
-            />
+        <div className="h-dvh w-screen overflow-hidden bg-[#141414]">
+            <div ref={terminalElementRef} className="h-full w-full p-2"/>
         </div>
     );
 };

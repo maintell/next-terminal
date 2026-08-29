@@ -1,7 +1,6 @@
 import {Descriptions, Spin, Tree} from "antd";
 import roleApi, {TreeNode} from "../../api/role-api";
 import {useQuery} from "@tanstack/react-query";
-import {useState} from "react";
 import {useTranslation} from "react-i18next";
 import {useNTTheme} from "@/hook/use-theme";
 import strings from "@/utils/strings";
@@ -16,7 +15,6 @@ interface RoleInfoProps {
 const RoleInfo = ({id}: RoleInfoProps) => {
 
     let {t} = useTranslation();
-    let [roleMenus, setRoleMenus] = useState<string[]>([]);
     let [theme] = useNTTheme();
 
 
@@ -56,24 +54,28 @@ const RoleInfo = ({id}: RoleInfoProps) => {
 
     const roleQuery = useQuery({
         queryKey: ['role', id],
-        queryFn: async () => {
-            let data = await api.getById(id);
-            let strings = data.menus?.filter(item => item.checked === true).map(item => item.key) ?? [];
-            setRoleMenus(strings);
-            return data;
-        },
+        queryFn: () => api.getById(id),
         enabled: !!id,
     });
 
     const role = roleQuery.data;
+    const roleMenus = role?.menus?.filter(item => item.checked).map(item => item.key) ?? [];
 
     return (
         <div className={'page-detail-info'}>
             <Spin spinning={roleQuery.isLoading}>
-                <Descriptions column={1}>
-                    <Descriptions.Item label={t('general.name')}>{role?.name}</Descriptions.Item>
-                    <Descriptions.Item label={t('identity.role.permission')}>
-                        {(() => {
+                <Descriptions
+                    column={1}
+                    items={[
+                        {
+                            key: 'name',
+                            label: t('general.name'),
+                            children: role?.name,
+                        },
+                        {
+                            key: 'permission',
+                            label: t('identity.role.permission'),
+                            children: (() => {
                             if (menusQuery.isLoading) {
                                 return <div>Loading</div>
                             }
@@ -86,12 +88,15 @@ const RoleInfo = ({id}: RoleInfoProps) => {
                                     backgroundColor: theme.backgroundColor,
                                 }}
                             />
-                        })()}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('general.created_at')}>
-                        {role?.createdAt ? times.format(role.createdAt) : '-'}
-                    </Descriptions.Item>
-                </Descriptions>
+                            })(),
+                        },
+                        {
+                            key: 'created-at',
+                            label: t('general.created_at'),
+                            children: role?.createdAt ? times.format(role.createdAt) : '-',
+                        },
+                    ]}
+                />
             </Spin>
         </div>
     );

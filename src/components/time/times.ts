@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import strings from "@/utils/strings";
 
-export const DateTime = `YYYY-MM-DD HH:mm:ss`
+const DateTime = `YYYY-MM-DD HH:mm:ss`
 
 class Times {
     format = (date?: dayjs.ConfigType, format?: dayjs.OptionType, locale?: string, strict?: boolean) => {

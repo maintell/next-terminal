@@ -3,7 +3,7 @@ import {App, ConfigProvider, theme} from "antd";
 import strings from "@/utils/strings";
 import AccessTerminal from "@/pages/access/AccessTerminal";
 import AccessGuacamole from "@/pages/access/AccessGuacamole";
-import {ThemeProvider} from "@/components/theme-provider";
+import AccessDarkTheme from "@/pages/access/components/AccessDarkTheme";
 
 const terminalProtocols = new Set(['ssh', 'telnet']);
 const guacamoleProtocols = new Set(['rdp', 'vnc']);
@@ -34,11 +34,11 @@ const StandaloneAssetAccessPage = () => {
     return (
         <ConfigProvider theme={{algorithm: theme.darkAlgorithm}}>
             <App>
-                <ThemeProvider defaultTheme="dark" storageKey="nt-ui-theme">
+                <AccessDarkTheme>
                     <div className="h-[100svh] w-screen overflow-hidden bg-[#141414]">
                         {content}
                     </div>
-                </ThemeProvider>
+                </AccessDarkTheme>
             </App>
         </ConfigProvider>
     );

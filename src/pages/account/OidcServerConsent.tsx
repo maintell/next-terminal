@@ -2,8 +2,9 @@ import React, {useEffect, useState} from 'react';
 import {Alert, Avatar, Button, Card, Checkbox, Space, Spin, Typography} from 'antd';
 import {CheckCircleOutlined, CloseCircleOutlined, UserOutlined} from '@ant-design/icons';
 import {useNavigate, useSearchParams} from 'react-router-dom';
-import accountApi, {AccountInfo, OidcConsentPageData} from '@/api/account-api';
+import accountApi from '@/api/account-api';
 import {useTranslation} from "react-i18next";
+import {useMutation, useQuery} from '@tanstack/react-query';
 
 const {Title, Text} = Typography;
 
@@ -11,11 +12,11 @@ const OidcServerConsent: React.FC = () => {
     const {t} = useTranslation();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [data, setData] = useState<OidcConsentPageData | null>(null);
     const [selectedScopes, setSelectedScopes] = useState<string[]>([]);
-    const [userInfo, setUserInfo] = useState<AccountInfo | null>(null);
+    const clientId = searchParams.get('client_id') || '';
+    const scopes = searchParams.get('scopes') || '';
+    const returnUrl = searchParams.get('return_url') || '';
+    const hasRequiredParams = !!clientId && !!scopes && !!returnUrl;
 
     const scopeDescriptions: Record<string, string> = {
         'openid': t('account.oidc_consent.scope.openid'),
@@ -25,62 +26,37 @@ const OidcServerConsent: React.FC = () => {
         'offline_access': t('account.oidc_consent.scope.offline_access'),
     };
 
-    useEffect(() => {
-        loadConsentData();
-    }, []);
-
-    const loadConsentData = async () => {
-        try {
-            const clientId = searchParams.get('client_id');
-            const scopes = searchParams.get('scopes');
-            const returnUrl = searchParams.get('return_url');
-
-            if (!clientId || !scopes || !returnUrl) {
-                throw new Error('Missing required parameters');
-            }
-
-            // 并行获取客户端信息和用户信息
-            const [pageData, userInfoData] = await Promise.all([
+    const consentQuery = useQuery({
+        queryKey: ['oidc-server-consent', clientId, scopes, returnUrl],
+        queryFn: async () => {
+            const [data, userInfo] = await Promise.all([
                 accountApi.getOidcConsentPage(clientId, scopes, returnUrl, undefined),
                 accountApi.getUserInfo(),
             ]);
+            return {data, userInfo};
+        },
+        enabled: hasRequiredParams,
+    });
 
-            setData(pageData);
-            setUserInfo(userInfoData);
-            setSelectedScopes(pageData.scopes); // 默认全选
-            setLoading(false);
-        } catch (error: any) {
-            console.error('Failed to load consent page data:', error);
-            setLoading(false);
+    useEffect(() => {
+        if (consentQuery.data) {
+            setSelectedScopes(consentQuery.data.data.scopes);
         }
-    };
+    }, [consentQuery.data]);
 
-    const handleAllow = async () => {
-        if (!data) return;
-
-        setSubmitting(true);
-        try {
-            const clientId = searchParams.get('client_id');
-            const returnUrl = searchParams.get('return_url');
-
-            if (!clientId || !returnUrl) {
-                throw new Error('Missing required parameters');
-            }
-
-            // 提交用户同意
-            const result = await accountApi.submitOidcConsent(clientId, returnUrl, true, selectedScopes);
-
-            // 授权成功后重定向回授权端点
+    const submitMutation = useMutation({
+        mutationFn: () => accountApi.submitOidcConsent(clientId, returnUrl, true, selectedScopes),
+        onSuccess: (result) => {
             if (result && result.return_url) {
-                window.location.href = result.return_url;
+                window.location.replace(result.return_url);
             } else {
                 navigate('/');
             }
-        } catch (error: any) {
-            console.error('Authorization failed:', error);
-            setSubmitting(false);
-        }
-    };
+        },
+    });
+
+    const data = consentQuery.data?.data;
+    const userInfo = consentQuery.data?.userInfo;
 
     const handleDeny = () => {
         // 拒绝授权，返回错误
@@ -91,13 +67,13 @@ const OidcServerConsent: React.FC = () => {
             if (data.state) {
                 errorUrl.searchParams.set('state', data.state);
             }
-            window.location.href = errorUrl.toString();
+            window.location.replace(errorUrl.toString());
         } else {
             navigate('/');
         }
     };
 
-    if (loading) {
+    if (consentQuery.isLoading) {
         return (
             <div style={{
                 display: 'flex',
@@ -111,7 +87,7 @@ const OidcServerConsent: React.FC = () => {
         );
     }
 
-    if (!data) {
+    if (!hasRequiredParams || consentQuery.isError || !data) {
         return (
             <div style={{
                 display: 'flex',
@@ -165,11 +141,6 @@ const OidcServerConsent: React.FC = () => {
                                     <Text strong className="text-sm block">
                                         {userInfo.nickname || userInfo.username}
                                     </Text>
-                                    {(userInfo as any).email && (
-                                        <Text type="secondary" className="text-xs">
-                                            {(userInfo as any).email}
-                                        </Text>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -232,15 +203,15 @@ const OidcServerConsent: React.FC = () => {
                         <Button
                             icon={<CloseCircleOutlined/>}
                             onClick={handleDeny}
-                            disabled={submitting}
+                            disabled={submitMutation.isPending}
                         >
                             {t('identity.policy.action.reject')}
                         </Button>
                         <Button
                             type="primary"
                             icon={<CheckCircleOutlined/>}
-                            onClick={handleAllow}
-                            loading={submitting}
+                            onClick={() => submitMutation.mutate()}
+                            loading={submitMutation.isPending}
                             disabled={selectedScopes.length === 0}
                         >
                             {t('actions.authorized')}

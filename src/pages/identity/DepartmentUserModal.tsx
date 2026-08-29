@@ -5,7 +5,7 @@ import {useMutation, useQuery} from "@tanstack/react-query";
 import departmentApi from "@/api/department-api";
 import userApi, {User} from "@/api/user-api";
 
-export interface DepartmentUserModalProps {
+interface DepartmentUserModalProps {
     departmentId?: string
     departmentName?: string
     open: boolean

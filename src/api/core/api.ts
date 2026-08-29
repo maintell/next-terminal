@@ -1,17 +1,6 @@
 import requests from "./requests";
 import qs from "qs";
 
-export class PageParam extends Map {
-    public pageIndex: number | undefined;
-    public pageSize: number | undefined;
-
-    constructor(pageIndex: number, pageSize: number) {
-        super();
-        this.pageIndex = pageIndex;
-        this.pageSize = pageSize
-    }
-}
-
 export type PageData<T> = {
     items: T[],
     total: number,

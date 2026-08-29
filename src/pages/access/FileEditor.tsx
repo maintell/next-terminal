@@ -33,9 +33,7 @@ self.MonacoEnvironment = {
 
 loader.config({monaco});
 
-loader.init().then(() => {
-    console.log('monaco init success')
-}).catch((error) => {
+loader.init().catch((error) => {
     console.error('monaco init error', error);
 });
 
@@ -153,7 +151,7 @@ const FileEditor: React.FC<Props> = ({
                 <div className="h-full">
                     <MonacoEditor
                         language={item.language}
-                        height={window.innerHeight * 0.7}
+                        height="70vh"
                         theme="vs-dark"
                         value={item.content}
                         options={{
@@ -240,7 +238,7 @@ const FileEditor: React.FC<Props> = ({
                 <Modal
                     title={title}
                     open={open}
-                    width={window.innerWidth * 0.8}
+                    width="min(80vw, 1200px)"
                     centered={true}
                     onCancel={handleClose}
                     footer={false}

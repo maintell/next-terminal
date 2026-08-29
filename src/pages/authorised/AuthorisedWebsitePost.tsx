@@ -1,9 +1,7 @@
 import {useEffect, useState} from "react";
-import {App, Checkbox, DatePicker, Form, Modal, Space} from "antd";
-import {CheckboxChangeEvent} from "antd/es/checkbox";
+import {App, Checkbox, DatePicker, Form, Modal, Space, type CheckboxChangeEvent, type DatePickerProps} from "antd";
 import dayjs from "dayjs";
 import {useTranslation} from "react-i18next";
-import {RangePickerProps} from "antd/es/date-picker";
 import authorisedWebsiteApi from "@/api/authorised-website-api";
 import {useNavigate} from "react-router-dom";
 import {useMutation} from "@tanstack/react-query";
@@ -56,12 +54,11 @@ const AuthorisedWebsitePost = ({open, onCancel, onSuccess}: AuthorisedWebsitePos
         }
     };
 
-    const handleTimeLimitChange = (date: dayjs.Dayjs | null, dateString: string | null) => {
-        console.log(date, dateString);
+    const handleTimeLimitChange = (date: dayjs.Dayjs | null) => {
         setExpiredAtDayjs(date);
     };
 
-    const disabledDate: RangePickerProps["disabledDate"] = current => {
+    const disabledDate: DatePickerProps["disabledDate"] = current => {
         // Can not select days before today and today
         return current && current < dayjs().endOf("day");
     };

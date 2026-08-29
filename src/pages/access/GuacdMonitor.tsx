@@ -1,86 +1,51 @@
-import {useEffect, useState} from 'react';
-import {useSearchParams} from 'react-router-dom';
-// @ts-ignore
+import {baseWebSocketUrl} from '@/api/core/requests';
+import {type GuacamoleStatus} from '@/pages/access/guacamole/ErrorAlert';
+import {GuacamoleRuntime} from '@/pages/access/guacamole/guacamole-runtime';
+import RenderState from '@/pages/access/guacamole/RenderState';
 import Guacamole from '@dushixiang/guacamole-common-js';
-import {baseWebSocketUrl} from "@/api/core/requests";
-import {debounce} from "@/utils/debounce";
-import {GuacamoleStatus} from "@/pages/access/guacamole/ErrorAlert";
-import RenderState from "@/pages/access/guacamole/RenderState";
+import {useEffect, useRef, useState} from 'react';
+import {useSearchParams} from 'react-router-dom';
 
 const GuacdMonitor = () => {
-
-    const [searchParams, _] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const sessionId = searchParams.get('sessionId') ?? '';
-
-    let [state, setState] = useState<number>();
-    let [status, setStatus] = useState<GuacamoleStatus>();
-    let [tunnelState, setTunnelState] = useState<number>();
-
-    const onWindowResize = (client: Guacamole.Client) => {
-        let width = client.getDisplay().getWidth();
-        let height = client.getDisplay().getHeight();
-
-        let winWidth = window.innerWidth;
-        let winHeight = window.innerHeight;
-
-        let scaleW = winWidth / width;
-        let scaleH = winHeight / height;
-        console.log(scaleW, scaleH)
-
-        let scale = Math.min(scaleW, scaleH);
-        if (!scale) {
-            return;
-        }
-        client.getDisplay().scale(scale);
-    };
-
-    const init = (sessionId: string) => {
-        let tunnel = new Guacamole.WebSocketTunnel(`${baseWebSocketUrl()}/admin/sessions/${sessionId}/graphics-monitor`);
-        let client = new Guacamole.Client(tunnel);
-
-        tunnel.onstatechange = setTunnelState;
-        client.onstatechange = setState;
-        client.onerror = setStatus
-
-        const display = document.getElementById("display");
-        if (!display) {
-            return client;
-        }
-        display.innerHTML = '';
-
-        // Add client to display div
-        const element = client.getDisplay().getElement();
-        display.appendChild(element);
-
-        client.connect("");
-        return client;
-    }
+    const containerRef = useRef<HTMLDivElement>(null);
+    const displayRef = useRef<HTMLDivElement>(null);
+    const [state, setState] = useState<number>();
+    const [status, setStatus] = useState<GuacamoleStatus>();
+    const [tunnelState, setTunnelState] = useState<number>();
 
     useEffect(() => {
-        let client = init(sessionId);
-        let resize = debounce(() => {
-            onWindowResize(client);
-        });
-        client.getDisplay().onresize = resize;
-        window.addEventListener('resize', resize);
-        return () => {
-            if (client) {
-                // client.disconnect();
-                // client.getDisplay().getElement().innerHTML = '';
-            }
-            window.removeEventListener('resize', resize);
+        const container = containerRef.current;
+        const displayContainer = displayRef.current;
+        if (!container || !displayContainer) {
+            return;
         }
+        const runtime = new GuacamoleRuntime({
+            container,
+            displayContainer,
+            interactive: false,
+            onStateChange: setState,
+            onTunnelStateChange: setTunnelState,
+            onError: setStatus,
+        });
+        runtime.connect({
+            url: `${baseWebSocketUrl()}/admin/sessions/${sessionId}/graphics-monitor`,
+            remoteResize: false,
+            params: () => '',
+        });
+        return () => runtime.dispose();
     }, [sessionId]);
 
     return (
-        <div className={'h-screen w-screen overflow-hidden flex items-center justify-center relative bg-[#1b1b1b]'}>
+        <div ref={containerRef} className="relative flex h-dvh w-screen items-center justify-center overflow-hidden bg-[#1b1b1b]">
             <RenderState
                 state={state}
                 status={status}
                 tunnelState={tunnelState ?? Guacamole.Tunnel.State.CONNECTING}
-                overlay={true}
+                overlay
             />
-            <div id="display"/>
+            <div ref={displayRef}/>
         </div>
     );
 };

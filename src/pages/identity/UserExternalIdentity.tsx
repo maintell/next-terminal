@@ -1,8 +1,7 @@
 import userApi, {type UserExternalIdentity as UserExternalIdentityItem} from "@/api/user-api";
 import times from "@/components/time/times";
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {App, Button, Empty, Popconfirm, Space, Table, Tag, Typography} from "antd";
-import type {ColumnsType} from "antd/es/table";
+import {App, Button, Empty, Popconfirm, Space, Table, Tag, Typography, type TableColumnsType} from "antd";
 import {useTranslation} from "react-i18next";
 
 interface UserExternalIdentityProps {
@@ -70,7 +69,7 @@ const UserExternalIdentity = ({active, userId}: UserExternalIdentityProps) => {
         }
     };
 
-    const columns: ColumnsType<UserExternalIdentityItem> = [
+    const columns: TableColumnsType<UserExternalIdentityItem> = [
         {
             title: t('identity.user.external_identity.provider'),
             dataIndex: 'provider',

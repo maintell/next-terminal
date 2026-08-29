@@ -191,8 +191,6 @@ const AccessLogStatsPage = () => {
         };
     });
 
-    console.log(`statusCodeChartData`, statusCodeChartData)
-
     // 核心指标卡片数据
     const coreMetrics = [
         {

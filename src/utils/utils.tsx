@@ -1,5 +1,13 @@
 import i18n from "@/react-i18next/i18n";
 
+interface LocalFontData {
+    family: string;
+}
+
+interface WindowWithLocalFonts extends Window {
+    queryLocalFonts?: () => Promise<LocalFontData[]>;
+}
+
 export function renderSize(value: number | undefined, places?: number) {
     if (undefined == value || value === 0) {
         return "0 B";
@@ -15,47 +23,12 @@ export function renderSize(value: number | undefined, places?: number) {
     return sizeStr + ' ' + unitArr[index];
 }
 
-export function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        // @ts-ignore
-        if (navigator.keyboard) {
-            // @ts-ignore
-            navigator.keyboard.lock();
-        }
-        document.documentElement.requestFullscreen();
-    } else {
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-            // @ts-ignore
-            if (navigator.keyboard) {
-                // @ts-ignore
-                navigator.keyboard?.unlock();
-            }
-        }
-    }
-}
-
-// @ts-ignore
 export function requestFullScreen(element: HTMLElement) {
     if (document.fullscreenElement) {
         document.exitFullscreen();
-        // @ts-ignore
-        // if (navigator.keyboard) {
-        //     // @ts-ignore
-        //     navigator.keyboard?.unlock();
-        // }
     } else {
-        // @ts-ignore
-        // if (navigator.keyboard) {
-        //     // @ts-ignore
-        //     navigator.keyboard.lock();
-        // }
         element.requestFullscreen();
     }
-}
-
-export function isFullScreen() {
-    return document.fullscreenElement != null;
 }
 
 export const generateRandomId = (): string => {
@@ -64,7 +37,7 @@ export const generateRandomId = (): string => {
     return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 };
 
-export function isFontAvailable(fontName: string) {
+function isFontAvailable(fontName: string) {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
     if (!context) {
@@ -86,17 +59,13 @@ export function isFontAvailable(fontName: string) {
  */
 export async function getAvailableFonts(): Promise<string[]> {
     try {
-        // 检查是否支持 Local Font Access API
-        // @ts-ignore
-        if ('queryLocalFonts' in window) {
-            // @ts-ignore
-            const fonts = await window.queryLocalFonts();
+        const queryLocalFonts = (window as WindowWithLocalFonts).queryLocalFonts;
+        if (queryLocalFonts) {
+            const fonts = await queryLocalFonts();
             const fontFamilies = new Set<string>();
 
-            fonts.forEach((font: any) => {
-                // 只添加等宽字体或常见的终端字体
-                const family = font.family;
-                fontFamilies.add(family);
+            fonts.forEach((font) => {
+                fontFamilies.add(font.family);
             });
 
             // 转换为数组并排序
@@ -117,7 +86,7 @@ export async function getAvailableFonts(): Promise<string[]> {
 /**
  * 获取常见字体列表并检测可用性
  */
-export function getCommonFonts(): string[] {
+function getCommonFonts(): string[] {
     const commonFonts = [
         // Windows 常见终端字体
         'Consolas',
@@ -168,7 +137,7 @@ export function isMobileByMediaQuery() {
     return mediaQuery.matches;
 }
 
-export function isFirefox() {
+function isFirefox() {
     return navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
 }
 
@@ -197,104 +166,6 @@ export const browserDownload = (url: string) => {
     a.remove();
     window.addEventListener('beforeunload', beforeUnload, true);
 }
-
-export const handleKeyDown = (e: KeyboardEvent) => {
-    // 禁用所有 F1-F12 功能键
-    if ((e.key && e.key.startsWith('F') && parseInt(e.key.substring(1)) >= 1 && parseInt(e.key.substring(1)) <= 12) ||
-        (e.keyCode >= 112 && e.keyCode <= 123)) {
-        e.preventDefault();
-        return false;
-    }
-    // 禁用 Ctrl+Shift+I（开发者工具）
-    if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-        e.preventDefault();
-        return false;
-    }
-    // 禁用 Ctrl+Shift+J（控制台）
-    if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-        e.preventDefault();
-        return false;
-    }
-    // 禁用 Ctrl+U（查看源码）
-    if (e.ctrlKey && e.key === 'u') {
-        e.preventDefault();
-        return false;
-    }
-}
-
-
-const BLOCKED_CTRL_KEYS = [
-    'A', // Select All
-    'F', // Find
-    'S', // Save
-    'P', // Print
-    'R', // Refresh
-    'T', // New Tab
-    'N', // New Window
-    'W', // Close Tab
-    'U', // View Source
-    'H', // History
-    'J', // Downloads
-    'D', // Bookmark
-    'L', // Focus Address Bar
-];
-
-const BLOCKED_FUNCTION_KEYS = [
-    'F5', // Refresh
-    'F11', // Fullscreen
-    'F6', // Focus Address Bar (alternative)
-];
-
-// For combinations like Ctrl + Shift + I
-const BLOCKED_CTRL_SHIFT_KEYS = [
-    'I', // Developer Tools
-    'J', // Developer Tools
-    'K', // Developer Tools
-];
-
-export const dropKeydown = (e: KeyboardEvent) => {
-    // Block Ctrl + specific keys
-    if (e.ctrlKey && !e.shiftKey && !e.altKey && BLOCKED_CTRL_KEYS.includes(e.key.toUpperCase())) {
-        console.log(`Blocked: Ctrl + ${e.key}`);
-        e.preventDefault();
-        return false;
-    }
-
-    // Block Ctrl + Shift + specific keys
-    if (e.ctrlKey && e.shiftKey && !e.altKey && BLOCKED_CTRL_SHIFT_KEYS.includes(e.key.toUpperCase())) {
-        console.log(`Blocked: Ctrl + Shift + ${e.key}`);
-        e.preventDefault();
-        return false;
-    }
-
-    // Block specific Function keys
-    if (BLOCKED_FUNCTION_KEYS.includes(e.key.toUpperCase())) {
-        console.log(`Blocked: ${e.key}`);
-        e.preventDefault();
-        return false;
-    }
-
-    // Block Meta key (Windows key / Command key)
-    // Note: On macOS, Cmd+W, Cmd+N, Cmd+T are common and might already be covered by BLOCKED_CTRL_KEYS
-    // if you intend for Ctrl to also mean Cmd on Mac. If not, you need separate handling or
-    // ensure your BLOCKED_CTRL_KEYS logic correctly interprets e.ctrlKey vs e.metaKey based on OS.
-    // For simplicity here, we just block the Meta key itself if pressed without other modifiers (usually not useful alone).
-    // If you want to block Cmd+C, Cmd+V, etc., you'd add them to a list similar to BLOCKED_CTRL_KEYS but check e.metaKey.
-    if (e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey) { // Block if *only* Meta is pressed
-        console.log(`Blocked: Meta key`);
-        e.preventDefault();
-        return false;
-    }
-
-    // Example: Block Alt + Left/Right Arrow
-    if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-        console.log(`Blocked: Alt + ${e.key}`);
-        e.preventDefault();
-        return false;
-    }
-
-    return true; // Allow other events
-};
 
 export const formatUptime = (seconds: number | undefined | null): string => {
     if (seconds === undefined || seconds === null) return '-';

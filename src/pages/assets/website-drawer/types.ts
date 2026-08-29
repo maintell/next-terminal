@@ -4,15 +4,9 @@ import type {GatewayHop} from "@/api/gateway-chain";
 export type WebsiteOriginHostMode = 'origin' | 'service' | 'custom';
 export type ConnectionMode = 'direct' | 'gateway' | 'proxy';
 
-export interface ParsedURL {
-    scheme: string;
-    host: string;
-    port: string;
-}
+type HeaderRewriteMode = 'url_host' | 'regex';
 
-export type HeaderRewriteMode = 'url_host' | 'regex';
-
-export interface HeaderRewriteRule {
+interface HeaderRewriteRule {
     key: string;
     mode: HeaderRewriteMode;
     search?: string;
@@ -20,7 +14,7 @@ export interface HeaderRewriteRule {
     scheme?: '' | 'http' | 'https';
 }
 
-export interface WebsiteResponseBodyReplaceRule {
+interface WebsiteResponseBodyReplaceRule {
     search: string;
     replace: string;
     is_regex: boolean;
@@ -93,9 +87,4 @@ export interface WebsiteFormData {
         autoRenew?: boolean;
     };
     modifyRules?: WebsiteResponseModifyRule[];
-}
-
-export interface LogoItem {
-    name: string;
-    data: string;
 }

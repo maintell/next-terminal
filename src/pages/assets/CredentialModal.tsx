@@ -8,7 +8,7 @@ import {EyeInvisibleOutlined, EyeTwoTone} from "@ant-design/icons";
 
 const api = credentialApi;
 
-export interface CredentialProps {
+interface CredentialProps {
     open: boolean;
     handleOk: (values: any) => void;
     handleCancel: () => void;

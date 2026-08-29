@@ -1,8 +1,7 @@
 import {useLicense} from "@/hook/LicenseContext";
 import {SafetyCertificateOutlined, StopOutlined} from "@ant-design/icons";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {Button, Popconfirm, Space, Table, Tag} from "antd";
-import type {ColumnsType} from "antd/es/table";
+import {Button, Popconfirm, Space, Table, Tag, type TableColumnsType} from "antd";
 import {useTranslation} from "react-i18next";
 import {Link} from "react-router-dom";
 import accessPolicyApi, {type AccessPolicyRule} from "../../api/access-policy-api";
@@ -28,7 +27,7 @@ const AccessPolicyRules = ({active, groupId}: AccessPolicyRulesProps) => {
         onSuccess: () => queryClient.invalidateQueries({queryKey: ['access-policy-rules', groupId]}),
     });
 
-    const columns: ColumnsType<AccessPolicyRule> = [
+    const columns: TableColumnsType<AccessPolicyRule> = [
         {title: t('identity.policy.priority'), dataIndex: 'priority', width: 90},
         {title: t('general.name'), dataIndex: 'name'},
         {

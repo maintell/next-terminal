@@ -1,8 +1,7 @@
 import userApi, {type UserOidcConsentItem} from "@/api/user-api";
 import times from "@/components/time/times";
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {App, Button, Empty, Popconfirm, Space, Table, Tag} from "antd";
-import type {ColumnsType} from "antd/es/table";
+import {App, Button, Empty, Popconfirm, Space, Table, Tag, type TableColumnsType} from "antd";
 import {useTranslation} from "react-i18next";
 
 interface UserOidcServerAuthorizationProps {
@@ -28,7 +27,7 @@ const UserOidcServerAuthorization = ({active, userId}: UserOidcServerAuthorizati
         },
     });
 
-    const columns: ColumnsType<UserOidcConsentItem> = [
+    const columns: TableColumnsType<UserOidcConsentItem> = [
         {
             title: t('identity.oidc_client.client_id_label'),
             dataIndex: 'clientId',

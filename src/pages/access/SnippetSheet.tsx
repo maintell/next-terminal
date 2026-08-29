@@ -1,9 +1,8 @@
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {App, Button, Drawer, Input, Spin} from "antd";
 import type {DrawerProps} from "antd";
 import snippetUserApi from "@/api/snippet-user-api";
-import {Snippet} from "@/api/snippet-api";
 import {useTranslation} from "react-i18next";
 import {ChevronDown, ChevronUp, CirclePlay} from "lucide-react";
 import SnippetUserModal from "@/pages/facade/SnippetUserModal";
@@ -25,8 +24,7 @@ const SnippetSheet = ({open, onClose, onUse, placement, size, mask, maskClosable
 
     let {t} = useTranslation();
     let {message} = App.useApp();
-    let [snippets, setSnippets] = useState<Snippet[]>();
-    let [searching, setSearching] = useState<boolean>();
+    const [search, setSearch] = useState('');
     let [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
     let [modalOpen, setModalOpen] = useState<boolean>(false);
 
@@ -35,11 +33,6 @@ const SnippetSheet = ({open, onClose, onUse, placement, size, mask, maskClosable
         queryFn: snippetUserApi.getAll,
         enabled: open
     });
-
-    useEffect(() => {
-        let snippets = query.data;
-        setSnippets(snippets);
-    }, [query.data])
 
     const postOrUpdate = async (values: any) => {
         if (values['id']) {
@@ -59,14 +52,12 @@ const SnippetSheet = ({open, onClose, onUse, placement, size, mask, maskClosable
     });
 
     const handleSearch = (value: string) => {
-        setSearching(true);
-        let snippets = query.data?.filter(item => {
-            return item.name.toLowerCase().includes(value.toLowerCase());
-        });
-        setSnippets(snippets);
-        setSearching(false);
-        console.log('search', value, snippets)
+        setSearch(value.trim().toLowerCase());
     }
+
+    const snippets = search
+        ? query.data?.filter(item => item.name.toLowerCase().includes(search))
+        : query.data;
 
     const toggleExpand = (id: string) => {
         setExpandedIds(prev => {
@@ -119,7 +110,7 @@ const SnippetSheet = ({open, onClose, onUse, placement, size, mask, maskClosable
             >
                 <Input.Search placeholder={t('access.search')}
                               onSearch={handleSearch}
-                              loading={searching}
+                              loading={query.isFetching}
                               style={{marginBottom: 16}}/>
 
                 <Spin spinning={query.isFetching}>

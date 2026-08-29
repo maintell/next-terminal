@@ -23,7 +23,6 @@ const SecuritySetting = ({
     };
 
     return <Tabs
-        className="setting-tabs"
         activeKey={activeKey}
         onChange={handleTabChange}
         items={[

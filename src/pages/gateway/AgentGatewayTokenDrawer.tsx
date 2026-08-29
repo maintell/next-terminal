@@ -1,7 +1,7 @@
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {App, Button, Drawer, Form, Input, Modal, Popconfirm, Table, TableProps, Typography} from "antd";
 import {useTranslation} from "react-i18next";
-import {useQuery} from "@tanstack/react-query";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import agentGatewayTokenApi, {AgentGatewayToken} from "@/api/agent-gateway-token-api";
 import dayjs from "dayjs";
 import NButton from "@/components/NButton";
@@ -26,49 +26,48 @@ const AgentGatewayTokenDrawer = ({open, onClose}: Props) => {
     let tokenQuery = useQuery({
         queryKey: ['agent-gateway-tokens'],
         queryFn: agentGatewayTokenApi.getAll,
+        enabled: open,
     });
 
-    useEffect(() => {
-        if (open) {
-            tokenQuery.refetch();
-        }
-    }, [open]);
-
-    const handleCreateToken = async (values: { remark: string }) => {
-        try {
-            const tokenData = {
+    const createMutation = useMutation({
+        mutationFn: (values: {remark: string}) => agentGatewayTokenApi.create({
                 remark: values.remark,
-            } as AgentGatewayToken;
-
-            await agentGatewayTokenApi.create(tokenData);
+            } as AgentGatewayToken),
+        onSuccess: () => {
             message.success(t('general.success'));
             setCreateModalOpen(false);
             form.resetFields();
             tokenQuery.refetch();
-        } catch (error) {
-            message.error(t('general.error'));
-        }
-    };
+        },
+        onError: () => message.error(t('general.error')),
+    });
 
-    const handleEditToken = async (values: { remark: string }) => {
-        if (!editingToken) return;
-
-        try {
+    const editMutation = useMutation({
+        mutationFn: (values: {remark: string}) => {
+            if (!editingToken) {
+                throw new Error('Missing token');
+            }
             const updatedToken = {
                 ...editingToken,
                 remark: values.remark,
             };
-
-            await agentGatewayTokenApi.updateById(editingToken.id, updatedToken);
+            return agentGatewayTokenApi.updateById(editingToken.id, updatedToken);
+        },
+        onSuccess: () => {
             message.success(t('general.success'));
             setEditModalOpen(false);
             setEditingToken(null);
             editForm.resetFields();
             tokenQuery.refetch();
-        } catch (error) {
-            message.error(t('general.error'));
-        }
-    };
+        },
+        onError: () => message.error(t('general.error')),
+    });
+
+    const deleteMutation = useMutation({
+        mutationFn: agentGatewayTokenApi.deleteById,
+        onSuccess: () => tokenQuery.refetch(),
+        onError: () => message.error(t('general.error')),
+    });
 
     const openEditModal = (token: AgentGatewayToken) => {
         setEditingToken(token);
@@ -130,10 +129,7 @@ const AgentGatewayTokenDrawer = ({open, onClose}: Props) => {
                     <Popconfirm
                         key={'delete-confirm'}
                         title={t('general.confirm_delete')}
-                        onConfirm={async () => {
-                            await agentGatewayTokenApi.deleteById(record.id);
-                            tokenQuery.refetch();
-                        }}
+                        onConfirm={() => deleteMutation.mutate(record.id)}
                     >
                         <NButton key='delete' danger={true}>{t('actions.delete')}</NButton>
                     </Popconfirm>
@@ -148,7 +144,7 @@ const AgentGatewayTokenDrawer = ({open, onClose}: Props) => {
                 title={t('gateways.token_manage')}
                 onClose={onClose}
                 open={open}
-                size={window.innerWidth * 0.6}
+                size="min(90vw, 960px)"
                 extra={
                     <Button
                         type="primary"
@@ -161,6 +157,7 @@ const AgentGatewayTokenDrawer = ({open, onClose}: Props) => {
                 <Table<AgentGatewayToken>
                     columns={columns}
                     dataSource={tokenQuery.data}
+                    loading={tokenQuery.isFetching || deleteMutation.isPending}
                     pagination={false}
                     rowKey="id"
                 />
@@ -170,6 +167,7 @@ const AgentGatewayTokenDrawer = ({open, onClose}: Props) => {
             <Modal
                 title={t('gateways.add_token')}
                 open={createModalOpen}
+                confirmLoading={createMutation.isPending}
                 onOk={() => form.submit()}
                 onCancel={() => {
                     setCreateModalOpen(false);
@@ -179,7 +177,7 @@ const AgentGatewayTokenDrawer = ({open, onClose}: Props) => {
                 <Form
                     form={form}
                     layout="vertical"
-                    onFinish={handleCreateToken}
+                    onFinish={(values) => createMutation.mutate(values)}
                 >
                     <Form.Item
                         label={t('general.remark')}
@@ -200,6 +198,7 @@ const AgentGatewayTokenDrawer = ({open, onClose}: Props) => {
             <Modal
                 title={t('gateways.edit_token_remark')}
                 open={editModalOpen}
+                confirmLoading={editMutation.isPending}
                 onOk={() => editForm.submit()}
                 onCancel={() => {
                     setEditModalOpen(false);
@@ -210,7 +209,7 @@ const AgentGatewayTokenDrawer = ({open, onClose}: Props) => {
                 <Form
                     form={editForm}
                     layout="vertical"
-                    onFinish={handleEditToken}
+                    onFinish={(values) => editMutation.mutate(values)}
                 >
                     <Form.Item
                         label={t('general.remark')}

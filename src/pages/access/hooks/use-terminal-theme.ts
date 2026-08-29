@@ -1,6 +1,5 @@
-import {useAtom} from "jotai"
 import XtermThemes, {XtermTheme} from "@/color-theme/XtermThemes";
-import {atomWithLocalStorage} from "@/hook/atom";
+import {useSyncExternalStore} from "react";
 
 type ConfigTerminalTheme = {
     selected: string | null,
@@ -11,6 +10,7 @@ type ConfigTerminalTheme = {
 }
 
 const defaultTheme = `Apple System Colors`
+const storageKey = 'access-theme';
 
 export const DefaultTerminalTheme = {
     selected: defaultTheme,
@@ -20,25 +20,53 @@ export const DefaultTerminalTheme = {
     lineHeight: 1.0,
 }
 
-const configAtom = atomWithLocalStorage<ConfigTerminalTheme>('access-theme', DefaultTerminalTheme)
+type ThemeUpdate = ConfigTerminalTheme | ((current: ConfigTerminalTheme) => ConfigTerminalTheme);
+type ThemeListener = () => void;
+
+const listeners = new Set<ThemeListener>();
+
+const readStoredTheme = (): ConfigTerminalTheme => {
+    try {
+        const storedTheme = localStorage.getItem(storageKey);
+        return storedTheme ? JSON.parse(storedTheme) as ConfigTerminalTheme : DefaultTerminalTheme;
+    } catch (error) {
+        console.warn('Ignoring invalid terminal theme cache', error);
+        return DefaultTerminalTheme;
+    }
+};
+
+let terminalTheme = readStoredTheme();
+
+const subscribe = (listener: ThemeListener) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+};
+
+const getSnapshot = () => terminalTheme;
+
+const setTerminalTheme = (update: ThemeUpdate) => {
+    terminalTheme = typeof update === 'function' ? update(terminalTheme) : update;
+    try {
+        localStorage.setItem(storageKey, JSON.stringify(terminalTheme));
+    } catch (error) {
+        console.warn('Failed to save terminal theme cache', error);
+    }
+    listeners.forEach(listener => listener());
+};
 
 export function useTerminalTheme() {
-    return useAtom(configAtom)
+    const theme = useSyncExternalStore(subscribe, getSnapshot, () => DefaultTerminalTheme);
+    return [theme, setTerminalTheme] as const;
 }
 
 export function CleanTheme(theme: ConfigTerminalTheme) {
-    if (!theme.fontSize || theme.fontSize == 0) {
-        theme.fontSize = DefaultTerminalTheme.fontSize
-    }
-    if (!theme.fontFamily) {
-        theme.fontFamily = DefaultTerminalTheme.fontFamily
-    }
-    if (!theme.selected) {
-        theme.selected = DefaultTerminalTheme.selected
-        theme.theme = DefaultTerminalTheme.theme
-    }
-    if (!theme.lineHeight || theme.lineHeight == 0) {
-        theme.lineHeight = DefaultTerminalTheme.lineHeight
-    }
-    return theme
+    const selected = theme.selected || DefaultTerminalTheme.selected;
+    return {
+        ...theme,
+        selected,
+        theme: theme.theme ?? XtermThemes.find((item) => item.name === selected) ?? DefaultTerminalTheme.theme,
+        fontSize: theme.fontSize > 0 ? theme.fontSize : DefaultTerminalTheme.fontSize,
+        fontFamily: theme.fontFamily || DefaultTerminalTheme.fontFamily,
+        lineHeight: theme.lineHeight > 0 ? theme.lineHeight : DefaultTerminalTheme.lineHeight,
+    };
 }

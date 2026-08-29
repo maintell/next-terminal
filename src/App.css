@@ -115,14 +115,6 @@
     scrollbar-gutter: stable;
 }
 
-.setting-tabs,
-.setting-tabs > .ant-tabs-content-holder,
-.setting-tabs > .ant-tabs-content-holder > .ant-tabs-content,
-.setting-tabs > .ant-tabs-content-holder > .ant-tabs-content > .ant-tabs-tabpane {
-    min-height: 0;
-    overflow: visible;
-}
-
 /* 暗黑模式 */
 .dark .ant-table-container .ant-table-body,
 .dark .ant-table-container .ant-table-content {

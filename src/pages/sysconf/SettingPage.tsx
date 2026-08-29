@@ -11,7 +11,6 @@ import {useMutation, useQuery} from "@tanstack/react-query";
 
 import SystemSetting from "@/pages/sysconf/SystemSetting";
 import {useMobile} from "@/hook/use-mobile";
-import {cn} from "@/lib/utils";
 import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
 import ProxyServiceSetting from "@/pages/sysconf/ProxyServiceSetting";
 import AssetAccessSetting from "@/pages/sysconf/AssetAccessSetting";
@@ -178,15 +177,10 @@ const SettingPage = () => {
                 tabPlacement={isMobile ? 'top' : 'start'}
                 activeKey={activeKey} 
                 onChange={handleTagChange} 
-                // tabBarStyle={isMobile ? {} : {width: 150}}
                 items={items}
                 size={isMobile ? 'small' : 'middle'}
-                className={cn(
-                    'setting-tabs',
-                    isMobile && 'mobile-setting-tabs'
-                )}
-            >
-            </Tabs>
+                className={isMobile ? 'mobile-setting-tabs' : undefined}
+            />
             {contextHolder}
             <MultiFactorAuthentication
                 open={mfaOpen}

@@ -1,4 +1,3 @@
-import {useEffect} from 'react';
 import {useQuery} from "@tanstack/react-query";
 import scheduledTaskApi from '@/api/scheduled-task-api';
 
@@ -17,12 +16,6 @@ const ScheduledTaskRuntime = ({open, spec}: Props) => {
         enabled: open,
         retry: false,
     });
-
-    useEffect(() => {
-        if (open) {
-            query.refetch();
-        }
-    }, [open]);
 
     return (
         <div className={''}>

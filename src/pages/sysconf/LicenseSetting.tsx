@@ -286,11 +286,16 @@ const LicenseSetting = () => {
                                 </Form.Item>
                                 {bindingType !== 'domain' &&
                                     <div className="mb-4">
-                                        <Descriptions column={1}>
-                                            <Descriptions.Item label={t('settings.license.machine_id')}>
-                                                <Text strong copyable>{queryMachineId.data}</Text>
-                                            </Descriptions.Item>
-                                        </Descriptions>
+                                        <Descriptions
+                                            column={1}
+                                            items={[
+                                                {
+                                                    key: 'machine-id',
+                                                    label: t('settings.license.machine_id'),
+                                                    children: <Text strong copyable>{queryMachineId.data}</Text>,
+                                                },
+                                            ]}
+                                        />
                                     </div>
                                 }
                                 {bindingType === 'domain' &&
@@ -346,47 +351,59 @@ const LicenseSetting = () => {
                         <Card>
                             <Descriptions title={t('settings.license.info')}
                                           column={1}
+                                          items={[
+                                              {
+                                                  key: 'type',
+                                                  label: t('settings.license.type.label'),
+                                                  children: <Text strong>{renderType(queryLicense.data?.type)}</Text>,
+                                              },
+                                              {
+                                                  key: 'binding-type',
+                                                  label: t('settings.license.license_binding_type'),
+                                                  children: <Text strong>{renderBindingType(queryLicense.data?.bindingType)}</Text>,
+                                              },
+                                              ...(hasText(queryLicense.data?.name) ? [{
+                                                  key: 'name',
+                                                  label: t('settings.license.name'),
+                                                  children: <Text strong>{queryLicense.data?.name}</Text>,
+                                              }] : []),
+                                              ...(hasText(queryLicense.data?.userName) ? [{
+                                                  key: 'user-name',
+                                                  label: t('settings.license.user_name'),
+                                                  children: <Text strong>{queryLicense.data?.userName}</Text>,
+                                              }] : []),
+                                              queryLicense.data?.bindingType === 'domain' ? {
+                                                  key: 'domain',
+                                                  label: t('settings.license.domain'),
+                                                  children: <Text strong>{queryLicense.data?.domain || '-'}</Text>,
+                                              } : {
+                                                  key: 'machine-id',
+                                                  label: t('settings.license.machine_id'),
+                                                  children: <Text strong>{queryLicense.data?.machineId}</Text>,
+                                              },
+                                              {
+                                                  key: 'asset-count',
+                                                  label: t('settings.license.max.asset_count'),
+                                                  children: <Text strong>{renderCount(queryLicense.data?.asset)}</Text>,
+                                              },
+                                              {
+                                                  key: 'user-count',
+                                                  label: t('settings.license.max.user_count'),
+                                                  children: <Text strong>{renderCount(queryLicense.data?.user)}</Text>,
+                                              },
+                                              {
+                                                  key: 'expired-at',
+                                                  label: t('settings.license.expired_at'),
+                                                  children: <Text strong>{renderTime(queryLicense.data?.expired)}</Text>,
+                                              },
+                                          ]}
                                           styles={{
                                               label: {
                                                   justifyContent: isMobile ? 'flex-start' : 'flex-end',
                                                   minWidth: isMobile ? 100 : 200,
                                               }
                                           }}
-                            >
-                                <Descriptions.Item label={t('settings.license.type.label')}>
-                                    <Text strong>{renderType(queryLicense.data?.type)}</Text>
-                                </Descriptions.Item>
-                                <Descriptions.Item label={t('settings.license.license_binding_type')}>
-                                    <Text strong>{renderBindingType(queryLicense.data?.bindingType)}</Text>
-                                </Descriptions.Item>
-                                {hasText(queryLicense.data?.name) &&
-                                    <Descriptions.Item label={t('settings.license.name')}>
-                                        <Text strong>{queryLicense.data?.name}</Text>
-                                    </Descriptions.Item>
-                                }
-                                {hasText(queryLicense.data?.userName) &&
-                                    <Descriptions.Item label={t('settings.license.user_name')}>
-                                        <Text strong>{queryLicense.data?.userName}</Text>
-                                    </Descriptions.Item>
-                                }
-                                {queryLicense.data?.bindingType === 'domain' ?
-                                    <Descriptions.Item label={t('settings.license.domain')}>
-                                        <Text strong>{queryLicense.data?.domain || '-'}</Text>
-                                    </Descriptions.Item> :
-                                    <Descriptions.Item label={t('settings.license.machine_id')}>
-                                        <Text strong>{queryLicense.data?.machineId}</Text>
-                                    </Descriptions.Item>
-                                }
-                                <Descriptions.Item label={t('settings.license.max.asset_count')}>
-                                    <Text strong>{renderCount(queryLicense.data?.asset)}</Text>
-                                </Descriptions.Item>
-                                <Descriptions.Item label={t('settings.license.max.user_count')}>
-                                    <Text strong>{renderCount(queryLicense.data?.user)}</Text>
-                                </Descriptions.Item>
-                                <Descriptions.Item label={t('settings.license.expired_at')}>
-                                    <Text strong>{renderTime(queryLicense.data?.expired)}</Text>
-                                </Descriptions.Item>
-                            </Descriptions>
+                            />
                         </Card>
                     </Spin>
                 </Col>

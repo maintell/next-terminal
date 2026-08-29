@@ -136,7 +136,7 @@ const GatewayGroupDrawer: React.FC<Props> = ({
                                 <Form.Item key={gatewayType} name={[field.name, 'gatewayId']} label={isSsh ? t('menus.gateway.submenus.ssh_gateway') : t('menus.gateway.submenus.agent_gateway')} rules={[{
                                   required: true
                                 }]}>
-                                  <QuerySelect showSearch params={{gatewayType}} request={isSsh ? sshGatewayRequest : agentGatewayRequest} />
+                                  <QuerySelect queryKey={['gateway-group-members', gatewayType]} showSearch params={{gatewayType}} request={isSsh ? sshGatewayRequest : agentGatewayRequest} />
                                 </Form.Item>
                               );
                             }}

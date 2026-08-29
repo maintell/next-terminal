@@ -1,9 +1,8 @@
-import React, {useId, useState} from 'react';
+import {useId, useState} from 'react';
 import AccessTerminalBulkItem from "@/pages/access/AccessTerminalBulkItem";
 import {FolderCodeIcon, TerminalIcon} from "lucide-react";
 import eventEmitter from "@/api/core/event-emitter";
 import {ScrollArea} from "@/components/ui/scroll-area";
-import {useWindowSize} from "react-use";
 import SnippetSheet from "@/pages/access/SnippetSheet";
 
 interface Props {
@@ -16,13 +15,11 @@ const AccessTerminalBulk = ({assetIds, securityToken}: Props) => {
     const tabId = useId();
     let [inputValue, setInputValue] = useState('');
 
-    let {height} = useWindowSize();
     // 添加一个状态来记录哪些元素是隐藏的
     const [hiddenAssetIds, setHiddenAssetIds] = useState<string[]>([]);
     let [snippetOpen, setSnippetOpen] = useState(false);
 
     const handleCommand = () => {
-        // console.log(`input [${inputValue}]`)
         if (inputValue === '') {
             eventEmitter.emit(`WS:MESSAGE:${tabId}`, '\r');
             return
@@ -31,14 +28,14 @@ const AccessTerminalBulk = ({assetIds, securityToken}: Props) => {
         eventEmitter.emit(`WS:MESSAGE:${tabId}`, inputValue)
     }
 
-    const handleClose = React.useCallback((assetId: string) => {
+    const handleClose = (assetId: string) => {
         // 更新隐藏元素的状态
         setHiddenAssetIds(prev => [...prev, assetId]);
-    }, []);
+    };
 
     return (
-        <div className={'p-4'}>
-            <div className={'relative mb-4'}>
+        <div className={'flex h-full min-h-0 flex-col p-4'}>
+            <div className={'relative mb-4 shrink-0'}>
                 <div className={'absolute inset-y-0 grid w-10 place-content-center'}>
                     <TerminalIcon className={'w-4 h-4 text-white'}/>
                 </div>
@@ -62,10 +59,8 @@ const AccessTerminalBulk = ({assetIds, securityToken}: Props) => {
                     />
                 </div>
             </div>
-            <ScrollArea style={{
-                height: height - 164,
-            }}>
-                <div className={'grid grid-cols-2 gap-4'}>
+            <ScrollArea className="min-h-0 flex-1">
+                <div className={'grid grid-cols-1 gap-4 xl:grid-cols-2'}>
                     {assetIds.filter(assetId => !hiddenAssetIds.includes(assetId)).map((assetId: string) => {
                         return <div key={assetId}>
                             <AccessTerminalBulkItem assetId={assetId}

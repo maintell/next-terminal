@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {useQuery} from "@tanstack/react-query";
 import portalApi, {DatabaseAssetUser} from "@/api/portal-api";
 import {Button, Empty, Tag, Typography} from "antd";
@@ -15,7 +15,6 @@ const {Paragraph} = Typography;
 const DatabaseAssetFacadePage = () => {
     const {t} = useTranslation();
     const {isMobile} = useMobile();
-    const [assets, setAssets] = useState<DatabaseAssetUser[]>([]);
     const [search, setSearch] = useState<string>('');
     const [typeFilter, setTypeFilter] = useState<string>('');
 
@@ -32,14 +31,8 @@ const DatabaseAssetFacadePage = () => {
         gcTime: 10 * 60 * 1000,
     });
 
-    useEffect(() => {
-        if (queryAssets.data) {
-            setAssets(queryAssets.data);
-        }
-    }, [queryAssets.data]);
-
     const searchValue = search.trim().toLowerCase();
-    let filteredAssets = assets || [];
+    let filteredAssets = queryAssets.data ?? [];
     if (strings.hasText(searchValue)) {
         filteredAssets = filteredAssets.filter(item => {
             if (item.name.toLowerCase().includes(searchValue)) {

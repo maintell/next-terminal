@@ -56,7 +56,7 @@ const OidcSetting = ({
                 }]}>
                     <Input placeholder={t('settings.oidc.scopes_placeholder')} disabled={!enabled}/>
                 </Form.Item>
-                <ProFormTreeSelect name="oidc-department" label={t('settings.oidc.department')}
+                <ProFormTreeSelect queryKey={['oidc-departments']} name="oidc-department" label={t('settings.oidc.department')}
                                    placeholder={t('settings.oidc.department_placeholder')} disabled={!enabled}
                                    fieldProps={{
                                        showSearch: true,

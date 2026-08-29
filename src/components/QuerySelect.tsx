@@ -4,15 +4,23 @@ import {useSelectRequest} from '@/hook/use-antd-form-query';
 
 type QueryKeyPart = string | number | boolean | null | undefined | Record<string, unknown> | QueryKeyPart[];
 
-type QuerySelectProps = SelectProps & {
-    request?: (params?: Record<string, any>) => Promise<any[]>;
-    params?: Record<string, any>;
+type QuerySelectRequestProps = {
+    request: (params?: Record<string, any>) => Promise<any[]>;
+    queryKey: QueryKeyPart[];
+};
+
+type QuerySelectStaticProps = {
+    request?: undefined;
     queryKey?: QueryKeyPart[];
+};
+
+type QuerySelectProps = SelectProps & (QuerySelectRequestProps | QuerySelectStaticProps) & {
+    params?: Record<string, any>;
 };
 
 const QuerySelect = ({request, params, queryKey, options, loading, optionFilterProp = 'label', ...props}: QuerySelectProps) => {
     const query = useSelectRequest(
-        ['query-select', ...(queryKey ?? []), request?.toString()],
+        ['query-select', ...(queryKey ?? [])],
         request,
         params,
     );

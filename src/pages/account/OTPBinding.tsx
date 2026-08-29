@@ -14,7 +14,7 @@ import {useTranslation} from "react-i18next";
 
 const {Paragraph} = Typography;
 
-export interface Binding2faProps {
+interface Binding2faProps {
     refetch: () => void
 }
 

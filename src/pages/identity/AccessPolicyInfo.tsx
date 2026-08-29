@@ -26,11 +26,23 @@ const AccessPolicyInfo = ({active, id}: AccessPolicyInfoProps) => {
     return (
         <Disabled disabled={!hasPremiumFeatures}>
             <Spin spinning={groupQuery.isLoading}>
-                <Descriptions column={1}>
-                    <Descriptions.Item label={t('general.name')}>{group?.name}</Descriptions.Item>
-                    <Descriptions.Item label={t('general.description')}>{group?.description || '-'}</Descriptions.Item>
-                    <Descriptions.Item label={t('identity.policy.mode.label')}>
-                        {group?.mode === 'whitelist' ? (
+                <Descriptions
+                    column={1}
+                    items={[
+                        {
+                            key: 'name',
+                            label: t('general.name'),
+                            children: group?.name,
+                        },
+                        {
+                            key: 'description',
+                            label: t('general.description'),
+                            children: group?.description || '-',
+                        },
+                        {
+                            key: 'mode',
+                            label: t('identity.policy.mode.label'),
+                            children: group?.mode === 'whitelist' ? (
                             <Tag icon={<SafetyCertificateOutlined/>} color="blue">
                                 {t('identity.policy.mode.whitelist')}
                             </Tag>
@@ -38,17 +50,24 @@ const AccessPolicyInfo = ({active, id}: AccessPolicyInfoProps) => {
                             <Tag icon={<StopOutlined/>} color="orange">
                                 {t('identity.policy.mode.blacklist')}
                             </Tag>
-                        )}
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('general.status')}>
-                        <Tag color={group?.enabled ? 'success' : 'default'}>
-                            {group?.enabled ? t('general.enabled') : t('general.disabled')}
-                        </Tag>
-                    </Descriptions.Item>
-                    <Descriptions.Item label={t('general.created_at')}>
-                        {group?.createdAt ? times.format(group.createdAt) : '-'}
-                    </Descriptions.Item>
-                </Descriptions>
+                            ),
+                        },
+                        {
+                            key: 'status',
+                            label: t('general.status'),
+                            children: (
+                                <Tag color={group?.enabled ? 'success' : 'default'}>
+                                    {group?.enabled ? t('general.enabled') : t('general.disabled')}
+                                </Tag>
+                            ),
+                        },
+                        {
+                            key: 'created-at',
+                            label: t('general.created_at'),
+                            children: group?.createdAt ? times.format(group.createdAt) : '-',
+                        },
+                    ]}
+                />
             </Spin>
         </Disabled>
     );

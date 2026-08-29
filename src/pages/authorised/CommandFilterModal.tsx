@@ -3,7 +3,7 @@ import {Modal, Form, Input} from "antd";
 import commandFilterApi from "../../api/command-filter-api.js";
 import { useTranslation } from "react-i18next";
 const api = commandFilterApi;
-export interface CommandFilterProps {
+interface CommandFilterProps {
   open: boolean;
   handleOk: (values: any) => void;
   handleCancel: () => void;

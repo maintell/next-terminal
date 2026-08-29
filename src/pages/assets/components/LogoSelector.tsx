@@ -1,9 +1,8 @@
 import React from 'react';
-import {App, Form, Popover, Upload} from "antd";
+import {App, Form, Popover, Upload, type UploadProps} from "antd";
 import {useQuery} from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { TrashIcon, UploadIcon } from "lucide-react";
-import {RcFile} from "antd/es/upload";
 
 import assetsApi from "@/api/asset-api";
 
@@ -32,7 +31,7 @@ const LogoSelector: React.FC<LogoSelectorProps> = ({ logo, onLogoChange, extra }
         reader.readAsDataURL(file);
     };
 
-    const beforeUpload = (file: RcFile) => {
+    const beforeUpload: UploadProps['beforeUpload'] = (file) => {
         if (file.size > 1024 * 1024) {
             message.error('Image must be smaller than 1MB!');
             return false;

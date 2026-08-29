@@ -2,10 +2,10 @@ import requests, {baseUrl} from "./core/requests";
 import {setCurrentUser} from "@/utils/permission";
 import eventEmitter from "@/api/core/event-emitter";
 import {browserDownload} from "@/utils/utils";
-// @ts-ignore
-import {PublicKeyCredentialCreationOptionsJSON} from "@simplewebauthn/browser/script/types";
-// @ts-ignore
-import type {PublicKeyCredentialRequestOptionsJSON} from "@simplewebauthn/browser/esm/types";
+import type {startAuthentication, startRegistration} from "@simplewebauthn/browser";
+
+type PublicKeyCredentialCreationOptionsJSON = Parameters<typeof startRegistration>[0]['optionsJSON'];
+type PublicKeyCredentialRequestOptionsJSON = Parameters<typeof startAuthentication>[0]['optionsJSON'];
 
 export interface AccessTokenItem {
     id: string;

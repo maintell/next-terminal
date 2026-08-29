@@ -1,7 +1,6 @@
 import {ReloadOutlined} from '@ant-design/icons';
-import type {DrawerProps} from 'antd';
+import type {DrawerProps, TableColumnsType} from 'antd';
 import {Button, Drawer, Progress, Table, Tag, Tooltip} from 'antd';
-import type {ColumnsType} from 'antd/es/table';
 import {X, XCircle} from 'lucide-react';
 import {useTranslation} from 'react-i18next';
 import {renderSize} from '@/utils/utils';
@@ -22,7 +21,7 @@ export default function UploadTaskDrawer({fsId, open, onClose, getContainer}: Pr
     const completedRecords = records.filter(task => task.status === 'success').length;
     const errorRecords = records.filter(task => task.status === 'error' || task.status === 'interrupted').length;
 
-    const columns: ColumnsType<UploadTaskRecord> = [
+    const columns: TableColumnsType<UploadTaskRecord> = [
         {
             title: t('audit.filename'),
             dataIndex: 'name',

@@ -1,7 +1,7 @@
 import React, {CSSProperties, forwardRef} from 'react';
 import {Button} from "antd";
 
-export interface NButtonProps {
+interface NButtonProps {
     href?: string;
     target?: string;
     danger?: boolean;

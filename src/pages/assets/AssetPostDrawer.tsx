@@ -298,6 +298,7 @@ const AssetPostDrawer = ({
                 </Form.Item>
 
                 <ProFormTreeSelect name="groupId" label={t('assets.group')}
+                                   queryKey={['asset-groups']}
                                    allowClear
                                    request={async () => {
                                        let tree = await assetsApi.getGroups();
@@ -370,7 +371,7 @@ const AssetPostDrawer = ({
             {renderProtocol(protocol)}
 
             <Form.Item label={t('assets.tags')} name='tags'>
-                <QuerySelect mode={'tags'} showSearch request={async () => {
+                <QuerySelect queryKey={['asset-tags']} mode={'tags'} showSearch request={async () => {
                     let tags = await assetsApi.getTags();
                     return tags.map(tag => ({
                         label: tag,

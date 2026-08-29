@@ -1,9 +1,10 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {Alert, Avatar, Button, Card, Space, Spin, Typography} from 'antd';
 import {CheckCircleOutlined, CloseCircleOutlined, SafetyOutlined, UserOutlined} from '@ant-design/icons';
 import {useNavigate, useSearchParams} from 'react-router-dom';
-import accountApi, {AccountInfo, OAuthConsentPageData} from '@/api/account-api';
+import accountApi from '@/api/account-api';
 import {useTranslation} from "react-i18next";
+import {useMutation, useQuery} from '@tanstack/react-query';
 
 const {Title, Text} = Typography;
 
@@ -11,55 +12,35 @@ const OAuthConsent: React.FC = () => {
     const {t} = useTranslation();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-    const [data, setData] = useState<OAuthConsentPageData | null>(null);
-    const [userInfo, setUserInfo] = useState<AccountInfo | null>(null);
-    const [errorKey, setErrorKey] = useState<string | null>(null);
-
     const authorizeId = searchParams.get('authorize_id') || '';
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                if (!authorizeId) {
-                    setErrorKey('account.oauth_consent.load_error');
-                    setLoading(false);
-                    return;
-                }
-                const [pageData, account] = await Promise.all([
-                    accountApi.getOAuthConsentPage(authorizeId),
-                    accountApi.getUserInfo(),
-                ]);
-                setData(pageData);
-                setUserInfo(account);
-            } catch (e) {
-                console.error('Failed to load OAuth consent page:', e);
-                setErrorKey('account.oauth_consent.load_error');
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
-    }, [authorizeId]);
+    const consentQuery = useQuery({
+        queryKey: ['oauth-consent', authorizeId],
+        queryFn: async () => {
+            const [data, userInfo] = await Promise.all([
+                accountApi.getOAuthConsentPage(authorizeId),
+                accountApi.getUserInfo(),
+            ]);
+            return {data, userInfo};
+        },
+        enabled: !!authorizeId,
+    });
 
-    const submit = async (approve: boolean) => {
-        if (!authorizeId) return;
-        setSubmitting(true);
-        try {
-            const result = await accountApi.submitOAuthConsent(authorizeId, approve);
+    const submitMutation = useMutation({
+        mutationFn: (approve: boolean) => accountApi.submitOAuthConsent(authorizeId, approve),
+        onSuccess: (result) => {
             if (result && result.redirectUrl) {
                 window.location.replace(result.redirectUrl);
             } else {
                 navigate('/');
             }
-        } catch (e) {
-            console.error('OAuth consent submission failed:', e);
-            setSubmitting(false);
-        }
-    };
+        },
+    });
 
-    if (loading) {
+    const data = consentQuery.data?.data;
+    const userInfo = consentQuery.data?.userInfo;
+
+    if (consentQuery.isLoading) {
         return (
             <div className="flex justify-center items-center min-h-screen p-4">
                 <Spin size="large" description={t('general.loading')}/>
@@ -67,12 +48,12 @@ const OAuthConsent: React.FC = () => {
         );
     }
 
-    if (errorKey || !data) {
+    if (!authorizeId || consentQuery.isError || !data) {
         return (
             <div className="flex justify-center items-center min-h-screen p-4">
                 <Alert
                     title={t('general.error')}
-                    description={errorKey ? t(errorKey) : t('account.oauth_consent.load_error')}
+                    description={t('account.oauth_consent.load_error')}
                     type="error"
                     showIcon
                     style={{maxWidth: 400, width: '100%'}}
@@ -179,16 +160,16 @@ const OAuthConsent: React.FC = () => {
                     <Space className="w-full justify-end" size="middle">
                         <Button
                             icon={<CloseCircleOutlined/>}
-                            onClick={() => submit(false)}
-                            disabled={submitting}
+                            onClick={() => submitMutation.mutate(false)}
+                            disabled={submitMutation.isPending}
                         >
                             {t('account.oauth_consent.deny')}
                         </Button>
                         <Button
                             type="primary"
                             icon={<CheckCircleOutlined/>}
-                            onClick={() => submit(true)}
-                            loading={submitting}
+                            onClick={() => submitMutation.mutate(true)}
+                            loading={submitMutation.isPending}
                         >
                             {t('account.oauth_consent.allow')}
                         </Button>

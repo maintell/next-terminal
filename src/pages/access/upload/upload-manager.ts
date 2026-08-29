@@ -28,7 +28,7 @@ type Listener = (tasks: UploadTaskRecord[]) => void;
 const terminalStatuses = new Set<UploadTaskStatus>(['success', 'error', 'cancelled', 'interrupted']);
 const activeStatuses = new Set<UploadTaskStatus>(['queued', 'retrying', 'initializing', 'uploading', 'transmitting']);
 
-export function calculateOverallPercent(clientPercent: number, remotePercent: number) {
+function calculateOverallPercent(clientPercent: number, remotePercent: number) {
     const normalizedClient = Math.min(Math.max(clientPercent, 0), 100);
     const normalizedRemote = Math.min(Math.max(remotePercent, 0), 100);
     return Number((normalizedClient * 0.5 + normalizedRemote * 0.5).toFixed(2));

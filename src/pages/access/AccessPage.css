@@ -2,6 +2,11 @@
     margin: 0 !important;
 }
 
+.access-container > .ant-tabs > .ant-tabs-body-holder {
+    min-height: 0;
+    overflow: hidden;
+}
+
 .access-container .ant-tabs-nav-list .ant-tabs-tab{
     border-radius: 0 !important;
     margin: 0 !important;

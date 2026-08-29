@@ -127,6 +127,7 @@ const GatewayChainEditor = ({name = 'gatewayChain', disabled}: GatewayChainEdito
                                         rules={[{required: true}]}
                                     >
                                         <QuerySelect
+                                            queryKey={['gateway-chain-members', gatewayType]}
                                             showSearch
                                             disabled={!gatewayType}
                                             placeholder={gatewayLabel(gatewayType)}

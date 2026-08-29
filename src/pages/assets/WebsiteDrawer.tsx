@@ -23,7 +23,7 @@ import dayjs from "dayjs";
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from "react-i18next";
 
-export interface WebsiteDrawerProps {
+interface WebsiteDrawerProps {
   open: boolean;
   onClose: () => void;
   onSuccess?: () => void;

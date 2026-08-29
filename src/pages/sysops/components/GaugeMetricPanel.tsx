@@ -4,7 +4,7 @@ import {memo, useId} from "react";
 
 export type GaugeStatus = "ok" | "warning" | "critical";
 
-export interface GaugeMetricPanelProps {
+interface GaugeMetricPanelProps {
     icon: ReactNode;
     title: string;
     value: number;

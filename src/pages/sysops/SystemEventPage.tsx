@@ -170,47 +170,30 @@ const SystemEventPage = () => {
             width={860}
             destroyOnHidden
         >
-            <Descriptions column={2} bordered size="small">
-                <Descriptions.Item label={t('sysops.system_event.id')} span={2}>
-                    <Text copyable>{detail?.id || '-'}</Text>
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.type')}>
-                    {detail ? eventTypeLabel(detail.type, t) : '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.severity')}>
-                    {detail ? <Tag color={severityColor(detail.severity)}>{severityLabel(detail.severity, t)}</Tag> : '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.category')}>
-                    {detail ? t(`sysops.system_event.categories.${detail.category}`, detail.category) : '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.source')}>
-                    {detail?.source || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.actor')}>
-                    {renderActor(detail)}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.target')}>
-                    {detail?.target || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.ip')}>
-                    {detail?.ip || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.created_at')}>
-                    {detail?.createdAt ? new Date(detail.createdAt).toLocaleString() : '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.title_field')} span={2}>
-                    {detail?.title || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.summary')} span={2}>
-                    {detail?.summary || '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.args')} span={2}>
-                    <pre className="m-0 max-h-60 overflow-auto text-xs">{formatJSON(detail?.args)}</pre>
-                </Descriptions.Item>
-                <Descriptions.Item label={t('sysops.system_event.metadata')} span={2}>
-                    <pre className="m-0 max-h-60 overflow-auto text-xs">{formatJSON(detail?.metadata)}</pre>
-                </Descriptions.Item>
-            </Descriptions>
+            <Descriptions
+                column={2}
+                bordered
+                size="small"
+                items={[
+                    {key: 'id', label: t('sysops.system_event.id'), span: 2, children: <Text copyable>{detail?.id || '-'}</Text>},
+                    {key: 'type', label: t('sysops.system_event.type'), children: detail ? eventTypeLabel(detail.type, t) : '-'},
+                    {
+                        key: 'severity',
+                        label: t('sysops.system_event.severity'),
+                        children: detail ? <Tag color={severityColor(detail.severity)}>{severityLabel(detail.severity, t)}</Tag> : '-',
+                    },
+                    {key: 'category', label: t('sysops.system_event.category'), children: detail ? t(`sysops.system_event.categories.${detail.category}`, detail.category) : '-'},
+                    {key: 'source', label: t('sysops.system_event.source'), children: detail?.source || '-'},
+                    {key: 'actor', label: t('sysops.system_event.actor'), children: renderActor(detail)},
+                    {key: 'target', label: t('sysops.system_event.target'), children: detail?.target || '-'},
+                    {key: 'ip', label: t('sysops.system_event.ip'), children: detail?.ip || '-'},
+                    {key: 'created-at', label: t('sysops.system_event.created_at'), children: detail?.createdAt ? new Date(detail.createdAt).toLocaleString() : '-'},
+                    {key: 'title', label: t('sysops.system_event.title_field'), span: 2, children: detail?.title || '-'},
+                    {key: 'summary', label: t('sysops.system_event.summary'), span: 2, children: detail?.summary || '-'},
+                    {key: 'args', label: t('sysops.system_event.args'), span: 2, children: <pre className="m-0 max-h-60 overflow-auto text-xs">{formatJSON(detail?.args)}</pre>},
+                    {key: 'metadata', label: t('sysops.system_event.metadata'), span: 2, children: <pre className="m-0 max-h-60 overflow-auto text-xs">{formatJSON(detail?.metadata)}</pre>},
+                ]}
+            />
             <Space style={{marginTop: 16}}>
                 <Button onClick={() => setSelectedId(undefined)}>{t('actions.cancel')}</Button>
             </Space>

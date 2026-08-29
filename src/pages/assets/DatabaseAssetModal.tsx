@@ -11,7 +11,7 @@ import ConnectionModeFields from "@/pages/assets/components/ConnectionModeFields
 
 const api = databaseAssetApi;
 
-export interface DatabaseAssetModalProps {
+interface DatabaseAssetModalProps {
     open: boolean;
     handleOk: (values: any) => void;
     handleCancel: () => void;

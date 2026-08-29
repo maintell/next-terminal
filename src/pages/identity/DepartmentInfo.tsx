@@ -35,33 +35,54 @@ const DepartmentInfo = ({active, id}: DepartmentInfoProps) => {
             <Descriptions
                 column={1}
                 title={t('actions.detail')}
-            >
-                <Descriptions.Item label={t('general.name')}>{department?.name}</Descriptions.Item>
-                <Descriptions.Item label={t('identity.department.parent')}>
-                    {!department?.parentId ? (
-                        <Tag color="green">{t('identity.department.root')}</Tag>
-                    ) : parentDepartment ? (
-                        <Tag color="blue">{parentDepartment.name}</Tag>
-                    ) : (
-                        <Tag color="default">{department.parentId}</Tag>
-                    )}
-                </Descriptions.Item>
-                <Descriptions.Item label={t('assets.sort')}>{department?.weight}</Descriptions.Item>
-                <Descriptions.Item label={t('general.created_at')}>
-                    {department?.createdAt ? times.format(department.createdAt) : '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="ID">{department?.id}</Descriptions.Item>
-                <Descriptions.Item label={t('actions.authorized')}>
-                    <Space size={12} wrap>
-                        <NLink to={`/authorised-asset?departmentId=${id}`}>
-                            {`${t('menus.resource.submenus.asset')}${t('actions.authorized')}`}
-                        </NLink>
-                        <NLink to={`/authorised-website?departmentId=${id}`}>
-                            {`${t('menus.resource.submenus.website')}${t('actions.authorized')}`}
-                        </NLink>
-                    </Space>
-                </Descriptions.Item>
-            </Descriptions>
+                items={[
+                    {
+                        key: 'name',
+                        label: t('general.name'),
+                        children: department?.name,
+                    },
+                    {
+                        key: 'parent',
+                        label: t('identity.department.parent'),
+                        children: !department?.parentId ? (
+                            <Tag color="green">{t('identity.department.root')}</Tag>
+                        ) : parentDepartment ? (
+                            <Tag color="blue">{parentDepartment.name}</Tag>
+                        ) : (
+                            <Tag color="default">{department.parentId}</Tag>
+                        ),
+                    },
+                    {
+                        key: 'weight',
+                        label: t('assets.sort'),
+                        children: department?.weight,
+                    },
+                    {
+                        key: 'created-at',
+                        label: t('general.created_at'),
+                        children: department?.createdAt ? times.format(department.createdAt) : '-',
+                    },
+                    {
+                        key: 'id',
+                        label: 'ID',
+                        children: department?.id,
+                    },
+                    {
+                        key: 'authorized',
+                        label: t('actions.authorized'),
+                        children: (
+                            <Space size={12} wrap>
+                                <NLink to={`/authorised-asset?departmentId=${id}`}>
+                                    {`${t('menus.resource.submenus.asset')}${t('actions.authorized')}`}
+                                </NLink>
+                                <NLink to={`/authorised-website?departmentId=${id}`}>
+                                    {`${t('menus.resource.submenus.website')}${t('actions.authorized')}`}
+                                </NLink>
+                            </Space>
+                        ),
+                    },
+                ]}
+            />
         </Spin>
     );
 };

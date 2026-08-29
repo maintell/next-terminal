@@ -19,7 +19,7 @@ MemoryStickIcon,
 MonitorCogIcon,
 MonitorPlayIcon
 } from "lucide-react";
-import { useEffect,useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from "react-i18next";
 import { Pie,PieChart } from "recharts";
 
@@ -86,7 +86,6 @@ const AccessStats = ({sessionId, open}: Props) => {
 
     let {t} = useTranslation();
 
-    let [stats, setStats] = useState<Stats>(defaultStats);
     let [hideVNic, setHideVNic] = useState(true);
 
     let statsQuery = useQuery({
@@ -98,20 +97,14 @@ const AccessStats = ({sessionId, open}: Props) => {
         enabled: open && strings.hasText(sessionId),
     });
 
-    useEffect(() => {
-        if (statsQuery.data) {
-            setStats(statsQuery.data);
-        }
-    }, [statsQuery.data]);
+    const stats = statsQuery.data ?? defaultStats as Stats;
 
     const ready = () => {
         return stats.info.id !== '';
     }
 
     return (
-        <ScrollArea style={{
-            height: 'calc(100vh - 80px)',
-        }}>
+        <ScrollArea className="h-full">
             <div className={'space-y-2 p-2'}>
                 <div className={'border rounded-md p-4'}>
                     <div className={'flex gap-2 items-center'}>

@@ -86,6 +86,7 @@ const ConnectionModeFields = ({
                         rules={[{required: true, message: t('assets.proxy_required')}]}
                     >
                         <QuerySelect
+                            queryKey={['gateway-groups']}
                             showSearch
                             request={async () => {
                                 const items = await networkProxyApi.getAll();

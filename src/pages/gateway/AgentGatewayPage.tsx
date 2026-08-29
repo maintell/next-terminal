@@ -126,7 +126,6 @@ const AgentGatewayPage = () => {
     });
 
     const handleDragSortEnd = (_beforeIndex: number, afterIndex: number, newDataSource: AgentGateway[]) => {
-        // console.log('排序操作', {beforeIndex, afterIndex});
 
         // 立即更新本地状态，避免闪烁
         setDataSource(newDataSource);

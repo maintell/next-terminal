@@ -1,96 +1,58 @@
-import { baseWebSocketUrl } from "@/api/core/requests";
-import { Message,MessageTypeData } from "@/pages/access/Terminal";
-import { maybe } from "@/utils/maybe";
-import { FitAddon } from "@xterm/addon-fit";
-import { Terminal } from "@xterm/xterm";
-import "@xterm/xterm/css/xterm.css";
-import qs from "qs";
-import { useEffect } from 'react';
-import { useSearchParams } from "react-router-dom";
+import {baseWebSocketUrl} from '@/api/core/requests';
+import {Message, MessageTypeData} from '@/pages/access/Terminal';
+import {TerminalRuntime} from '@/pages/access/terminal/terminal-runtime';
+import {maybe} from '@/utils/maybe';
+import '@xterm/xterm/css/xterm.css';
+import qs from 'qs';
+import {useEffect, useRef} from 'react';
+import {useSearchParams} from 'react-router-dom';
 
 const TerminalMonitor = () => {
-
-    const [searchParams, _setSearchParams] = useSearchParams();
-    let sessionId = maybe(searchParams.get('sessionId'), '');
-
-    const writeErrorMessage = (term: Terminal, message: string) => {
-        term.writeln(`\x1B[1;3;31m${message}\x1B[0m `);
-    }
-
-    const init = (term: Terminal, sessionId: string) => {
-        let elementTerm = document.getElementById('terminal');
-        if (!elementTerm) {
-            return
-        }
-        term.open(elementTerm);
-        let fitAddon = new FitAddon();
-        term.loadAddon(fitAddon);
-        fitAddon.fit();
-        term.focus();
-
-        term.writeln('trying to connect to the server ...');
-        let cols = term.cols;
-        let rows = term.rows;
-        let params = {
-            'cols': cols,
-            'rows': rows,
-            'sessionId': sessionId,
-        };
-
-        let paramStr = qs.stringify(params);
-
-        let websocket = new WebSocket(`${baseWebSocketUrl()}/admin/sessions/${sessionId}/terminal-monitor?${paramStr}`);
-        websocket.onopen = (_e => {
-            term.clear();
-        });
-
-        websocket.onerror = (_e) => {
-            writeErrorMessage(term, `websocket error`);
-        }
-
-        websocket.onclose = (_e) => {
-            writeErrorMessage(term, `connection is closed.`);
-        }
-
-        websocket.onmessage = (e) => {
-            let msg = Message.parse(e.data);
-            switch (msg.type) {
-                case MessageTypeData:
-                    term.write(msg.content);
-                    break;
-            }
-        }
-        return websocket;
-    }
+    const [searchParams] = useSearchParams();
+    const sessionId = maybe(searchParams.get('sessionId'), '');
+    const terminalElementRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        let term = new Terminal({
-            fontFamily: 'monaco, Consolas, "Lucida Console", monospace',
-            fontSize: 15,
-            theme: {
-                background: '#141414'
+        const element = terminalElementRef.current;
+        if (!element) {
+            return;
+        }
+        const runtime = new TerminalRuntime({
+            container: element,
+            readOnly: true,
+            sendResize: false,
+            pingInterval: 0,
+            terminalOptions: {
+                fontFamily: 'monaco, Consolas, "Lucida Console", monospace',
+                fontSize: 15,
+                theme: {background: '#141414'},
             },
         });
-
-        let websocket = init(term, sessionId);
-
-        return () => {
-            term.dispose();
-            if (websocket) {
-                websocket.close(3886, 'client quit');
-            }
-        }
-
-    }, []);
+        runtime.terminal.writeln('trying to connect to the server ...');
+        const params = qs.stringify({
+            cols: runtime.terminal.cols,
+            rows: runtime.terminal.rows,
+            sessionId,
+        });
+        runtime.connect(`${baseWebSocketUrl()}/admin/sessions/${sessionId}/terminal-monitor?${params}`, {
+            onOpen: () => runtime.terminal.clear(),
+            onMessage: (event) => {
+                const message = Message.parse(event.data);
+                if (message.type === MessageTypeData) {
+                    runtime.terminal.write(message.content);
+                }
+            },
+            onError: () => runtime.terminal.writeln('\x1B[1;3;31mwebsocket error\x1B[0m '),
+            onClose: () => runtime.terminal.writeln('\x1B[1;3;31mconnection is closed.\x1B[0m '),
+        });
+        runtime.focus();
+        return () => runtime.dispose();
+    }, [sessionId]);
 
     return (
-        <div id='terminal'
-             style={{
-                 overflow: 'hidden',
-                 padding: 8,
-                 backgroundColor: '#141414',
-             }}
-             className={'h-screen w-screen'}
+        <div
+            ref={terminalElementRef}
+            className="h-dvh w-screen overflow-hidden bg-[#141414] p-2"
         />
     );
 };

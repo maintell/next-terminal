@@ -5,7 +5,7 @@ import {ExclamationCircleOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
 
-export interface UnBinding2faProps {
+interface UnBinding2faProps {
     refetch: () => void
     forceReauth?: boolean
 }

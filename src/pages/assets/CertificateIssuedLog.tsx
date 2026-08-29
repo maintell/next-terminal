@@ -5,6 +5,7 @@ import { useEffect,useRef,useState } from 'react';
 import { useTranslation } from "react-i18next";
 
 const {Text} = Typography;
+const maxLogEntries = 5000;
 
 interface Props {
     open: boolean;
@@ -26,6 +27,8 @@ const CertificateIssuedLog = ({open, onClose}: Props) => {
     const [autoScroll, setAutoScroll] = useState(true);
     const bottomRef = useRef<HTMLDivElement>(null);
     const logContainerRef = useRef<HTMLDivElement>(null);
+    const pausedRef = useRef(isPaused);
+    pausedRef.current = isPaused;
 
     // 解析日志条目
     const parseLogEntry = (logText: string): LogEntry => {
@@ -124,9 +127,9 @@ const CertificateIssuedLog = ({open, onClose}: Props) => {
         const eventSource = new EventSource(`${baseUrl()}/admin/certificates/issued/log`);
 
         eventSource.onmessage = (event) => {
-            if (!isPaused) {
+            if (!pausedRef.current) {
                 const logEntry = parseLogEntry(event.data);
-                setLogs((prevLogs) => [...prevLogs, logEntry]);
+                setLogs((prevLogs) => [...prevLogs.slice(-(maxLogEntries - 1)), logEntry]);
             }
         };
 
@@ -138,7 +141,7 @@ const CertificateIssuedLog = ({open, onClose}: Props) => {
         return () => {
             eventSource.close();
         };
-    }, [open, isPaused]);
+    }, [open]);
 
     useEffect(() => {
         if (autoScroll && !isPaused) {
@@ -171,7 +174,7 @@ const CertificateIssuedLog = ({open, onClose}: Props) => {
 
     // 切换暂停/继续
     const togglePause = () => {
-        setIsPaused(!isPaused);
+        setIsPaused((paused) => !paused);
     };
 
 
@@ -205,7 +208,7 @@ const CertificateIssuedLog = ({open, onClose}: Props) => {
             }
             onClose={onClose}
             open={open}
-            size={window.innerWidth * 0.85}
+            size="85vw"
             styles={{
                 body: { padding: 0 }
             }}

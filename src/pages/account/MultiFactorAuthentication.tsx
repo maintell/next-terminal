@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Button, Card, Input, Modal, Result, Space, Spin} from "antd";
 import accountApi, {AuthType} from "@/api/account-api";
 import {startAuthentication} from "@simplewebauthn/browser";
@@ -6,7 +6,7 @@ import {useMutation, useQuery} from "@tanstack/react-query";
 import {useTranslation} from "react-i18next";
 import {KeyOutlined, SafetyOutlined} from "@ant-design/icons";
 
-export interface Props {
+interface Props {
     open: boolean
     handleOk: (securityToken: string) => void
     handleCancel: () => void
@@ -36,7 +36,7 @@ const MultiFactorAuthentication = ({open, handleOk, handleCancel, forceReauth = 
     });
 
     // 认证类型配置
-    const authTypeConfigs = useMemo(() => [
+    const authTypeConfigs = [
         {
             key: 'passkey' as const,
             icon: <SafetyOutlined style={{fontSize: 32}}/>,
@@ -49,7 +49,7 @@ const MultiFactorAuthentication = ({open, handleOk, handleCancel, forceReauth = 
             title: t('account.auth_type_otp'),
             description: t('account.auth_type_otp_desc'),
         },
-    ], [t]);
+    ];
 
     // 重置状态
     const resetState = () => {

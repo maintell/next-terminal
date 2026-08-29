@@ -3,20 +3,48 @@ import {maybe} from "@/utils/maybe";
 import {useSearchParams} from "react-router-dom";
 import './BrowserPage.css';
 import portalApi from "@/api/portal-api";
+import {useQuery} from '@tanstack/react-query';
+import {Button, Result} from 'antd';
+import {useTranslation} from 'react-i18next';
 
 const BrowserPage = () => {
+    const {t} = useTranslation();
+    const [searchParams] = useSearchParams();
+    const websiteId = maybe(searchParams.get('websiteId'), '');
 
-    let [searchParams] = useSearchParams();
-    let websiteId = maybe(searchParams.get('websiteId'), '');
+    const accessQuery = useQuery({
+        queryKey: ['website-access-url', websiteId],
+        queryFn: () => portalApi.accessWebsite(websiteId),
+        enabled: !!websiteId,
+        staleTime: 0,
+        gcTime: 0,
+    });
 
     useEffect(() => {
-        portalApi.accessWebsite(websiteId).then((url) => {
-            window.location.href = url;
-        })
-    }, []);
+        if (accessQuery.data) {
+            window.location.replace(accessQuery.data);
+        }
+    }, [accessQuery.data]);
+
+    if (!websiteId || accessQuery.isError) {
+        return (
+            <div className="flex h-screen items-center justify-center">
+                <Result
+                    status="error"
+                    title={t('general.error')}
+                    subTitle={t('assets.website_load_failed')}
+                    extra={websiteId && (
+                        <Button type="primary" onClick={() => accessQuery.refetch()}>
+                            {t('actions.retry')}
+                        </Button>
+                    )}
+                />
+            </div>
+        );
+    }
 
     return (
-        <div className={'flex items-center justify-center h-screen'}>
+        <div className="flex h-screen items-center justify-center">
             <div className="loader">
                 <div className="truckWrapper">
                     <div className="truckBody">

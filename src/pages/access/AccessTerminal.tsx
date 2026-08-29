@@ -1,14 +1,14 @@
-import accessSettingApi, {Setting} from "@/api/access-setting-api";
+import accessSettingApi from "@/api/access-setting-api";
 import {baseWebSocketUrl} from "@/api/core/requests";
 import portalApi, {ExportSession} from "@/api/portal-api";
 import {ResizableHandle, ResizablePanel, ResizablePanelGroup} from "@/components/ui/resizable";
 import {cn} from "@/lib/utils";
+import {useMobile} from "@/hook/use-mobile";
 import AccessStats from "@/pages/access/AccessStats";
 import AIAssistant from "@/pages/ai/AIAssistant";
-import FileSystemPage from "@/pages/access/FileSystemPage";
-import {useAccessContentSize} from "@/pages/access/hooks/use-access-size";
-import {useAccessTab} from "@/pages/access/hooks/use-access-tab";
+import FileSystemPage, {type FileSystem as FileSystemHandle} from "@/pages/access/FileSystemPage";
 import {CleanTheme, useTerminalTheme} from "@/pages/access/hooks/use-terminal-theme";
+import {useAccessSessionMutation} from "@/pages/access/hooks/use-access-session";
 import SessionSharerModal from "@/pages/access/SessionSharerModal";
 import SessionWatermark from "@/pages/access/SessionWatermark";
 import SnippetSheet from "@/pages/access/SnippetSheet";
@@ -22,20 +22,19 @@ import {
     MessageTypeError,
     MessageTypeExit,
     MessageTypeJoin,
-    MessageTypePing,
-    MessageTypeResize
+    MessageTypePing
 } from "@/pages/access/Terminal";
 import {normalizeTerminalBackspace} from "@/pages/access/terminal-backspace";
+import {TerminalRuntime} from "@/pages/access/terminal/terminal-runtime";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import {ZmodemController} from "@/pages/access/lrzsz/zmodemController";
 import {MOBILE_TOOL_DRAWER_SIZE} from "@/pages/access/terminal-tool-drawer";
 import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
-import {debounce} from "@/utils/debounce";
-import {isMac, isMobileByMediaQuery} from "@/utils/utils";
+import {isMac} from "@/utils/utils";
 import {CanvasAddon} from "@xterm/addon-canvas";
-import {FitAddon} from "@xterm/addon-fit";
 import {SearchAddon} from "@xterm/addon-search";
 import {WebglAddon} from "@xterm/addon-webgl";
-import {Terminal} from "@xterm/xterm";
+import {type Terminal} from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import {App} from "antd";
 import clsx from "clsx";
@@ -55,14 +54,13 @@ import {
     XIcon
 } from "lucide-react";
 import qs from "qs";
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useTranslation} from "react-i18next";
-import {useInterval, useWindowSize} from "react-use";
 
 interface Props {
     assetId: string;
-    tabKey?: string;
     standalone?: boolean;
+    active?: boolean;
 }
 
 type MobileToolDrawer = 'ai' | 'snippet' | 'fileSystem' | null;
@@ -83,24 +81,23 @@ const RESTORE_TERMINAL_STATE = [
 ].join('');
 const LEAVE_ALTERNATE_SCREEN_BUFFER = '\x1b[?1049l';
 
-const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
+const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props) => {
 
     let {t} = useTranslation();
 
     const divRef = React.useRef<HTMLDivElement>(null);
     const terminalRef = useRef<Terminal>(null);
-    const fitRef = useRef<FitAddon>(null);
+    const runtimeRef = useRef<TerminalRuntime>(null);
     const searchRef = useRef<SearchAddon>(null);
-    const webglRef = useRef<WebglAddon>(null);
-    const canvasRef = useRef<CanvasAddon>(null);
     const zmodemControllerRef = useRef<ZmodemController>(null);
     const rootRef = useRef<HTMLDivElement>(null);
     const mobileTopControlsRef = useRef<HTMLDivElement>(null);
     const mobileBottomControlsRef = useRef<HTMLDivElement>(null);
     const zmodemUploadInputRef = useRef<HTMLInputElement>(null);
     const hasConnectedRef = useRef(false);
+    const connectingRef = useRef(false);
+    const mfaCheckingRef = useRef(false);
 
-    let websocketRef = useRef<WebSocket>(null); // 使用 ref 来存储 websocket
     let [session, setSession] = useState<ExportSession>();
     const aiEnabled = session?.attrs?.['ai-enabled'] === true;
     const restrictedShell = session?.attrs?.['restricted-shell'] === true;
@@ -109,9 +106,12 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
     const zmodemUploadEnabled = session?.protocol?.toLowerCase() === 'ssh' && !session.readonly && !restrictedShell;
 
     let [accessTheme] = useTerminalTheme();
-    let [accessTab] = useAccessTab();
-    let {width, height} = useWindowSize();
-    let [accessSetting, setAccessSetting] = useState<Setting>();
+    const sessionMutation = useAccessSessionMutation({type: 'asset', assetId});
+    const accessRequireMFAMutation = useMutation({mutationFn: () => portalApi.getAccessRequireMFA()});
+    const {data: accessSetting} = useQuery({
+        queryKey: ['access-setting'],
+        queryFn: accessSettingApi.get,
+    });
 
     let [fileSystemOpen, setFileSystemOpen] = useState(false);
     let [preFileSystemOpen, setPreFileSystemOpen] = useState(false);
@@ -124,13 +124,16 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
     const [pingDelay, setPingDelay] = useState<number | null>(null);
 
     let [reconnected, setReconnected] = useState('');
-    let [contentSize] = useAccessContentSize();
-    const active = standalone || accessTab === tabKey;
-    let isMobile = isMobileByMediaQuery();
+    const active = activeProp ?? standalone;
+    const {isMobile} = useMobile();
     const getEffectiveTerminalFontSize = (fontSize: number) => isMobile ? Math.min(fontSize, 12) : fontSize;
 
+    const fitTerminal = () => {
+        runtimeRef.current?.fit();
+    };
+
     let {notification, message} = App.useApp();
-    const fsRef = useRef(null);
+    const fsRef = useRef<FileSystemHandle>(null);
 
     let [mfaOpen, setMfaOpen] = useState(false);
 
@@ -164,34 +167,12 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         }
     }, [fileSystemEnabled, statsEnabled]);
 
-    // 获取访问设置
-    useEffect(() => {
-        const fetchAccessSetting = async () => {
-            try {
-                const setting = await accessSettingApi.get();
-                setAccessSetting(setting);
-            } catch (error) {
-                console.error('Failed to fetch access setting:', error);
-            }
-        };
-
-        fetchAccessSetting();
-    }, []);
-
-    useInterval(() => {
-        const ws = websocketRef.current;
-        if (ws?.readyState === WebSocket.OPEN) {
-            const timestamp = Date.now();
-            ws.send(new Message(MessageTypePing, timestamp.toString()).toString());
-        }
-    }, 1000);
-
     useEffect(() => {
         if (active) {
             setTimeout(() => {
                 terminalRef.current?.focus();
             }, 100);
-            fitFit();
+            fitTerminal();
             setFileSystemOpen(fileSystemEnabled && preFileSystemOpen)
         } else {
             setFileSystemOpen(false);
@@ -207,7 +188,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                 options.fontFamily = cleanTheme.fontFamily;
                 options.fontSize = getEffectiveTerminalFontSize(cleanTheme.fontSize);
                 options.lineHeight = cleanTheme.lineHeight;
-                setTimeout(() => fitRef.current?.fit(), 0);
+                requestAnimationFrame(() => runtimeRef.current?.fit());
             }
         }
     }, [accessTheme, isMobile]);
@@ -225,7 +206,6 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         }
 
         let selectionChange = terminalRef.current.onSelectionChange(() => {
-            // console.log(`on selection change`, accessSetting)
             if (accessSetting?.selectionCopy !== true) {
                 return
             }
@@ -245,7 +225,6 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         const normalizeNewlines = (text: string) => text.replace(/\r\n?/g, '\n');
 
         const handleContextMenu = async (e: MouseEvent) => {
-            // console.log(`on context menu`, accessSetting)
             if (accessSetting?.rightClickPaste !== true) {
                 return
             }
@@ -253,10 +232,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
             try {
                 const clipboardText = await navigator.clipboard.readText();
                 const text = normalizeNewlines(clipboardText);
-                const ws = websocketRef.current;
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(new Message(MessageTypeData, text).toString());
-                }
+                runtimeRef.current?.sendMessage(MessageTypeData, text);
             } catch (error) {
                 console.error('Failed to read clipboard:', error);
             }
@@ -294,87 +270,65 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         if (terminalRef.current || !divRef.current) return;
 
         let cleanTheme = CleanTheme(accessTheme);
-        let term = new Terminal({
-            theme: cleanTheme?.theme?.value,
-            fontFamily: cleanTheme.fontFamily,
-            fontSize: getEffectiveTerminalFontSize(cleanTheme.fontSize),
-            lineHeight: cleanTheme.lineHeight,
-            allowProposedApi: true,
-            cursorBlink: true,
-            macOptionIsMeta: _isMac && accessSetting?.macOptionIsMeta === true,
-            // WebGL 渲染器性能优化配置
-            convertEol: true, // 启用自动换行符转换
-            fastScrollModifier: 'alt', // 启用快速滚动
-            fastScrollSensitivity: 5, // 提高滚动敏感度
-            scrollback: 10000, // 增加回滚缓冲区
-            windowsMode: false, // 禁用 Windows 模式以提高性能
-        });
-
-        term.attachCustomKeyEventHandler((domEvent) => {
-            if (domEvent.ctrlKey && domEvent.key === 'c' && term.hasSelection()) {
-                return false;
-            }
-            return !(domEvent.ctrlKey && domEvent.key === 'v');
-        })
-
-        term.open(divRef.current);
-        let fitAddon = new FitAddon();
-        let searchAddon = new SearchAddon();
-        term.loadAddon(fitAddon);
-        term.loadAddon(searchAddon);
-
-        // 尝试加载 WebGL 渲染器，失败时回退到 Canvas 渲染器
         let webglAddon: WebglAddon | null = null;
         let canvasAddon: CanvasAddon | null = null;
+        const searchAddon = new SearchAddon();
+        const runtime = new TerminalRuntime({
+            container: divRef.current,
+            pingInterval: 1000,
+            terminalOptions: {
+                theme: cleanTheme?.theme?.value,
+                fontFamily: cleanTheme.fontFamily,
+                fontSize: getEffectiveTerminalFontSize(cleanTheme.fontSize),
+                lineHeight: cleanTheme.lineHeight,
+                allowProposedApi: true,
+                cursorBlink: true,
+                macOptionIsMeta: _isMac && accessSetting?.macOptionIsMeta === true,
+                convertEol: true,
+                fastScrollModifier: 'alt',
+                fastScrollSensitivity: 5,
+                scrollback: 10000,
+                windowsMode: false,
+            },
+            configureTerminal: (term) => {
+                term.attachCustomKeyEventHandler((domEvent) => {
+                    if (domEvent.ctrlKey && domEvent.key === 'c' && term.hasSelection()) {
+                        return false;
+                    }
+                    return !(domEvent.ctrlKey && domEvent.key === 'v');
+                });
+                term.loadAddon(searchAddon);
+                try {
+                    webglAddon = new WebglAddon();
+                    term.loadAddon(webglAddon);
+                } catch (error) {
+                    console.warn('WebGL renderer unavailable, falling back to Canvas renderer:', error);
+                    try {
+                        canvasAddon = new CanvasAddon();
+                        term.loadAddon(canvasAddon);
+                    } catch (canvasError) {
+                        console.warn('Canvas renderer unavailable, using DOM renderer:', canvasError);
+                    }
+                }
+            },
+        });
 
-        try {
-            webglAddon = new WebglAddon();
-            term.loadAddon(webglAddon);
-            console.log('✅ WebGL renderer loaded successfully - Hardware acceleration enabled');
-
-            // WebGL 特定优化
-            if (webglAddon && 'preserveDrawingBuffer' in webglAddon) {
-                // 启用绘图缓冲区保持，提高渲染性能
-                (webglAddon as any).preserveDrawingBuffer = false;
-            }
-        } catch (e) {
-            console.warn('⚠️ Failed to load WebGL renderer, falling back to Canvas renderer:', e);
-            try {
-                canvasAddon = new CanvasAddon();
-                term.loadAddon(canvasAddon);
-                console.log('✅ Canvas renderer loaded successfully - Software acceleration enabled');
-            } catch (e2) {
-                console.warn('⚠️ Failed to load Canvas renderer, using default DOM renderer:', e2);
-                console.log('🐌 Using DOM renderer - Performance may be reduced');
-            }
-        }
-
-        terminalRef.current = term;
-        fitRef.current = fitAddon;
+        runtimeRef.current = runtime;
+        terminalRef.current = runtime.terminal;
         searchRef.current = searchAddon;
-        webglRef.current = webglAddon;
-        canvasRef.current = canvasAddon;
-
-        fitAddon.fit();
-        term.focus();
+        runtime.focus();
 
         return () => {
             zmodemControllerRef.current?.dispose();
             zmodemControllerRef.current = null;
-            term.dispose();
-            fitAddon.dispose();
-            webglAddon?.dispose();
-            canvasAddon?.dispose();
+            runtimeRef.current = null;
+            terminalRef.current = null;
+            searchRef.current = null;
+            runtime.dispose();
         }
     }, []);
 
-    useEffect(() => {
-        fitFit();
-    }, [width, height, contentSize]);
-
     const onDirChanged = (dir: string) => {
-        // changeVal就是子组件暴露给父组件的方法
-        // @ts-ignore
         fsRef.current?.changeDir(dir);
     };
 
@@ -393,9 +347,11 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
     };
 
     const connect = async (securityToken?: string) => {
-        if (websocketRef.current !== null) {
+        const runtime = runtimeRef.current;
+        if (!runtime || runtime.socket || connectingRef.current) {
             return;
         }
+        connectingRef.current = true;
         const reconnecting = hasConnectedRef.current;
         if (reconnecting) {
             restoreTerminalStateForReconnect();
@@ -403,15 +359,22 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         }
         let session: ExportSession;
         try {
-            session = await portalApi.createSessionByAssetsId(assetId, securityToken);
+            session = await sessionMutation.mutateAsync(securityToken);
+            if (runtimeRef.current !== runtime) {
+                return;
+            }
             setSession(session);
             if (standalone && session.assetName) {
                 document.title = session.assetName;
             }
         } catch (e) {
-            const message = e instanceof Error ? e.message : String(e);
-            terminalRef.current?.writeln(`\x1b[41m ERROR \x1b[0m : ${message}`);
+            if (runtimeRef.current === runtime) {
+                const message = e instanceof Error ? e.message : String(e);
+                runtime.terminal.writeln(`\x1b[41m ERROR \x1b[0m : ${message}`);
+            }
             return;
+        } finally {
+            connectingRef.current = false;
         }
 
         const terminal = terminalRef.current;
@@ -426,10 +389,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
             enabled: session.protocol.toLowerCase() === 'ssh',
             disabledMessage: t('access.terminal.zmodem.ssh_only'),
             sendBytes: (data) => {
-                const ws = websocketRef.current;
-                if (ws?.readyState === WebSocket.OPEN) {
-                    ws.send(new Message(MessageTypeBinaryData, Base64.fromUint8Array(data)).toString());
-                }
+                runtime.sendMessage(MessageTypeBinaryData, Base64.fromUint8Array(data));
             },
             texts: {
                 saveDialogTitle: t('access.terminal.zmodem.save_dialog_title'),
@@ -452,23 +412,21 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
             'sessionId': session.id,
         };
 
-        let paramStr = qs.stringify(params);
-        let websocket = new WebSocket(`${baseWebSocketUrl()}/access/terminal?${paramStr}`);
-
-        websocket.onopen = (_e => {
+        const paramStr = qs.stringify(params);
+        runtime.connect(`${baseWebSocketUrl()}/access/terminal?${paramStr}`, {
+        onOpen: () => {
             hasConnectedRef.current = true;
             restoreTerminalStateForReconnect();
             setPingDelay(null);
-        });
+        },
 
-        websocket.onerror = (e) => {
+        onError: (e) => {
             console.error(`websocket error`, e);
             terminalRef.current?.writeln(`websocket error`);
             setPingDelay(null);
-            websocketRef.current = null;
-        }
+        },
 
-        websocket.onclose = (e) => {
+        onClose: (e) => {
             restoreTerminalStateForReconnect();
             if (e.code === 3886) {
                 terminalRef.current?.writeln('');
@@ -482,15 +440,14 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
             terminalRef.current?.writeln('Press any key to reconnect');
 
             setPingDelay(null);
-            websocketRef.current = null;
-        }
+        },
 
-        websocket.onmessage = (e) => {
+        onMessage: (e) => {
             let msg = Message.parse(e.data);
             switch (msg.type) {
                 case MessageTypeError:
                     terminal.write(msg.content);
-                    websocketRef.current?.close();
+                    runtime.closeSocket();
                     break;
                 case MessageTypeData:
                     zmodemControllerRef.current?.consume(new TextEncoder().encode(msg.content));
@@ -542,16 +499,27 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                     }
                     break;
             }
-        }
-        websocketRef.current = websocket;
+        },
+        });
     }
 
-    const connectWrap = async () => {
-        let required = await portalApi.getAccessRequireMFA();
-        if (required) {
-            setMfaOpen(true);
-        } else {
-            connect();
+    const connectWrap = async (expectedRuntime: TerminalRuntime) => {
+        if (mfaCheckingRef.current) {
+            return;
+        }
+        mfaCheckingRef.current = true;
+        try {
+            const required = await accessRequireMFAMutation.mutateAsync();
+            if (runtimeRef.current !== expectedRuntime) {
+                return;
+            }
+            if (required) {
+                setMfaOpen(true);
+            } else {
+                connect();
+            }
+        } finally {
+            mfaCheckingRef.current = false;
         }
     }
 
@@ -596,12 +564,8 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                     authContent = authPassword;
                 }
 
-                // 使用 ref 获取最新的 WebSocket 连接
-                const ws = websocketRef.current;
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(new Message(MessageTypeAuthReply, authContent).toString());
-                } else {
-                    console.error('WebSocket is not open', ws?.readyState);
+                if (!runtimeRef.current?.sendMessage(MessageTypeAuthReply, authContent)) {
+                    console.error('WebSocket is not open');
                     terminal.writeln('\r\n\x1b[41m ERROR \x1b[0m : Connection lost, please try again');
                 }
 
@@ -624,49 +588,36 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
     }
 
     useEffect(() => {
-        if (!terminalRef.current) {
+        const runtime = runtimeRef.current;
+        if (!runtime) {
             return;
         }
         setAuthMode('none');
-        connectWrap();
-    }, [terminalRef.current, reconnected]);
+        void connectWrap(runtime);
+    }, [reconnected]);
 
     useEffect(() => {
-        let sizeListener = terminalRef.current?.onResize(function (evt) {
-            // console.log(`term resize`, evt.cols, evt.rows);
-            const ws = websocketRef.current;
-            if (ws?.readyState === WebSocket.OPEN) {
-                ws.send(new Message(MessageTypeResize, `${evt.cols},${evt.rows}`).toString());
-            }
-        });
-        let dataListener = terminalRef.current?.onData(data => {
+        const runtime = runtimeRef.current;
+        runtime?.setInputHandler((data) => {
             // 如果处于认证模式，拦截输入用于认证
             if (authMode !== 'none') {
                 handleAuthInput(data);
                 return;
             }
 
-            const ws = websocketRef.current;
-            if (!ws) {
+            if (!runtime.socket) {
                 // 忽略鼠标上报，避免鼠标移动就触发重连（残留的鼠标追踪模式可能仍在生成上报）
                 if (data.startsWith('\x1b[<') || data.startsWith('\x1b[M')) return;
                 setReconnected(new Date().toString());
-            } else if (ws.readyState === WebSocket.OPEN) {
-                ws.send(new Message(MessageTypeData, normalizeTerminalBackspace(data, session)).toString());
+            } else {
+                runtime.sendMessage(MessageTypeData, normalizeTerminalBackspace(data, session));
             }
         });
 
         return () => {
-            sizeListener?.dispose();
-            dataListener?.dispose();
+            runtime?.setInputHandler();
         }
     }, [authMode, authUsername, authPassword, session?.attrs?.backspaceMode]);
-
-    const fitFit = useMemo(() => debounce(() => {
-        if (terminalRef.current && fitRef.current) {
-            fitRef.current.fit();
-        }
-    }, 300), []);
 
     // 搜索功能函数
     const handleSearch = (term: string) => {
@@ -776,11 +727,10 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         terminalRef.current?.clear();
     };
 
-    const [mobileViewportHeight, setMobileViewportHeight] = useState(height);
+    const [mobileViewportHeight, setMobileViewportHeight] = useState(() => (
+        window.visualViewport?.height ?? window.innerHeight
+    ));
     const [mobileTerminalBodyHeight, setMobileTerminalBodyHeight] = useState<number>();
-    const terminalHeight = isMobile
-        ? (standalone ? height : Math.max(0, height - 77.5))
-        : (standalone ? height : height - 77.5);
 
     useEffect(() => {
         if (!isMobile) {
@@ -798,7 +748,6 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
 
     useEffect(() => {
         if (!isMobile) {
-            setMobileViewportHeight(height);
             return;
         }
 
@@ -816,11 +765,11 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
             window.visualViewport?.removeEventListener('scroll', updateViewportHeight);
             window.removeEventListener('resize', updateViewportHeight);
         };
-    }, [height, isMobile]);
+    }, [isMobile]);
 
     useEffect(() => {
         if (isMobile) {
-            fitFit();
+            fitTerminal();
         }
     }, [isMobile, mobileTerminalBodyHeight, mobileViewportHeight, searchOpen]);
 
@@ -831,7 +780,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         }
 
         const updateMobileTerminalBodyHeight = () => {
-            const containerHeight = rootRef.current?.clientHeight || terminalHeight;
+            const containerHeight = rootRef.current?.clientHeight ?? 0;
             const topControlsHeight = mobileTopControlsRef.current?.offsetHeight || 0;
             const bottomControlsHeight = mobileBottomControlsRef.current?.offsetHeight || 0;
 
@@ -856,7 +805,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
             window.removeEventListener('resize', updateMobileTerminalBodyHeight);
             window.visualViewport?.removeEventListener('resize', updateMobileTerminalBodyHeight);
         };
-    }, [isMobile, searchOpen, terminalHeight]);
+    }, [isMobile, searchOpen]);
 
     const pingColorClass = pingDelay === null
         ? 'text-gray-400'
@@ -876,10 +825,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
     ];
 
     const sendTerminalData = (data: string) => {
-        const ws = websocketRef.current;
-        if (ws?.readyState === WebSocket.OPEN) {
-            ws.send(new Message(MessageTypeData, data).toString());
-        }
+        runtimeRef.current?.sendMessage(MessageTypeData, data);
         terminalRef.current?.focus();
     };
 
@@ -894,8 +840,8 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
         }
 
         const controller = zmodemControllerRef.current;
-        const ws = websocketRef.current;
-        if (!controller || ws?.readyState !== WebSocket.OPEN) {
+        const runtime = runtimeRef.current;
+        if (!controller || !runtime?.connected) {
             void message.warning(t('access.terminal.zmodem.not_connected'));
             return;
         }
@@ -903,7 +849,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
             return;
         }
         try {
-            ws.send(new Message(MessageTypeData, 'rz\r').toString());
+            runtime.sendMessage(MessageTypeData, 'rz\r');
             terminalRef.current?.focus();
         } catch (error) {
             controller.cancelPendingUploadFiles();
@@ -999,7 +945,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                 'relative overflow-hidden',
                 standalone ? 'h-svh w-screen' : 'h-full w-full',
             )}
-            style={!isMobile ? undefined : standalone ? undefined : {height: terminalHeight}}
+            style={isMobile && standalone ? {height: mobileViewportHeight} : undefined}
         >
             <div className={cn(
                 'flex min-h-0 w-full',
@@ -1008,15 +954,9 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
             )}
             >
                 <ResizablePanelGroup direction="horizontal" className="min-h-0">
-                    <ResizablePanel order={1} className="h-full min-w-0" onResize={(_curr, _prev) => {
-                        fitFit();
-                    }}>
+                    <ResizablePanel order={1} className="h-full min-w-0">
                         <div className={'relative h-full'}>
-                            <div className={'flex min-h-0 flex-col overflow-hidden transition duration-100'}
-                                 style={{
-                                     height: isMobile ? '100%' : terminalHeight,
-                                 }}
-                            >
+                            <div className={'flex h-full min-h-0 flex-col overflow-hidden'}>
                                 {isMobile && (
                                     <div
                                         ref={mobileTopControlsRef}
@@ -1171,7 +1111,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                                 id={'stat'}
                                 className={'min-w-[340px]'}
                             >
-                                <div>
+                                <div className="h-full">
                                     <AccessStats sessionId={session?.id ?? ''} open={statsOpen}/>
                                 </div>
                             </ResizablePanel>
@@ -1190,7 +1130,6 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                             >
                                 <AIAssistant
                                     embedded
-                                    embeddedHeight={terminalHeight}
                                     sessionId={session?.id}
                                     open={Boolean(session?.id)}
                                     onClose={() => setAiOpen(false)}
@@ -1259,10 +1198,7 @@ const AccessTerminal = ({assetId, tabKey, standalone = false}: Props) => {
                 }}
                 onUse={(content: string) => {
                     terminalRef.current?.paste(content);
-                    const ws = websocketRef.current;
-                    if (ws?.readyState === WebSocket.OPEN) {
-                        ws.send(new Message(MessageTypeData, '\r').toString());
-                    }
+                    runtimeRef.current?.sendMessage(MessageTypeData, '\r');
                 }}
                 open={isMobile ? mobileToolDrawer === 'snippet' : snippetOpen}
                 placement={isMobile ? 'bottom' : 'right'}

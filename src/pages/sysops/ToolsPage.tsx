@@ -26,10 +26,15 @@ const ToolsPage = () => {
     }
 
     return (
-        <div>
+        <div className="h-full min-h-0">
             <Tabs activeKey={searchParams.get('tab') || 'ping'}
                   items={items}
                   onChange={onChange}
+                  styles={{
+                      root: {height: '100%', minHeight: 0, overflow: 'hidden'},
+                      body: {height: '100%', minHeight: 0},
+                      content: {height: '100%', minHeight: 0, overflow: 'hidden'},
+                  }}
             />
         </div>
     );

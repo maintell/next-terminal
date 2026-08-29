@@ -114,7 +114,7 @@ const ScheduledTaskModal = ({
                         case 'local':
                             break;
                         case 'custom':
-                            return <ProFormTreeSelect label={t('menus.resource.submenus.asset')} name='assetIdList' rules={[{
+                            return <ProFormTreeSelect queryKey={['scheduled-task-assets']} label={t('menus.resource.submenus.asset')} name='assetIdList' rules={[{
                                 required: true
                             }]} fieldProps={{
                                 multiple: true,
@@ -168,7 +168,7 @@ const ScheduledTaskModal = ({
         </Form>
     </Modal>;
 };
-export interface Props {
+interface Props {
     open: boolean;
     handleOk: (values: any) => void;
     handleCancel: () => void;

@@ -1,7 +1,6 @@
 import { logoApi } from "@/api/logo-api";
 import { useQuery } from "@tanstack/react-query";
-import { App,Popconfirm,Tooltip,TreeDataNode,Upload } from "antd";
-import { RcFile } from "antd/es/upload";
+import { App,Popconfirm,Tooltip,TreeDataNode,Upload,type UploadProps } from "antd";
 import { UploadIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -20,7 +19,7 @@ const LogoSetting = () => {
         queryFn: logoApi.logos,
     });
 
-    const beforeUpload = (file: RcFile) => {
+    const beforeUpload: UploadProps['beforeUpload'] = (file) => {
         const isTooLarge = file.size / 1024 / 1024;
         if (!isTooLarge) {
             message.error('Image must smaller than 1MB!');

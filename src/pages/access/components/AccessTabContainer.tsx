@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react';
+import React, {isValidElement} from 'react';
 import {Tabs} from 'antd';
 import {closestCenter, DndContext, PointerSensor, useSensor} from '@dnd-kit/core';
 import {horizontalListSortingStrategy, SortableContext, useSortable} from '@dnd-kit/sortable';
@@ -6,6 +6,7 @@ import type {DragEndEvent} from '@dnd-kit/core';
 import {CSS} from '@dnd-kit/utilities';
 import {ResizablePanel} from '@/components/ui/resizable';
 import TabContextMenu from '@/components/TabContextMenu';
+import {ACCESS_CONTENT_PANEL_ID} from '@/pages/access/constants';
 
 interface DraggableTabPaneProps extends React.HTMLAttributes<HTMLDivElement> {
     'data-node-key': string;
@@ -23,8 +24,10 @@ const DraggableTabNode = ({className, ...props}: DraggableTabPaneProps) => {
         cursor: 'move',
     };
 
-    return React.cloneElement(props.children as React.ReactElement, {
-        // @ts-ignore
+    const child = props.children as React.ReactElement<
+        React.HTMLAttributes<HTMLElement> & React.RefAttributes<HTMLElement>
+    >;
+    return React.cloneElement(child, {
         ref: setNodeRef,
         style,
         ...attributes,
@@ -38,6 +41,7 @@ interface TabItem {
     children: React.ReactNode;
     meta?: {
         type?: 'session';
+        assetId?: string;
     };
 }
 
@@ -48,7 +52,6 @@ interface AccessTabContainerProps {
     onChange: (key: string) => void;
     onRemove: (key: string) => void;
     onDragEnd: (event: DragEndEvent) => void;
-    onContentResize: (size: number) => void;
     tabOperations: {
         handleCloseLeft: (key: string) => void;
         handleCloseRight: (key: string) => void;
@@ -63,37 +66,40 @@ interface AccessTabContainerProps {
  * AccessTabContainer 组件
  * 标签页容器，支持拖拽排序和右键菜单操作
  */
-const AccessTabContainer = React.memo(({
+const AccessTabContainer = ({
                                            items,
                                            activeKey,
                                            leftPanelSize,
                                            onChange,
                                            onRemove,
                                            onDragEnd,
-                                           onContentResize,
                                            tabOperations,
                                        }: AccessTabContainerProps) => {
     const sensor = useSensor(PointerSensor, {activationConstraint: {distance: 10}});
 
-    const handleEdit = useCallback((targetKey: string | React.MouseEvent | React.KeyboardEvent, action: 'add' | 'remove') => {
+    const handleEdit = (targetKey: string | React.MouseEvent | React.KeyboardEvent, action: 'add' | 'remove') => {
         if (action === 'remove') {
             onRemove(targetKey as string);
         }
-    }, [onRemove]);
+    };
 
     return (
         <ResizablePanel
+            id={ACCESS_CONTENT_PANEL_ID}
             defaultSize={100 - leftPanelSize}
-            className={'bg-[#1E1E1E] access-container'}
-            onResize={onContentResize}
+            className={'h-full min-h-0 overflow-hidden bg-[#1E1E1E] access-container'}
         >
             <Tabs
+                styles={{
+                    root: {height: '100%', minHeight: 0, overflow: 'hidden'},
+                    body: {height: '100%', minHeight: 0},
+                    content: {height: '100%', minHeight: 0, overflow: 'hidden'},
+                }}
                 items={items.map((item) => ({
                     key: item.key,
                     label: (
                         <TabContextMenu
                             tabKey={item.key}
-                            currentActiveKey={activeKey}
                             allTabs={items}
                             onCloseLeft={tabOperations.handleCloseLeft}
                             onCloseRight={tabOperations.handleCloseRight}
@@ -101,14 +107,20 @@ const AccessTabContainer = React.memo(({
                             onCloseOthers={tabOperations.handleCloseOthers}
                             onReconnect={tabOperations.handleReconnect}
                             onDuplicateSession={tabOperations.handleDuplicateSession}
-                            canDuplicateSession={item.meta?.type === 'session'}
+                            canDuplicateSession={item.meta?.type === 'session' && Boolean(item.meta.assetId)}
+                            canReconnect={item.meta?.type === 'session'}
                         >
                             <span className={'access-tab-label'} title={item.label}>
                                 {item.label}
                             </span>
                         </TabContextMenu>
                     ),
-                    children: item.children,
+                    children: item.meta?.type === 'session' && isValidElement(item.children)
+                        ? React.cloneElement(
+                            item.children as React.ReactElement<{active?: boolean}>,
+                            {active: item.key === activeKey},
+                        )
+                        : item.children,
                 }))}
                 hideAdd
                 size={'small'}
@@ -136,15 +148,12 @@ const AccessTabContainer = React.memo(({
                         </SortableContext>
                     </DndContext>
                 )}
-                tabBarStyle={{}}
                 activeKey={activeKey}
                 onChange={onChange}
                 onEdit={handleEdit}
             />
         </ResizablePanel>
     );
-});
-
-AccessTabContainer.displayName = 'AccessTabContainer';
+};
 
 export default AccessTabContainer;

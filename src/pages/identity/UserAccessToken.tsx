@@ -1,8 +1,7 @@
 import userApi, {type UserAccessTokenItem} from "@/api/user-api";
 import times from "@/components/time/times";
 import {useMutation, useQuery} from "@tanstack/react-query";
-import {Button, Empty, Popconfirm, Table, Tag, Typography} from "antd";
-import type {ColumnsType} from "antd/es/table";
+import {Button, Empty, Popconfirm, Table, Tag, Typography, type TableColumnsType} from "antd";
 import {useTranslation} from "react-i18next";
 
 interface UserAccessTokenProps {
@@ -50,7 +49,7 @@ const UserAccessToken = ({active, userId}: UserAccessTokenProps) => {
         }
     };
 
-    const columns: ColumnsType<UserAccessTokenItem> = [
+    const columns: TableColumnsType<UserAccessTokenItem> = [
         {
             title: t('account.access_token'),
             dataIndex: 'token',

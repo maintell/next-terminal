@@ -53,7 +53,7 @@ const WechatWorkSetting = ({
                 }]}>
                     <Input placeholder={t('settings.wechat_work.redirect_uri_placeholder')} disabled={!enabled}/>
                 </Form.Item>
-                <ProFormTreeSelect name="wechat-work-department" label={t('settings.oidc.department')}
+                <ProFormTreeSelect queryKey={['wechat-work-departments']} name="wechat-work-department" label={t('settings.oidc.department')}
                                    placeholder={t('settings.oidc.department_placeholder')} disabled={!enabled}
                                    fieldProps={{
                                        showSearch: true,

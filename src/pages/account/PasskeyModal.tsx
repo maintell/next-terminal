@@ -3,7 +3,7 @@ import {Form, Input, Modal} from "antd";
 import {useTranslation} from "react-i18next";
 import {WebauthnCredential} from "@/api/account-api";
 
-export interface Props {
+interface Props {
     open: boolean;
     handleOk: (values: any) => void;
     handleCancel: () => void;

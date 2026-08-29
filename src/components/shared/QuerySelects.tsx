@@ -1,8 +1,8 @@
-import React, {useState, useEffect} from 'react';
+import React from 'react';
 import {useTranslation} from "react-i18next";
 import {Select, TreeSelect} from "antd";
 import userApi, {User} from "@/api/user-api";
-import departmentApi, {Department} from "@/api/department-api";
+import departmentApi from "@/api/department-api";
 import assetApi, {Asset} from "@/api/asset-api";
 import websiteApi, {Website} from "@/api/website-api";
 import databaseAssetApi, {DatabaseAsset} from "@/api/database-asset-api";
@@ -59,27 +59,10 @@ const buildWebsiteTree = (nodes: Website[] = []): any[] => nodes.map(node => ({
 // 用户查询组件
 export const UserSelect = ({value, onChange, style, mode, ...rest}: SelectProps) => {
     const {t} = useTranslation();
-    const [options, setOptions] = useState<{label: string, value: string}[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchUsers = async () => {
-            setLoading(true);
-            try {
-                const result = await userApi.getAll();
-                const userOptions = result.map((user: User) => ({
-                    label: user.nickname || user.username,
-                    value: user.id,
-                }));
-                setOptions(userOptions);
-            } catch (error) {
-                console.error('Failed to fetch users:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUsers();
-    }, []);
+    const query = useQuery({
+        queryKey: ['shared-query-selects', 'users'],
+        queryFn: userApi.getAll,
+    });
 
     return (
         <Select
@@ -92,52 +75,11 @@ export const UserSelect = ({value, onChange, style, mode, ...rest}: SelectProps)
                 filterOption: (input, option) =>
                     (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
             }}
-            loading={loading}
-            options={options}
-            style={selectStyle(style)}
-            {...rest}
-        />
-    );
-};
-
-// 部门查询组件
-export const DepartmentSelect = ({value, onChange, style, mode, ...rest}: SelectProps) => {
-    const {t} = useTranslation();
-    const [options, setOptions] = useState<{label: string, value: string}[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchDepartments = async () => {
-            setLoading(true);
-            try {
-                const result = await departmentApi.getAll();
-                const deptOptions = result.map((dept: Department) => ({
-                    label: dept.name,
-                    value: dept.id,
-                }));
-                setOptions(deptOptions);
-            } catch (error) {
-                console.error('Failed to fetch departments:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchDepartments();
-    }, []);
-
-    return (
-        <Select
-            value={value}
-            onChange={onChange}
-            placeholder={t('menus.identity.submenus.department')}
-            mode={mode}
-            allowClear
-            showSearch={{
-                filterOption: (input, option) =>
-                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
-            }}
-            loading={loading}
-            options={options}
+            loading={query.isPending}
+            options={(query.data ?? []).map((user: User) => ({
+                label: user.nickname || user.username,
+                value: user.id,
+            }))}
             style={selectStyle(style)}
             {...rest}
         />
@@ -163,61 +105,6 @@ export const DepartmentTreeSelect = ({value, onChange, style, ...rest}: SelectPr
             treeDefaultExpandAll
             loading={query.isPending}
             treeData={query.data || []}
-            style={selectStyle(style)}
-            {...rest}
-        />
-    );
-};
-
-// 资产组查询组件
-export const AssetGroupSelect = ({value, onChange, style, mode, ...rest}: SelectProps) => {
-    const {t} = useTranslation();
-    const [options, setOptions] = useState<{label: string, value: string}[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchAssetGroups = async () => {
-            setLoading(true);
-            try {
-                const groups = await assetApi.getGroups();
-                const flattenGroups = (nodes: any[]): any[] => {
-                    let result: any[] = [];
-                    nodes.forEach(node => {
-                        if (node.key !== 'default') {
-                            result.push({
-                                label: node.title,
-                                value: node.key,
-                            });
-                        }
-                        if (node.children) {
-                            result = result.concat(flattenGroups(node.children));
-                        }
-                    });
-                    return result;
-                };
-                setOptions(flattenGroups(groups));
-            } catch (error) {
-                console.error('Failed to fetch asset groups:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAssetGroups();
-    }, []);
-
-    return (
-        <Select
-            value={value}
-            onChange={onChange}
-            placeholder={t('authorised.label.asset_group')}
-            mode={mode}
-            allowClear
-            showSearch={{
-                filterOption: (input, option) =>
-                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
-            }}
-            loading={loading}
-            options={options}
             style={selectStyle(style)}
             {...rest}
         />
@@ -252,27 +139,10 @@ export const AssetGroupTreeSelect = ({value, onChange, style, ...rest}: SelectPr
 // 资产查询组件
 export const AssetSelect = ({value, onChange, style, mode, ...rest}: SelectProps) => {
     const {t} = useTranslation();
-    const [options, setOptions] = useState<{label: string, value: string}[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchAssets = async () => {
-            setLoading(true);
-            try {
-                const result = await assetApi.getAll();
-                const assetOptions = result.map((asset: Asset) => ({
-                    label: asset.name,
-                    value: asset.id,
-                }));
-                setOptions(assetOptions);
-            } catch (error) {
-                console.error('Failed to fetch assets:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAssets();
-    }, []);
+    const query = useQuery({
+        queryKey: ['shared-query-selects', 'assets'],
+        queryFn: () => assetApi.getAll(),
+    });
 
     return (
         <Select
@@ -285,8 +155,8 @@ export const AssetSelect = ({value, onChange, style, mode, ...rest}: SelectProps
                 filterOption: (input, option) =>
                     (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
             }}
-            loading={loading}
-            options={options}
+            loading={query.isPending}
+            options={(query.data ?? []).map((asset: Asset) => ({label: asset.name, value: asset.id}))}
             style={selectStyle(style)}
             {...rest}
         />
@@ -320,61 +190,6 @@ export const AssetTreeSelect = ({value, onChange, style, ...rest}: SelectProps &
     );
 };
 
-// 网站组查询组件
-export const WebsiteGroupSelect = ({value, onChange, style, mode, ...rest}: SelectProps) => {
-    const {t} = useTranslation();
-    const [options, setOptions] = useState<{label: string, value: string}[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchWebsiteGroups = async () => {
-            setLoading(true);
-            try {
-                const groups = await websiteApi.getGroups();
-                const flattenGroups = (nodes: any[]): any[] => {
-                    let result: any[] = [];
-                    nodes.forEach(node => {
-                        if (node.key !== 'default') {
-                            result.push({
-                                label: node.title,
-                                value: node.key,
-                            });
-                        }
-                        if (node.children) {
-                            result = result.concat(flattenGroups(node.children));
-                        }
-                    });
-                    return result;
-                };
-                setOptions(flattenGroups(groups));
-            } catch (error) {
-                console.error('Failed to fetch website groups:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchWebsiteGroups();
-    }, []);
-
-    return (
-        <Select
-            value={value}
-            onChange={onChange}
-            placeholder={t('authorised.label.website_group')}
-            mode={mode}
-            allowClear
-            showSearch={{
-                filterOption: (input, option) =>
-                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
-            }}
-            loading={loading}
-            options={options}
-            style={selectStyle(style)}
-            {...rest}
-        />
-    );
-};
-
 // 网站组树查询组件
 export const WebsiteGroupTreeSelect = ({value, onChange, style, ...rest}: SelectProps) => {
     const {t} = useTranslation();
@@ -403,27 +218,10 @@ export const WebsiteGroupTreeSelect = ({value, onChange, style, ...rest}: Select
 // 数据库资产查询组件
 export const DatabaseAssetSelect = ({value, onChange, style, mode, ...rest}: SelectProps) => {
     const {t} = useTranslation();
-    const [options, setOptions] = useState<{label: string, value: string}[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchAssets = async () => {
-            setLoading(true);
-            try {
-                const result = await databaseAssetApi.getAll();
-                const assetOptions = result.map((asset: DatabaseAsset) => ({
-                    label: asset.name,
-                    value: asset.id,
-                }));
-                setOptions(assetOptions);
-            } catch (error) {
-                console.error('Failed to fetch database assets:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchAssets();
-    }, []);
+    const query = useQuery({
+        queryKey: ['shared-query-selects', 'database-assets'],
+        queryFn: () => databaseAssetApi.getAll(),
+    });
 
     return (
         <Select
@@ -436,52 +234,8 @@ export const DatabaseAssetSelect = ({value, onChange, style, mode, ...rest}: Sel
                 filterOption: (input, option) =>
                     (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
             }}
-            loading={loading}
-            options={options}
-            style={selectStyle(style)}
-            {...rest}
-        />
-    );
-};
-
-// 网站查询组件
-export const WebsiteSelect = ({value, onChange, style, mode, ...rest}: SelectProps) => {
-    const {t} = useTranslation();
-    const [options, setOptions] = useState<{label: string, value: string}[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const fetchWebsites = async () => {
-            setLoading(true);
-            try {
-                const result = await websiteApi.getAll();
-                const websiteOptions = result.map((website: Website) => ({
-                    label: website.name,
-                    value: website.id,
-                }));
-                setOptions(websiteOptions);
-            } catch (error) {
-                console.error('Failed to fetch websites:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchWebsites();
-    }, []);
-
-    return (
-        <Select
-            value={value}
-            onChange={onChange}
-            placeholder={t('menus.resource.submenus.website')}
-            mode={mode}
-            allowClear
-            showSearch={{
-                filterOption: (input, option) =>
-                    (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase()),
-            }}
-            loading={loading}
-            options={options}
+            loading={query.isPending}
+            options={(query.data ?? []).map((asset: DatabaseAsset) => ({label: asset.name, value: asset.id}))}
             style={selectStyle(style)}
             {...rest}
         />
