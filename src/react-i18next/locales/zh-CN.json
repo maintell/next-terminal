@@ -76,6 +76,7 @@
     "delete": "删除",
     "clear": "清空",
     "detail": "详情",
+    "close": "关闭",
     "binding": "绑定",
     "unbind": "解绑",
     "authorized": "授权",
@@ -190,7 +191,7 @@
         "access_log_stats": "访问日志统计",
         "login_log": "登录日志",
         "operation_log": "操作日志",
-        "exec_command_log": "远程命令记录",
+        "exec_command_log": "命令审计",
         "database_sql_log": "SQL 日志"
       }
     },
@@ -767,6 +768,16 @@
         "normal": "普通"
       }
     },
+    "command_audit": {
+      "session_commands": "SSH 会话命令",
+      "remote_exec_commands": "远程执行命令",
+      "session_scope_tip": "记录交互式 SSH 终端中用户提交的命令，不包含命令执行结果和退出码。",
+      "input_at": "输入时间",
+      "locate_playback": "定位回放",
+      "remote_exec_detail": "远程执行命令详情",
+      "clear_remote_exec": "清空远程执行记录",
+      "clear_remote_exec_confirm": "确认清空全部远程执行命令记录吗？"
+    },
     "accessLog": {
       "uri": "请求URI",
       "statusCode": "状态码",
@@ -1176,46 +1187,25 @@
     "ssh_key_delete_title": "确认移除 SSH 密钥？",
     "ssh_key_delete_content": "确定要移除 SSH 密钥 {{name}} 吗？",
     "enter": "请输入",
-    "otp_bind_title": "您已成功开启双因素认证",
-    "otp_bind_sub_title": "多因素认证-二次认证-登录身份鉴别,访问控制更安全。",
+    "otp_bind_title": "已启用",
+    "otp_bind_sub_title": "登录时需要输入身份验证应用生成的动态验证码。",
     "otp_unbind": "解除多因素认证",
     "otp_unbind_title": "您确认要解除双因素认证吗？",
     "otp_unbind_subtitle": "解除之后可能存在系统账号被暴力破解的风险。",
     "otp_description": "双因素认证 (OTP) 为您的账户提供额外的安全保护。即使您的密码被泄露，攻击者也无法在没有您的移动设备的情况下访问您的账户。",
+    "otp_authenticator_app_description": "在您的手机上安装以下任一身份验证应用：",
     "otp_features": {
-      "title": "功能特点",
-      "enhanced_security": "增强安全性：为登录过程增加额外的安全层",
       "offline_access": "离线访问：无需网络连接即可生成验证码",
-      "time_based": "时效性：验证码每30秒自动更新，确保安全性",
-      "widely_supported": "广泛支持：兼容各种主流身份验证应用"
-    },
-    "otp_setup_guide": {
-      "title": "设置指南",
-      "step1": {
-        "title": "第1步：安装身份验证应用",
-        "description": "在您的手机上安装以下任一身份验证应用："
-      },
-      "step2": {
-        "title": "第2步：扫描二维码",
-        "description": "使用身份验证应用扫描下方的二维码，或手动输入密钥"
-      },
-      "step3": {
-        "title": "第3步：输入验证码",
-        "description": "输入身份验证应用显示的6位数字验证码完成绑定"
-      }
+      "time_based": "时效性：验证码每30秒自动更新，确保安全性"
     },
     "otp_manual_setup": "手动设置",
     "otp_manual_setup_desc": "如果无法扫描二维码，请在身份验证应用中手动输入以下密钥：",
-    "otp_verification_placeholder": "请输入6位验证码",
-    "otp_binding_title": "绑定双因素认证",
     "otp_scan_qr": "扫描二维码",
     "otp_scan_instruction": "请使用身份验证应用扫描上方二维码",
     "otp_verification_title": "验证绑定",
     "otp_verification_instruction": "请输入身份验证应用显示的6位验证码",
     "otp_security_tip": "安全提示",
     "otp_security_description": "绑定成功后，您的账户将受到双因素认证保护。请确保妥善保管您的身份验证设备。",
-    "otp_step2_description": "使用身份验证应用扫描二维码",
-    "otp_step3_description": "输入验证码完成绑定",
     "passkey_add": "添加 Passkey",
     "passkey_add_time": "添加时间",
     "passkey_used_time": "上次使用",

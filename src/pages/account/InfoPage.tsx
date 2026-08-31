@@ -76,7 +76,7 @@ const InfoPage = () => {
                 isMobile && 'px-4',
             )}>
                 <Tabs tabPlacement={isMobile ? 'top' : 'start'}
-                    // tabBarStyle={{width: 150}}
+                      className="min-w-0"
                       items={items}
                       activeKey={activeKey}
                       onChange={handleTagChange}

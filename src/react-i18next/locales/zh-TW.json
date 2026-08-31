@@ -76,6 +76,7 @@
     "delete": "刪除",
     "clear": "清空",
     "detail": "詳情",
+    "close": "關閉",
     "binding": "綁定",
     "unbind": "解除綁定",
     "authorized": "授權",
@@ -187,7 +188,7 @@
         "access_log_stats": "訪問日誌統計",
         "login_log": "登入日誌",
         "operation_log": "操作日誌",
-        "exec_command_log": "遠端命令記錄",
+        "exec_command_log": "命令審計",
         "database_sql_log": "SQL 日誌"
       }
     },
@@ -767,6 +768,16 @@
         "normal": "普通"
       }
     },
+    "command_audit": {
+      "session_commands": "SSH 會話命令",
+      "remote_exec_commands": "遠端執行命令",
+      "session_scope_tip": "記錄互動式 SSH 終端中使用者提交的命令，不包含命令執行結果和退出碼。",
+      "input_at": "輸入時間",
+      "locate_playback": "定位回放",
+      "remote_exec_detail": "遠端執行命令詳情",
+      "clear_remote_exec": "清空遠端執行記錄",
+      "clear_remote_exec_confirm": "確認清空全部遠端執行命令記錄嗎？"
+    },
     "accessLog": {
       "uri": "請求 URI",
       "statusCode": "狀態碼",
@@ -1176,46 +1187,25 @@
     "ssh_key_delete_title": "確認移除 SSH 金鑰？",
     "ssh_key_delete_content": "確定要移除 SSH 金鑰 {{name}} 嗎？",
     "enter": "請輸入",
-    "otp_bind_title": "您已成功開啟雙因素認證",
-    "otp_bind_sub_title": "多因素認證-二次認證-登入身分鑑別，訪問控制更安全。",
+    "otp_bind_title": "已啟用",
+    "otp_bind_sub_title": "登入時需要輸入身分驗證應用程式產生的動態驗證碼。",
     "otp_unbind": "解除多因素認證",
     "otp_unbind_title": "您確認要解除雙因素認證嗎？",
     "otp_unbind_subtitle": "解除之後可能存在系統帳號被暴力破解的風險。",
     "otp_description": "雙因素認證 (OTP) 為您的帳戶提供額外的安全保護。即使您的密碼被洩露，攻擊者也無法在沒有您的行動裝置的情況下存取您的帳戶。",
+    "otp_authenticator_app_description": "在您的手機上安裝以下任一身分驗證應用：",
     "otp_features": {
-      "title": "功能特點",
-      "enhanced_security": "增強安全性：為登入過程增加額外的安全層",
       "offline_access": "離線存取：無需網路連線即可生成驗證碼",
-      "time_based": "時效性：驗證碼每 30 秒自動更新，確保安全性",
-      "widely_supported": "廣泛支援：相容各種主流身分驗證應用"
-    },
-    "otp_setup_guide": {
-      "title": "設定指南",
-      "step1": {
-        "title": "第 1 步：安裝身分驗證應用",
-        "description": "在您的手機上安裝以下任一身分驗證應用："
-      },
-      "step2": {
-        "title": "第 2 步：掃描二維碼",
-        "description": "使用身分驗證應用掃描下方的二維碼，或手動輸入密鑰"
-      },
-      "step3": {
-        "title": "第 3 步：輸入驗證碼",
-        "description": "輸入身分驗證應用顯示的 6 位數字驗證碼完成綁定"
-      }
+      "time_based": "時效性：驗證碼每 30 秒自動更新，確保安全性"
     },
     "otp_manual_setup": "手動設定",
     "otp_manual_setup_desc": "如果無法掃描二維碼，請在身分驗證應用中手動輸入以下密鑰：",
-    "otp_verification_placeholder": "請輸入 6 位驗證碼",
-    "otp_binding_title": "綁定雙因素認證",
     "otp_scan_qr": "掃描二維碼",
     "otp_scan_instruction": "請使用身分驗證應用掃描上方二維碼",
     "otp_verification_title": "驗證綁定",
     "otp_verification_instruction": "請輸入身分驗證應用顯示的 6 位數字驗證碼",
     "otp_security_tip": "安全提示",
     "otp_security_description": "綁定成功後，您的帳戶將受到雙因素認證保護。請確保妥善保管您的身分驗證裝置。",
-    "otp_step2_description": "使用身分驗證應用掃描二維碼",
-    "otp_step3_description": "輸入驗證碼完成綁定",
     "passkey_add": "新增 Passkey",
     "passkey_add_time": "新增時間",
     "passkey_used_time": "上次使用",

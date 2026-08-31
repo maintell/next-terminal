@@ -40,10 +40,6 @@ class OperationLogApi extends Api<OperationLog> {
         super("admin/operation-logs");
     }
 
-    clear = async () => {
-        await requests.post(`/${this.group}/clear`);
-    }
-
     options = async () => {
         let result = await requests.get(`/${this.group}/options`);
         return result as OperationLogOptions;

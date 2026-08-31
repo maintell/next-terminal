@@ -2,10 +2,8 @@ import operationLogApi,{ OperationLog,OperationLogOption } from "@/api/operation
 import IPRegion from "@/components/IPRegion";
 import NTable,{ type NColumn,type NTableActionType } from "@/components/NTable";
 import { getSort } from "@/utils/sort";
-import { useMutation,useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
-    App,
-    Button,
     DatePicker,
     Space,
     Tag,
@@ -46,15 +44,6 @@ const OperationLogPage = () => {
 
     const {t} = useTranslation();
     const actionRef = useRef<NTableActionType>(null);
-
-    let {modal} = App.useApp();
-
-    let clearMutation = useMutation({
-        mutationFn: operationLogApi.clear,
-        onSuccess: () => {
-            actionRef.current?.reload();
-        }
-    });
 
     const optionsQuery = useQuery({
         queryKey: ['operation-log-options'],
@@ -236,21 +225,6 @@ const OperationLogPage = () => {
                 }}
                 dateFormatter="string"
                 headerTitle={t('menus.log_audit.submenus.operation_log')}
-                toolBarRender={() => [
-                    <Button key="clear"
-                            type="primary"
-                            danger
-                            onClick={() => {
-                                modal.confirm({
-                                    title: t('general.clear_confirm'),
-                                    onOk: async () => {
-                                        return clearMutation.mutate();
-                                    }
-                                })
-                            }}>
-                        {t('actions.clear')}
-                    </Button>,
-                ]}
             />
         </div>
     );

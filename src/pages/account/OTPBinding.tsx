@@ -1,204 +1,210 @@
-import {useState} from 'react';
-import {useQuery} from "@tanstack/react-query";
-import accountApi from "../../api/account-api";
-import {Alert, App, Button, Divider, Form, Input, QRCode, Space, Steps, Typography} from "antd";
-import {
-    CopyOutlined,
-    EyeInvisibleOutlined,
-    EyeTwoTone,
-    KeyOutlined,
-    MobileOutlined,
-    QrcodeOutlined
-} from '@ant-design/icons';
+import {useMutation, useQuery} from "@tanstack/react-query";
+import {CopyOutlined} from '@ant-design/icons';
+import {App, Button, Form, Input, QRCode, Space, Spin, Tag, Typography} from "antd";
 import {useTranslation} from "react-i18next";
+import accountApi from "../../api/account-api";
 
-const {Paragraph} = Typography;
+const {Title, Paragraph, Text} = Typography;
 
-interface Binding2faProps {
+const authenticatorApps = [
+    'Google Authenticator',
+    'Microsoft Authenticator',
+    'Authy',
+    '1Password',
+    'LastPass Authenticator',
+];
+
+interface OTPBindingProps {
     refetch: () => void
 }
 
-const OTPBinding = ({refetch}: Binding2faProps) => {
+interface ConfirmTotpValues {
+    totp: string
+}
 
-    const [form] = Form.useForm();
-    const [showSecret, setShowSecret] = useState(false);
-    let {t} = useTranslation();
-    let {message} = App.useApp();
+interface ConfirmTotpRequest extends ConfirmTotpValues {
+    secret: string
+}
 
-    let totpQuery = useQuery({
-        queryKey: ['totp'],
-        queryFn: () => accountApi.reloadTotp(window.location.hostname),
+const OTPBinding = ({refetch}: OTPBindingProps) => {
+    const [form] = Form.useForm<ConfirmTotpValues>();
+    const {t} = useTranslation();
+    const {message} = App.useApp();
+    const hostname = window.location.hostname;
+
+    const totpQuery = useQuery({
+        queryKey: ['account', 'totp', hostname],
+        queryFn: () => accountApi.reloadTotp(hostname),
         refetchOnWindowFocus: false,
-    })
+    });
 
-    const confirmTOTP = async (values: any) => {
-        values['secret'] = totpQuery.data?.secret;
-        await accountApi.confirmTotp(values);
-        message.success(t('general.success'));
-        refetch();
-    }
-
-    const renderQRCodeStatus = () => {
-        if (totpQuery.isLoading) {
-            return "loading";
-        }
-        return "active"
-    }
+    const confirmMutation = useMutation({
+        mutationFn: (values: ConfirmTotpRequest) => accountApi.confirmTotp(values),
+        onSuccess: () => {
+            message.success(t('general.success'));
+            refetch();
+        },
+    });
 
     const copySecret = () => {
-        if (totpQuery.data?.secret) {
-            navigator.clipboard.writeText(totpQuery.data.secret);
-            message.success(t('general.copy_success'));
+        const secret = totpQuery.data?.secret;
+        if (!secret) {
+            return;
         }
-    }
+        void navigator.clipboard.writeText(secret);
+        message.success(t('general.copy_success'));
+    };
 
-    const setupSteps = [
-        {
-            title: t('account.otp_setup_guide.step2.title'),
-            description: t('account.otp_step2_description'),
-            status: 'process' as const
-        },
-        {
-            title: t('account.otp_setup_guide.step3.title'),
-            description: t('account.otp_step3_description'),
-            status: 'wait' as const
+    const confirmTOTP = (values: ConfirmTotpValues) => {
+        const secret = totpQuery.data?.secret;
+        if (!secret) {
+            return;
         }
-    ];
+        confirmMutation.mutate({...values, secret});
+    };
+
+    const stepTitle = (step: number, title: string) => (
+        <div className="flex items-start gap-3">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-semibold text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
+                {step}
+            </span>
+            <Title level={5} style={{margin: 0, marginTop: 2}}>{title}</Title>
+        </div>
+    );
+
+    const renderQRCode = () => {
+        if (totpQuery.data?.url) {
+            return (
+                <QRCode
+                    value={totpQuery.data.url}
+                    errorLevel="M"
+                    size={200}
+                />
+            );
+        }
+
+        return (
+            <div className="flex h-[200px] w-[200px] items-center justify-center">
+                {totpQuery.isError ? (
+                    <Button
+                        type="link"
+                        loading={totpQuery.isFetching}
+                        onClick={() => void totpQuery.refetch()}
+                    >
+                        {t('actions.retry')}
+                    </Button>
+                ) : (
+                    <Spin size="large"/>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div>
-            <Steps
-                items={setupSteps}
-                size="small"
-                style={{marginBottom: 24}}
-            />
+            <section className="mb-8 border-b border-gray-200 pb-8 dark:border-gray-800">
+                {stepTitle(1, t('account.otp_authenticator_app_description'))}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                    <div className="border  rounded-lg">
-                        <div className="px-4 py-3 border-b ">
-                            <div className="flex items-center gap-2">
-                                <QrcodeOutlined/>
-                                <span>{t('account.otp_scan_qr')}</span>
-                            </div>
-                        </div>
-                        <div className="p-4 text-center">
-                            <div className="flex flex-col items-center gap-4 w-full">
-                                <QRCode
-                                    value={totpQuery.data?.url as string}
-                                    errorLevel={'M'}
-                                    status={renderQRCodeStatus()}
-                                    onRefresh={() => totpQuery.refetch()}
-                                    size={200}
-                                />
-                                <div className="w-full text-left">
-                                    <Alert
-                                        title={t('account.otp_scan_instruction')}
-                                        type="info"
-                                        showIcon
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div className="ml-10 mt-4">
+                    <Space wrap size={[8, 8]}>
+                        {authenticatorApps.map((app) => (
+                            <Tag key={app}>{app}</Tag>
+                        ))}
+                    </Space>
 
-                    <div className="border  rounded-lg">
-                        <div className="px-4 py-3 border-b">
-                            <div className="flex items-center gap-2">
-                                <KeyOutlined/>
-                                <span>{t('account.otp_manual_setup')}</span>
-                            </div>
-                        </div>
-                        <div className="p-4">
-                            <Paragraph style={{marginBottom: 12}}>
-                                {t('account.otp_manual_setup_desc')}
-                            </Paragraph>
-
-                            <Space.Compact block>
-                                <Input
-                                    value={totpQuery.data?.secret}
-                                    readOnly
-                                    type={showSecret ? "text" : "password"}
-                                    style={{width: 'calc(100% - 80px)'}}
-                                />
-                                <Button
-                                    icon={showSecret ? <EyeInvisibleOutlined/> : <EyeTwoTone/>}
-                                    onClick={() => setShowSecret(!showSecret)}
-                                    style={{width: '40px'}}
-                                />
-                                <Button
-                                    icon={<CopyOutlined/>}
-                                    onClick={copySecret}
-                                    style={{width: '40px'}}
-                                    type="primary"
-                                />
-                            </Space.Compact>
-                        </div>
+                    <div className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+                        <span>{t('account.otp_features.offline_access')}</span>
+                        <span>{t('account.otp_features.time_based')}</span>
                     </div>
                 </div>
+            </section>
 
-                <div>
-                    <div className="border rounded-lg">
-                        <div className="px-4 py-3 border-b">
-                            <div className="flex items-center gap-2">
-                                <MobileOutlined/>
-                                <span>{t('account.otp_verification_title')}</span>
-                            </div>
-                        </div>
-                        <div className="p-4">
-                            <div className="mb-4">
-                                <Alert
-                                    title={t('account.otp_verification_instruction')}
-                                    type="warning"
-                                    showIcon
-                                />
-                            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2">
+                <section className="pb-8 lg:pr-10 lg:pb-0">
+                    {stepTitle(2, t('account.otp_scan_qr'))}
 
-                            <Form
-                                form={form}
-                                onFinish={confirmTOTP}
-                                layout="vertical"
-                            >
-                                <Form.Item
-                                    name="totp"
-                                    label={t('account.captcha')}
-                                    rules={[
-                                        {required: true, message: t('account.otp_code_required')},
-                                        {pattern: /^\d{6}$/, message: t('account.otp_code_format')}
-                                    ]}
-                                >
-                                    <Input
-                                        placeholder={t('account.otp_verification_placeholder')}
-                                        size="large"
-                                        maxLength={6}
-                                        style={{textAlign: 'center', fontSize: '18px', letterSpacing: '4px'}}
-                                    />
-                                </Form.Item>
+                    <div className="mt-6 flex justify-center">
+                        {renderQRCode()}
+                    </div>
 
-                                <Form.Item style={{marginBottom: 0}}>
-                                    <Button
-                                        type="primary"
-                                        htmlType="submit"
-                                        size="large"
-                                        block
-                                        loading={false}
-                                    >
-                                        {t('actions.confirm')}
-                                    </Button>
-                                </Form.Item>
-                            </Form>
+                    <Paragraph
+                        type="secondary"
+                        style={{marginTop: 16, marginBottom: 0, textAlign: 'center'}}
+                    >
+                        {t('account.otp_scan_instruction')}
+                    </Paragraph>
 
-                            <Divider/>
-
-                            <Alert
-                                title={t('account.otp_security_tip')}
-                                description={t('account.otp_security_description')}
-                                type="success"
-                                showIcon
+                    <div className="mt-6 rounded-lg bg-gray-50 p-4 dark:bg-white/[0.04]">
+                        <Text strong>{t('account.otp_manual_setup')}</Text>
+                        <Paragraph type="secondary" style={{marginTop: 4, marginBottom: 12}}>
+                            {t('account.otp_manual_setup_desc')}
+                        </Paragraph>
+                        <Space.Compact block>
+                            <Input
+                                value={totpQuery.data?.secret ?? ''}
+                                readOnly
+                                className="font-mono"
                             />
-                        </div>
+                            <Button
+                                icon={<CopyOutlined/>}
+                                onClick={copySecret}
+                                disabled={!totpQuery.data?.secret}
+                            />
+                        </Space.Compact>
                     </div>
-                </div>
+                </section>
+
+                <section className="border-t border-gray-200 pt-8 dark:border-gray-800 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+                    {stepTitle(3, t('account.otp_verification_title'))}
+
+                    <Paragraph type="secondary" style={{marginTop: 8, marginBottom: 0, marginLeft: 40}}>
+                        {t('account.otp_verification_instruction')}
+                    </Paragraph>
+
+                    <Form
+                        form={form}
+                        onFinish={confirmTOTP}
+                        layout="vertical"
+                        style={{marginTop: 24}}
+                    >
+                        <Form.Item
+                            name="totp"
+                            rules={[
+                                {required: true, message: t('account.otp_code_required')},
+                                {pattern: /^\d{6}$/, message: t('account.otp_code_format')},
+                            ]}
+                        >
+                            <Input.OTP
+                                size="large"
+                                length={6}
+                                type="text"
+                                inputMode="numeric"
+                                formatter={(value) => value.replace(/\D/g, '')}
+                                disabled={!totpQuery.data?.secret || confirmMutation.isPending}
+                            />
+                        </Form.Item>
+
+                        <Form.Item style={{marginBottom: 0}}>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                size="large"
+                                block
+                                loading={confirmMutation.isPending}
+                                disabled={!totpQuery.data?.secret}
+                            >
+                                {t('actions.confirm')}
+                            </Button>
+                        </Form.Item>
+                    </Form>
+
+                    <div className="mt-6 border-t border-gray-200 pt-4 dark:border-gray-800">
+                        <Text strong>{t('account.otp_security_tip')}</Text>
+                        <Paragraph type="secondary" style={{marginTop: 4, marginBottom: 0}}>
+                            {t('account.otp_security_description')}
+                        </Paragraph>
+                    </div>
+                </section>
             </div>
         </div>
     );

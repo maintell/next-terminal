@@ -1,193 +1,65 @@
-import {
-CheckCircleOutlined,
-ClockCircleOutlined,
-GlobalOutlined,
-InfoCircleOutlined,
-MobileOutlined,
-SafetyOutlined
-} from '@ant-design/icons';
-import { useQuery } from "@tanstack/react-query";
-import { Alert,Card,Col,Row,Space,Steps,Tag,Typography } from "antd";
-import { useEffect,useState } from 'react';
-import { useTranslation } from "react-i18next";
+import {useQuery} from "@tanstack/react-query";
+import {Button, Spin, Typography} from "antd";
+import {useTranslation} from "react-i18next";
 import accountApi from "../../api/account-api";
 import OTPBinding from "./OTPBinding";
 import OTPUnBinding from "./OTPUnBinding";
 
-const {Title, Paragraph, Text: _Text} = Typography;
+const {Title, Paragraph} = Typography;
 
 const OTP = () => {
-
-    let {t} = useTranslation();
-    let infoQuery = useQuery({
+    const {t} = useTranslation();
+    const infoQuery = useQuery({
         queryKey: ['info'],
         queryFn: accountApi.getUserInfo,
-    })
-
-    let [view, setView] = useState<string>('binding');
-
-    useEffect(() => {
-        if (infoQuery.data?.enabledTotp) {
-            setView('unbinding');
-        }else {
-            setView('binding');
-        }
-    }, [infoQuery.data]);
+    });
 
     const refetch = () => {
-        infoQuery.refetch();
-    }
-
-    const renderFeatures = () => {
-        const features = [
-            {
-                icon: <SafetyOutlined style={{color: '#52c41a'}} />,
-                title: t('account.otp_features.enhanced_security'),
-            },
-            {
-                icon: <MobileOutlined style={{color: '#1890ff'}} />,
-                title: t('account.otp_features.offline_access'),
-            },
-            {
-                icon: <ClockCircleOutlined style={{color: '#faad14'}} />,
-                title: t('account.otp_features.time_based'),
-            },
-            {
-                icon: <GlobalOutlined style={{color: '#722ed1'}} />,
-                title: t('account.otp_features.widely_supported'),
-            }
-        ];
-
-        return (
-            <div className="space-y-3">
-                {features.map((item) => (
-                    <div key={item.title} className="flex items-center gap-3 py-1">
-                        {item.icon}
-                        <span>{item.title}</span>
-                    </div>
-                ))}
-            </div>
-        );
+        void infoQuery.refetch();
     };
 
-    const renderAuthApps = () => {
-        const apps = [
-            { name: 'Google Authenticator', color: 'blue' },
-            { name: 'Microsoft Authenticator', color: 'green' },
-            { name: 'Authy', color: 'orange' },
-            { name: '1Password', color: 'purple' },
-            { name: 'LastPass Authenticator', color: 'red' },
-        ];
-
-        return (
-            <Space wrap>
-                {apps.map((app, index) => (
-                    <Tag key={index} color={app.color} style={{margin: '4px'}}>
-                        {app.name}
-                    </Tag>
-                ))}
-            </Space>
-        );
-    };
-
-    const renderSetupGuide = () => {
-        const steps = [
-            {
-                title: t('account.otp_setup_guide.step1.title'),
-                description: (
-                    <div>
-                        <Paragraph>{t('account.otp_setup_guide.step1.description')}</Paragraph>
-                        {renderAuthApps()}
-                    </div>
-                ),
-                icon: <MobileOutlined />,
-            },
-            {
-                title: t('account.otp_setup_guide.step2.title'),
-                description: t('account.otp_setup_guide.step2.description'),
-                icon: <InfoCircleOutlined />,
-            },
-            {
-                title: t('account.otp_setup_guide.step3.title'),
-                description: t('account.otp_setup_guide.step3.description'),
-                icon: <CheckCircleOutlined />,
-            }
-        ];
-
-        return (
-            <Steps
-                orientation="vertical"
-                current={-1}
-                items={steps}
-                style={{marginTop: 16}}
-            />
-        );
-    };
-
-    const renderView = (view: string) => {
-        switch (view) {
-            case 'unbinding':
-                return <OTPUnBinding refetch={refetch} forceReauth/>;
-            case 'binding':
-                return (
-                    <Row gutter={[24, 24]}>
-                        <Col xs={24} lg={10}>
-                            <Card 
-                                title={
-                                    <Space>
-                                        <InfoCircleOutlined />
-                                        {t('account.otp_features.title')}
-                                    </Space>
-                                }
-                                size="small"
-                            >
-                                {renderFeatures()}
-                            </Card>
-                            
-                            <Card 
-                                title={t('account.otp_setup_guide.title')} 
-                                style={{marginTop: 16}}
-                                size="small"
-                            >
-                                {renderSetupGuide()}
-                            </Card>
-                        </Col>
-                        
-                        <Col xs={24} lg={14}>
-                            <Card 
-                                title={
-                                    <Space>
-                                        <SafetyOutlined />
-                                        {t('account.otp_binding_title')}
-                                    </Space>
-                                }
-                                size="small"
-                            >
-                                <OTPBinding refetch={refetch}/>
-                            </Card>
-                        </Col>
-                    </Row>
-                );
+    const renderContent = () => {
+        if (infoQuery.isPending) {
+            return (
+                <div className="flex justify-center py-16">
+                    <Spin size="large"/>
+                </div>
+            );
         }
-    }
+
+        if (!infoQuery.data) {
+            return (
+                <div className="flex justify-center py-16">
+                    <Button type="link" onClick={() => void infoQuery.refetch()}>
+                        {t('actions.retry')}
+                    </Button>
+                </div>
+            );
+        }
+
+        if (infoQuery.data.enabledTotp) {
+            return <OTPUnBinding refetch={refetch} forceReauth/>;
+        }
+
+        return <OTPBinding refetch={refetch}/>;
+    };
 
     return (
-        <div>
-            <Title level={3} style={{marginTop: 0, marginBottom: 16}}>
-                <Space>
-                    <SafetyOutlined />
+        <div className="max-w-5xl min-w-0">
+            <div className="mb-4 min-w-0">
+                <Title level={5} style={{margin: 0}}>
                     {t('identity.user.otp')}
-                </Space>
-            </Title>
-            
-            <Alert
-                title={t('account.otp_description')}
-                type="info"
-                showIcon
-                style={{marginBottom: 24}}
-            />
+                </Title>
+                <Paragraph
+                    type="secondary"
+                    ellipsis={{rows: 1, tooltip: t('account.otp_description')}}
+                    style={{marginTop: 4, marginBottom: 0}}
+                >
+                    {t('account.otp_description')}
+                </Paragraph>
+            </div>
 
-            {renderView(view)}
+            {renderContent()}
         </div>
     );
 };

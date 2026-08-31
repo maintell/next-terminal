@@ -76,6 +76,7 @@
     "delete": "削除",
     "clear": "クリア",
     "detail": "詳細",
+    "close": "閉じる",
     "binding": "連携",
     "unbind": "連携解除",
     "authorized": "認可",
@@ -187,7 +188,7 @@
         "access_log_stats": "アクセスログ統計",
         "login_log": "ログインログ",
         "operation_log": "操作ログ",
-        "exec_command_log": "リモートコマンド記録",
+        "exec_command_log": "コマンド監査",
         "database_sql_log": "SQL ログ"
       }
     },
@@ -767,6 +768,16 @@
         "normal": "通常"
       }
     },
+    "command_audit": {
+      "session_commands": "SSH セッションコマンド",
+      "remote_exec_commands": "リモート実行コマンド",
+      "session_scope_tip": "対話型 SSH ターミナルで送信されたコマンドを記録します。実行結果と終了コードは含まれません。",
+      "input_at": "入力日時",
+      "locate_playback": "再生位置へ移動",
+      "remote_exec_detail": "リモート実行コマンド詳細",
+      "clear_remote_exec": "リモート実行記録をクリア",
+      "clear_remote_exec_confirm": "すべてのリモート実行コマンド記録をクリアしますか？"
+    },
     "accessLog": {
       "uri": "リクエスト URI",
       "statusCode": "ステータスコード",
@@ -1176,46 +1187,25 @@
     "ssh_key_delete_title": "SSH キーを削除しますか？",
     "ssh_key_delete_content": "SSH キー {{name}} を削除しますか？",
     "enter": "入力してください",
-    "otp_bind_title": "二要素認証が有効になりました",
-    "otp_bind_sub_title": "多要素認証—ログイン本人確認でアクセス制御を強化します。",
+    "otp_bind_title": "有効",
+    "otp_bind_sub_title": "ログイン時に認証アプリが生成するワンタイムコードの入力が必要です。",
     "otp_unbind": "二要素認証を解除",
     "otp_unbind_title": "二要素認証を解除しますか？",
     "otp_unbind_subtitle": "解除するとアカウントが攻撃されるリスクが高まります。",
     "otp_description": "二要素認証 (OTP) はアカウントに追加の保護を提供します。パスワードが漏洩しても、モバイルデバイスがなければアクセスできません。",
+    "otp_authenticator_app_description": "以下の認証アプリのいずれかをスマホにインストールしてください：",
     "otp_features": {
-      "title": "機能",
-      "enhanced_security": "セキュリティ強化：ログインに追加の保護レイヤーを提供",
       "offline_access": "オフラインアクセス：ネット接続なしでコード生成",
-      "time_based": "時間ベース：30 秒ごとにコード更新",
-      "widely_supported": "広く対応：主要な認証アプリと互換"
-    },
-    "otp_setup_guide": {
-      "title": "設定ガイド",
-      "step1": {
-        "title": "ステップ 1：認証アプリをインストール",
-        "description": "以下の認証アプリのいずれかをスマホにインストールしてください："
-      },
-      "step2": {
-        "title": "ステップ 2：QR コードをスキャン",
-        "description": "認証アプリで下の QR コードをスキャンするか、手動でキーを入力してください"
-      },
-      "step3": {
-        "title": "ステップ 3：コードを入力",
-        "description": "認証アプリに表示される 6 桁のコードを入力して連携を完了します"
-      }
+      "time_based": "時間ベース：30 秒ごとにコード更新"
     },
     "otp_manual_setup": "手動設定",
     "otp_manual_setup_desc": "QR コードをスキャンできない場合は、認証アプリで次のキーを手動入力してください：",
-    "otp_verification_placeholder": "6 桁のコードを入力してください",
-    "otp_binding_title": "二要素認証を連携",
     "otp_scan_qr": "QR コードをスキャン",
     "otp_scan_instruction": "上の QR コードを認証アプリでスキャンしてください",
     "otp_verification_title": "連携を確認",
     "otp_verification_instruction": "認証アプリに表示された 6 桁のコードを入力してください",
     "otp_security_tip": "セキュリティのヒント",
     "otp_security_description": "連携が完了すると、アカウントは二要素認証で保護されます。認証デバイスを大切に保管してください。",
-    "otp_step2_description": "認証アプリで QR コードをスキャン",
-    "otp_step3_description": "コードを入力して連携を完了",
     "passkey_add": "Passkey を追加",
     "passkey_add_time": "追加日時",
     "passkey_used_time": "最終使用",

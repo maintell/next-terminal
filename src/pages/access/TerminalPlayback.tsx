@@ -22,6 +22,9 @@ const TerminalPlayback = () => {
 
     const [searchParams] = useSearchParams();
     const sessionId = maybe(searchParams.get('sessionId'), '');
+    const positionValue = searchParams.get('at');
+    const positionParam = positionValue === null ? Number.NaN : Number(positionValue);
+    const initialPosition = Number.isFinite(positionParam) && positionParam >= 0 ? positionParam : undefined;
 
     let [open, setOpen] = useState(false);
     const playerRef = useRef<ReturnType<typeof AsciinemaPlayer.create>>(null);
@@ -32,6 +35,7 @@ const TerminalPlayback = () => {
         const player = AsciinemaPlayer.create(url, playerElementRef.current, {
             fit: 'both',
             autoPlay: true,
+            startAt: initialPosition,
             terminalFontFamily: 'monaco, Consolas, "Lucida Console", monospace'
         });
         playerRef.current = player;
@@ -39,7 +43,7 @@ const TerminalPlayback = () => {
             playerRef.current = null;
             player.dispose();
         }
-    }, [sessionId]);
+    }, [sessionId, initialPosition]);
 
     let sessionQuery = useQuery({
         queryKey: ['session', sessionId],
