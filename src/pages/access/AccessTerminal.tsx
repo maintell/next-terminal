@@ -45,7 +45,6 @@ import {
     ChevronDownIcon,
     ChevronUpIcon,
     EraserIcon,
-    FileUpIcon,
     FolderCode,
     FolderIcon,
     SearchIcon,
@@ -56,6 +55,7 @@ import {
 import qs from "qs";
 import React, {useEffect, useRef, useState} from 'react';
 import {useTranslation} from "react-i18next";
+import type {PanelImperativeHandle} from "react-resizable-panels";
 
 interface Props {
     assetId: string;
@@ -93,7 +93,7 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
     const rootRef = useRef<HTMLDivElement>(null);
     const mobileTopControlsRef = useRef<HTMLDivElement>(null);
     const mobileBottomControlsRef = useRef<HTMLDivElement>(null);
-    const zmodemUploadInputRef = useRef<HTMLInputElement>(null);
+    const toolPanelRef = useRef<PanelImperativeHandle>(null);
     const hasConnectedRef = useRef(false);
     const connectingRef = useRef(false);
     const mfaCheckingRef = useRef(false);
@@ -103,7 +103,6 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
     const restrictedShell = session?.attrs?.['restricted-shell'] === true;
     const fileSystemEnabled = session?.fileSystem === true && !restrictedShell;
     const statsEnabled = Boolean(session?.id) && !restrictedShell;
-    const zmodemUploadEnabled = session?.protocol?.toLowerCase() === 'ssh' && !session.readonly && !restrictedShell;
 
     let [accessTheme] = useTerminalTheme();
     const sessionMutation = useAccessSessionMutation({type: 'asset', assetId});
@@ -118,9 +117,11 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
 
     let [snippetOpen, setSnippetOpen] = useState(false);
     let [aiOpen, setAiOpen] = useState(false);
+    const [aiPanelMounted, setAiPanelMounted] = useState(false);
     const [mobileToolDrawer, setMobileToolDrawer] = useState<MobileToolDrawer>(null);
     let [sharerOpen, setSharerOpen] = useState(false);
     let [statsOpen, setStatsOpen] = useState(false);
+    const [statsPanelMounted, setStatsPanelMounted] = useState(false);
     const [pingDelay, setPingDelay] = useState<number | null>(null);
 
     let [reconnected, setReconnected] = useState('');
@@ -130,6 +131,26 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
 
     const fitTerminal = () => {
         runtimeRef.current?.fit();
+    };
+
+    const setDesktopAiOpen = (open: boolean) => {
+        if (open) {
+            setStatsOpen(false);
+            toolPanelRef.current?.expand();
+        } else {
+            toolPanelRef.current?.collapse();
+        }
+        setAiOpen(open);
+    };
+
+    const setDesktopStatsOpen = (open: boolean) => {
+        if (open) {
+            setAiOpen(false);
+            toolPanelRef.current?.expand();
+        } else {
+            toolPanelRef.current?.collapse();
+        }
+        setStatsOpen(open);
     };
 
     let {notification, message} = App.useApp();
@@ -152,6 +173,7 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
     useEffect(() => {
         if (!aiEnabled) {
             setAiOpen(false);
+            setAiPanelMounted(false);
             setMobileToolDrawer((current) => current === 'ai' ? null : current);
         }
     }, [aiEnabled]);
@@ -164,8 +186,18 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
         }
         if (!statsEnabled) {
             setStatsOpen(false);
+            setStatsPanelMounted(false);
         }
     }, [fileSystemEnabled, statsEnabled]);
+
+    useEffect(() => {
+        if (aiOpen) {
+            setAiPanelMounted(true);
+        }
+        if (statsOpen) {
+            setStatsPanelMounted(true);
+        }
+    }, [aiOpen, statsOpen]);
 
     useEffect(() => {
         if (active) {
@@ -829,35 +861,6 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
         terminalRef.current?.focus();
     };
 
-    const handleZmodemUpload = (files: FileList | null) => {
-        const uploadFiles = files ? Array.from(files) : [];
-        const input = zmodemUploadInputRef.current;
-        if (input) {
-            input.value = '';
-        }
-        if (uploadFiles.length === 0) {
-            return;
-        }
-
-        const controller = zmodemControllerRef.current;
-        const runtime = runtimeRef.current;
-        if (!controller || !runtime?.connected) {
-            void message.warning(t('access.terminal.zmodem.not_connected'));
-            return;
-        }
-        if (!controller.prepareUploadFiles(uploadFiles)) {
-            return;
-        }
-        try {
-            runtime.sendMessage(MessageTypeData, 'rz\r');
-            terminalRef.current?.focus();
-        } catch (error) {
-            controller.cancelPendingUploadFiles();
-            console.error('Failed to start ZMODEM upload:', error);
-            void message.error(t('access.terminal.zmodem.start_upload_failed'));
-        }
-    };
-
     const handleMobileShortcutPointerDown = (event: React.PointerEvent<HTMLButtonElement>, data: string) => {
         event.preventDefault();
         sendTerminalData(data);
@@ -953,7 +956,7 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
                 !isMobile && 'h-full',
             )}
             >
-                <ResizablePanelGroup direction="horizontal" className="min-h-0">
+                <ResizablePanelGroup direction="horizontal" className="min-h-0 min-w-0 flex-1">
                     <ResizablePanel order={1} className="h-full min-w-0">
                         <div className={'relative h-full'}>
                             <div className={'flex h-full min-h-0 flex-col overflow-hidden'}>
@@ -999,16 +1002,6 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
                                                 >
                                                     <Share2Icon className="h-4 w-4"/>
                                                 </button>
-                                                {zmodemUploadEnabled && (
-                                                    <button
-                                                        type="button"
-                                                        title={t('access.terminal.zmodem.upload_file')}
-                                                        className="flex h-7 w-7 items-center justify-center rounded bg-white/10 text-white transition-colors active:bg-white/20"
-                                                        onClick={() => zmodemUploadInputRef.current?.click()}
-                                                    >
-                                                        <FileUpIcon className="h-4 w-4"/>
-                                                    </button>
-                                                )}
                                                 {aiEnabled && (
                                                     <button
                                                         type="button"
@@ -1100,48 +1093,45 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
                             <SessionWatermark watermark={session?.watermark}/>
                         </div>
                     </ResizablePanel>
-                    {
-                        statsEnabled && statsOpen && <>
-                            <ResizableHandle withHandle/>
+                    {!isMobile && (statsEnabled || aiEnabled) ? (
+                        <>
+                            <ResizableHandle withHandle className={clsx(!statsOpen && !aiOpen && 'hidden')}/>
                             <ResizablePanel
-                                defaultSize={22}
-                                minSize={22}
-                                maxSize={50}
+                                ref={toolPanelRef}
+                                collapsible
+                                collapsedSize="0px"
+                                defaultSize="0px"
+                                minSize="340px"
+                                maxSize="640px"
+                                groupResizeBehavior="preserve-pixel-size"
                                 order={2}
-                                id={'stat'}
-                                className={'min-w-[340px]'}
+                                id={'terminal-tool'}
+                                className={'relative h-full min-h-0 overflow-hidden'}
                             >
-                                <div className="h-full">
-                                    <AccessStats sessionId={session?.id ?? ''} open={statsOpen}/>
-                                </div>
+                                {statsEnabled && (statsOpen || statsPanelMounted) ? (
+                                    <div className={clsx('h-full', !statsOpen && 'hidden')} aria-hidden={!statsOpen} inert={!statsOpen}>
+                                        <AccessStats sessionId={session?.id ?? ''} open={statsOpen}/>
+                                    </div>
+                                ) : null}
+                                {aiEnabled && (aiOpen || aiPanelMounted) ? (
+                                    <div className={clsx('h-full', !aiOpen && 'hidden')} aria-hidden={!aiOpen} inert={!aiOpen}>
+                                        <AIAssistant
+                                            embedded
+                                            assetId={assetId}
+                                            assetName={session?.assetName}
+                                            open={Boolean(session?.id)}
+                                            onClose={() => setDesktopAiOpen(false)}
+                                        />
+                                    </div>
+                                ) : null}
                             </ResizablePanel>
                         </>
-                    }
-                    {
-                        !isMobile && aiEnabled && aiOpen && <>
-                            <ResizableHandle withHandle/>
-                            <ResizablePanel
-                                defaultSize={28}
-                                minSize={22}
-                                maxSize={55}
-                                order={2}
-                                id={'ai-assistant'}
-                                className={'relative h-full min-h-0 min-w-[325px] max-w-[800px] overflow-hidden'}
-                            >
-                                <AIAssistant
-                                    embedded
-                                    sessionId={session?.id}
-                                    open={Boolean(session?.id)}
-                                    onClose={() => setAiOpen(false)}
-                                />
-                            </ResizablePanel>
-                        </>
-                    }
+                    ) : null}
 
                 </ResizablePanelGroup>
 
                 {!isMobile &&
-                    <div className={'w-10 bg-[#1E1F22] flex flex-col items-center border'}>
+                    <div className={'w-10 shrink-0 bg-[#1E1F22] flex flex-col items-center border'}>
                         <div className={'flex-grow py-4 space-y-6 cursor-pointer'}>
                             <div title={t('access.terminal.search')}>
                                 <SearchIcon className={clsx('h-4 w-4', searchOpen && 'text-blue-500')}
@@ -1152,19 +1142,10 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
                                 <EraserIcon className={'h-4 w-4'} onClick={handleClearTerminal}/>
                             </div>
                             <Share2Icon className={'h-4 w-4'} onClick={() => setSharerOpen(true)}/>
-                            {zmodemUploadEnabled && (
-                                <div title={t('access.terminal.zmodem.upload_file')}>
-                                    <FileUpIcon
-                                        className={'h-4 w-4'}
-                                        onClick={() => zmodemUploadInputRef.current?.click()}
-                                    />
-                                </div>
-                            )}
                             {aiEnabled && (
                                 <SparklesIcon className={clsx('h-4 w-4', aiOpen && 'text-blue-500')}
                                               onClick={() => {
-                                                  setStatsOpen(false);
-                                                  setAiOpen(!aiOpen);
+                                                  setDesktopAiOpen(!aiOpen);
                                               }}
                                 />
                             )}
@@ -1177,8 +1158,7 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
                             {statsEnabled && (
                                 <ActivityIcon className={clsx('h-4 w-4', statsOpen && 'text-blue-500')}
                                               onClick={() => {
-                                                  setAiOpen(false);
-                                                  setStatsOpen(!statsOpen);
+                                                  setDesktopStatsOpen(!statsOpen);
                                               }}
                                 />
                             )}
@@ -1214,7 +1194,8 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
                     drawer
                     drawerPlacement="bottom"
                     drawerSize={MOBILE_TOOL_DRAWER_SIZE}
-                    sessionId={session?.id}
+                    assetId={assetId}
+                    assetName={session?.assetName}
                     open={mobileToolDrawer === 'ai' && Boolean(session?.id)}
                     onClose={() => setMobileToolDrawer(null)}
                     getContainer={drawerGetContainer}
@@ -1246,13 +1227,6 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
                     connect(securityToken);
                 }}
                 handleCancel={() => setMfaOpen(false)}
-            />
-            <input
-                ref={zmodemUploadInputRef}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={(event) => handleZmodemUpload(event.target.files)}
             />
         </div>
     );
