@@ -3,7 +3,7 @@
 [![Stars](https://img.shields.io/github/stars/next-terminal/next-terminal?style=flat&label=Stars)](https://github.com/next-terminal/next-terminal/stargazers)
 [![License](https://img.shields.io/github/license/next-terminal/next-terminal?label=License)](./LICENSE)
 [![Website](https://img.shields.io/badge/Website-next--terminal.com-1063ff)](https://www.next-terminal.com)
-[![Docs](https://img.shields.io/badge/Docs-docs.next--terminal.com-0ea5e9)](https://docs.next-terminal.com)
+[![Docs](https://img.shields.io/badge/Docs-www.next--terminal.com-0ea5e9)](https://www.next-terminal.com/docs/)
 [![Demo](https://img.shields.io/badge/Demo-demo.next--terminal.com-10b981)](https://demo.next-terminal.com)
 
 English | [简体中文](./README-en.md)
@@ -19,7 +19,7 @@ Next Terminal is a simple, secure, and user-friendly interactive auditing system
 ### Quick Start
 
 Refer to the installation guide here:
-👉 [Installation Documentation](https://docs.next-terminal.com)
+👉 [Installation Documentation](https://www.next-terminal.com/docs/)
 
 
 ## Screenshots
@@ -43,7 +43,7 @@ If you discover any security vulnerabilities, please contact the maintainer:
 ## Contact
 
 - **Website**: https://www.next-terminal.com
-- **Docs**: https://docs.next-terminal.com
+- **Docs**: https://www.next-terminal.com/docs/
 - **Support email (official)**: [support@next-terminal.com](mailto:support@next-terminal.com) — after-sales within 1 year of purchase, workdays 10:00–18:00; replies on the next workday outside these hours
 - **Issues / Bugs / Feature requests**: [GitHub Issues](https://github.com/next-terminal/next-terminal/issues) (public and searchable — your question helps others with the same issue)
 - **Community**: Telegram https://t.me/next_terminal · WeChat group — see https://www.next-terminal.com
