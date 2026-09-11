@@ -143,7 +143,7 @@ class AssetApi extends Api<Asset> {
     }
 
     decrypt = async (id: string, securityToken: string) => {
-        return await requests.get(`/${this.group}/${id}/decrypted?securityToken=${securityToken}`) as Asset;
+        return await requests.get(`/${this.group}/${id}/decrypted`, {securityToken}) as Asset;
     }
 
     tree = async (protocol?: string) => {

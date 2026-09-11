@@ -1,3 +1,4 @@
+import {useLicense} from "@/hook/LicenseContext";
 import QuerySelect from "@/components/QuerySelect";
 import agentGatewayApi from "@/api/agent-gateway-api";
 import gatewayGroupApi from "@/api/gateway-group-api";
@@ -14,6 +15,8 @@ interface GatewayChainEditorProps {
 
 const GatewayChainEditor = ({name = 'gatewayChain', disabled}: GatewayChainEditorProps) => {
     const {t} = useTranslation();
+    const {license, isLoading} = useLicense();
+    const premium = !isLoading && license.hasPremiumFeatures();
     const form = Form.useFormInstance();
     const gatewayChain = Form.useWatch(name, form) || [];
 
@@ -50,9 +53,9 @@ const GatewayChainEditor = ({name = 'gatewayChain', disabled}: GatewayChainEdito
             case 'ssh':
                 return sshGatewayRequest;
             case 'agent':
-                return agentGatewayRequest;
+                return premium ? agentGatewayRequest : undefined;
             case 'group':
-                return gatewayGroupRequest;
+                return premium ? gatewayGroupRequest : undefined;
             default:
                 return undefined;
         }
@@ -109,8 +112,8 @@ const GatewayChainEditor = ({name = 'gatewayChain', disabled}: GatewayChainEdito
                                         <Select
                                             options={[
                                                 {label: t('menus.gateway.submenus.ssh_gateway'), value: 'ssh'},
-                                                {label: t('menus.gateway.submenus.agent_gateway'), value: 'agent', disabled: index > 0},
-                                                {label: t('menus.gateway.submenus.gateway_group'), value: 'group', disabled: index > 0},
+                                                {label: t('menus.gateway.submenus.agent_gateway'), value: 'agent', disabled: index > 0 || !premium},
+                                                {label: t('menus.gateway.submenus.gateway_group'), value: 'group', disabled: index > 0 || !premium},
                                             ]}
                                             onChange={(value) => {
                                                 const next = [...gatewayChain];
@@ -129,7 +132,7 @@ const GatewayChainEditor = ({name = 'gatewayChain', disabled}: GatewayChainEdito
                                         <QuerySelect
                                             queryKey={['gateway-chain-members', gatewayType]}
                                             showSearch
-                                            disabled={!gatewayType}
+                                            disabled={!gatewayType || (gatewayType !== 'ssh' && !premium)}
                                             placeholder={gatewayLabel(gatewayType)}
                                             params={{gatewayType}}
                                             request={gatewayRequest(gatewayType)}

@@ -1,3 +1,5 @@
+import Disabled from "@/components/Disabled";
+import {useLicense} from "@/hook/LicenseContext";
 import {useRef, useState} from 'react';
 import {
     App,
@@ -19,7 +21,7 @@ import FacadeCompactSearch from "@/pages/facade/components/FacadeCompactSearch";
 
 const {Text} = Typography;
 
-const DatabaseWorkOrderUserPage = () => {
+const DatabaseWorkOrderUserPageContent = () => {
     const {t} = useTranslation();
     const {isMobile} = useMobile();
     const {message} = App.useApp();
@@ -227,6 +229,13 @@ const DatabaseWorkOrderUserPage = () => {
             />
         </div>
     );
+};
+
+const DatabaseWorkOrderUserPage = () => {
+    const {license, isLoading} = useLicense();
+    return <Disabled feature="sql_work_order" disabled={isLoading || !license.hasPremiumFeatures()}>
+        <DatabaseWorkOrderUserPageContent/>
+    </Disabled>;
 };
 
 export default DatabaseWorkOrderUserPage;

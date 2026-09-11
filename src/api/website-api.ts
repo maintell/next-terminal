@@ -26,6 +26,7 @@ export interface Website {
     asciiDomain: string;
     entrance: string;
     description: string;
+    tags?: string[];
     connectionMode: ConnectionMode;
     gatewayChain: GatewayHop[];
     proxyId?: string;
@@ -52,7 +53,7 @@ export interface Website {
 interface Public {
     enabled: boolean;
     ip: string;
-	 ipWhitelistIds?: string[];
+	 ipSetIds?: string[];
     expiredAt: number;
     password: string;
     timeLimit?: boolean;
@@ -90,6 +91,7 @@ export interface SortPositionRequest {
 export interface WebsiteBasicUpdateRequest {
     logo?: string;
     name: string;
+    tags?: string[];
     domain: string;
     entrance?: string;
     targetUrl: string;
@@ -163,6 +165,10 @@ class WebsiteApi extends Api<Website> {
 
     updateSortPosition = async (req: SortPositionRequest) => {
         return await requests.post(`/${this.group}/sort`, req);
+    }
+
+    getTags = async () => {
+        return await requests.get(`/${this.group}/tags`) as string[];
     }
 
     getFavicon = async (url: string): Promise<string> => {

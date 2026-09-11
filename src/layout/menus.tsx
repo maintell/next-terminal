@@ -21,6 +21,7 @@ import {
     HddOutlined,
     IdcardOutlined,
     InsuranceOutlined,
+    KeyOutlined,
     LinkOutlined,
     LoginOutlined,
     MonitorOutlined,
@@ -32,7 +33,6 @@ import {
     WarningOutlined,
     SafetyCertificateOutlined,
     SyncOutlined,
-    RobotOutlined,
     UserAddOutlined,
 } from "@ant-design/icons";
 
@@ -42,11 +42,6 @@ export const getMenus = (t: any) => {
             key: 'dashboard',
             label: t('menus.dashboard.label'),
             icon: <DashboardOutlined/>,
-        },
-        {
-            key: 'ai',
-            label: t('menus.ai.label'),
-            icon: <RobotOutlined/>,
         },
         {
             key: 'resource',
@@ -64,9 +59,24 @@ export const getMenus = (t: any) => {
                     icon: <DatabaseOutlined/>,
                 },
                 {
+                    key: 'website',
+                    label: t('menus.resource.submenus.website'),
+                    icon: <GlobalOutlined/>,
+                },
+                {
                     key: 'credential',
                     label: t('menus.resource.submenus.credential'),
                     icon: <IdcardOutlined/>,
+                },
+                {
+                    key: 'certificate',
+                    label: t('menus.resource.submenus.certificate'),
+                    icon: <SafetyCertificateOutlined />,
+                },
+                {
+                    key: 'ip-set',
+                    label: t('menus.resource.submenus.ip_set'),
+                    icon: <SyncOutlined/>,
                 },
                 {
                     key: 'snippet',
@@ -78,20 +88,74 @@ export const getMenus = (t: any) => {
                     label: t('menus.resource.submenus.storage'),
                     icon: <HddOutlined/>,
                 },
+            ]
+        },
+        {
+            key: 'identity',
+            label: t('menus.identity.label'),
+            icon: <UserSwitchOutlined/>,
+            children: [
                 {
-                    key: 'website',
-                    label: t('menus.resource.submenus.website'),
+                    key: 'user',
+                    label: t('menus.identity.submenus.user'),
+                    icon: <UserOutlined/>,
+                },
+                {
+                    key: 'role',
+                    label: t('menus.identity.submenus.role'),
+                    icon: <SolutionOutlined/>,
+                },
+                {
+                    key: 'department',
+                    label: t('menus.identity.submenus.department'),
+                    icon: <ApartmentOutlined/>,
+                },
+                {
+                    key: 'access-policy',
+                    label: t('menus.identity.submenus.access_policy'),
+                    icon: <ForkOutlined/>,
+                },
+                {
+                    key: 'login-locked',
+                    label: t('menus.identity.submenus.login_locked'),
+                    icon: <WarningOutlined/>,
+                },
+                {
+                    key: 'oidc-client',
+                    label: t('menus.identity.submenus.oidc_client'),
+                    icon: <ApiOutlined/>,
+                },
+            ]
+        },
+        {
+            key: 'authorised',
+            label: t('menus.authorised.label'),
+            icon: <UserSwitchOutlined/>,
+            children: [
+                {
+                    key: 'authorised-asset',
+                    label: t('menus.authorised.submenus.authorised_asset'),
+                    icon: <DesktopOutlined/>,
+                },
+                {
+                    key: 'authorised-database-asset',
+                    label: t('menus.authorised.submenus.authorised_database_asset'),
+                    icon: <DatabaseOutlined/>,
+                },
+                {
+                    key: 'authorised-website',
+                    label: t('menus.authorised.submenus.authorised_website'),
                     icon: <GlobalOutlined/>,
                 },
                 {
-                    key: 'ip-whitelist',
-                    label: t('menus.resource.submenus.ip_whitelist'),
-                    icon: <SyncOutlined/>,
+                    key: 'strategy',
+                    label: t('menus.authorised.submenus.strategy'),
+                    icon: <InsuranceOutlined/>,
                 },
                 {
-                    key: 'certificate',
-                    label: t('menus.resource.submenus.certificate'),
-                    icon: <SafetyCertificateOutlined />,
+                    key: 'command-filter',
+                    label: t('menus.authorised.submenus.command_filter'),
+                    icon: <CodeOutlined/>,
                 },
             ]
         },
@@ -109,33 +173,6 @@ export const getMenus = (t: any) => {
                     key: 'access-request',
                     label: t('menus.work_order.submenus.access_request'),
                     icon: <UserAddOutlined/>,
-                },
-            ]
-        },
-        {
-            key: 'gateway',
-            label: t('menus.gateway.label'),
-            icon: <ClusterOutlined/>,
-            children: [
-                {
-                    key: 'ssh-gateway',
-                    label: t('menus.gateway.submenus.ssh_gateway'),
-                    icon: <ApiOutlined/>,
-                },
-                {
-                    key: 'agent-gateway',
-                    label: t('menus.gateway.submenus.agent_gateway'),
-                    icon: <ClusterOutlined/>,
-                },
-                {
-                    key: 'gateway-group',
-                    label: t('menus.gateway.submenus.gateway_group'),
-                    icon: <TeamOutlined/>,
-                },
-                {
-                    key: 'network-proxy',
-                    label: t('menus.gateway.submenus.network_proxy'),
-                    icon: <ApiOutlined/>,
                 },
             ]
         },
@@ -202,6 +239,11 @@ export const getMenus = (t: any) => {
                     icon: <BlockOutlined/>,
                 },
                 {
+                    key: 'credential-rotation',
+                    label: t('menus.sysops.submenus.credential_rotation'),
+                    icon: <KeyOutlined/>,
+                },
+                {
                     key: 'tools',
                     label: t('menus.sysops.submenus.tools'),
                     icon: <ToolOutlined />,
@@ -219,71 +261,29 @@ export const getMenus = (t: any) => {
             ]
         },
         {
-            key: 'identity',
-            label: t('menus.identity.label'),
-            icon: <UserSwitchOutlined/>,
+            key: 'gateway',
+            label: t('menus.gateway.label'),
+            icon: <ClusterOutlined/>,
             children: [
                 {
-                    key: 'user',
-                    label: t('menus.identity.submenus.user'),
-                    icon: <UserOutlined/>,
-                },
-                {
-                    key: 'role',
-                    label: t('menus.identity.submenus.role'),
-                    icon: <SolutionOutlined/>,
-                },
-                {
-                    key: 'department',
-                    label: t('menus.identity.submenus.department'),
-                    icon: <ApartmentOutlined/>,
-                },
-                {
-                    key: 'access-policy',
-                    label: t('menus.identity.submenus.access_policy'),
-                    icon: <ForkOutlined/>,
-                },
-                {
-                    key: 'login-locked',
-                    label: t('menus.identity.submenus.login_locked'),
-                    icon: <WarningOutlined/>,
-                },
-                {
-                    key: 'oidc-client',
-                    label: t('menus.identity.submenus.oidc_client'),
+                    key: 'ssh-gateway',
+                    label: t('menus.gateway.submenus.ssh_gateway'),
                     icon: <ApiOutlined/>,
                 },
-            ]
-        },
-        {
-            key: 'authorised',
-            label: t('menus.authorised.label'),
-            icon: <UserSwitchOutlined/>,
-            children: [
                 {
-                    key: 'command-filter',
-                    label: t('menus.authorised.submenus.command_filter'),
-                    icon: <CodeOutlined/>,
+                    key: 'agent-gateway',
+                    label: t('menus.gateway.submenus.agent_gateway'),
+                    icon: <ClusterOutlined/>,
                 },
                 {
-                    key: 'strategy',
-                    label: t('menus.authorised.submenus.strategy'),
-                    icon: <InsuranceOutlined/>,
+                    key: 'gateway-group',
+                    label: t('menus.gateway.submenus.gateway_group'),
+                    icon: <TeamOutlined/>,
                 },
                 {
-                    key: 'authorised-asset',
-                    label: t('menus.authorised.submenus.authorised_asset'),
-                    icon: <DesktopOutlined/>,
-                },
-                {
-                    key: 'authorised-website',
-                    label: t('menus.authorised.submenus.authorised_website'),
-                    icon: <GlobalOutlined/>,
-                },
-                {
-                    key: 'authorised-database-asset',
-                    label: t('menus.authorised.submenus.authorised_database_asset'),
-                    icon: <DatabaseOutlined/>,
+                    key: 'network-proxy',
+                    label: t('menus.gateway.submenus.network_proxy'),
+                    icon: <ApiOutlined/>,
                 },
             ]
         },

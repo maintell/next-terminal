@@ -55,10 +55,8 @@ const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
                             onClick={onMenuClick}
                             selectedKeys={[current]}
                             onOpenChange={onSubMenuChange}
-                            defaultOpenKeys={stateOpenKeys}
                             openKeys={stateOpenKeys}
                             mode="inline"
-                            defaultSelectedKeys={['']}
                             items={filteredMenus}
                             style={{
                                 backgroundColor: 'transparent',

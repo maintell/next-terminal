@@ -1,3 +1,5 @@
+import Disabled from "@/components/Disabled";
+import {useLicense} from "@/hook/LicenseContext";
 import { DatabaseWorkOrder,dbWorkOrderAdminApi } from "@/api/db-work-order-api";
 import portalApi from "@/api/portal-api";
 import NButton from "@/components/NButton";
@@ -24,7 +26,7 @@ import { useTranslation } from "react-i18next";
 
 const {Text} = Typography;
 
-const DatabaseWorkOrderPage = () => {
+const DatabaseWorkOrderPageContent = () => {
     const {t} = useTranslation();
     const {modal, message} = App.useApp();
 
@@ -350,6 +352,13 @@ const DatabaseWorkOrderPage = () => {
             </Modal>
         </div>
     );
+};
+
+const DatabaseWorkOrderPage = () => {
+    const {license, isLoading} = useLicense();
+    return <Disabled feature="sql_work_order" disabled={isLoading || !license.hasPremiumFeatures()}>
+        <DatabaseWorkOrderPageContent/>
+    </Disabled>;
 };
 
 export default DatabaseWorkOrderPage;

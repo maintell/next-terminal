@@ -14,6 +14,7 @@ export const getDefaultWebsiteData = (): Partial<WebsiteBasicFormData> => ({
     connectionMode: 'direct',
     gatewaySource: 'inherit',
     gatewayChain: [],
+    tags: [],
     cert: {
         enabled: false
     },
@@ -23,7 +24,7 @@ export const getDefaultWebsiteData = (): Partial<WebsiteBasicFormData> => ({
         countries: [],
         provinces: [],
         cities: [],
-		ipWhitelistIds: [],
+		ipSetIds: [],
         headerWhitelist: [],
         pathWhitelist: []
     },

@@ -4,7 +4,6 @@ import './index.css'
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import relativeTime from 'dayjs/plugin/relativeTime';
 import dayjs from "dayjs";
-import {LicenseProvider} from "@/hook/LicenseContext";
 import {UploadManagerProvider} from "@/pages/access/upload/UploadManagerProvider";
 import {App as AntdApp} from "antd";
 
@@ -30,11 +29,9 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <AntdApp>
         <QueryClientProvider client={queryClient}>
-            <LicenseProvider>
-                <UploadManagerProvider>
-                    <App/>
-                </UploadManagerProvider>
-            </LicenseProvider>
+            <UploadManagerProvider>
+                <App/>
+            </UploadManagerProvider>
         </QueryClientProvider>
     </AntdApp>
 )

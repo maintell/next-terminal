@@ -94,6 +94,7 @@
     "batch_delete": "批次刪除",
     "refresh": "重新整理",
     "retry": "重試",
+    "filter": "篩選",
     "confirm": "確認",
     "test_connection": "測試連線"
   },
@@ -140,7 +141,8 @@
     "database_asset_placeholder": "資產名稱、帳號、標籤、類型",
     "database_access_work_order": "前往 SQL 工單",
     "website_placeholder": "網站名稱、標籤、類型",
-    "in_use": "使用中",
+    "current_users": "目前使用者",
+    "status_detail": "狀態說明",
     "clear_search": "清除搜尋",
     "list_view": "列表",
     "card_view": "卡片"
@@ -152,13 +154,13 @@
     "resource": {
       "label": "資源管理",
       "submenus": {
-        "asset": "資產",
+        "asset": "主機資產",
         "database_asset": "資料庫資產",
-        "credential": "授權憑證",
+        "credential": "存取憑證",
         "snippet": "命令片段",
         "storage": "儲存",
         "website": "Web 資產",
-        "ip_whitelist": "IP 白名單",
+        "ip_set": "IP 位址集",
         "certificate": "證書管理"
       }
     },
@@ -198,16 +200,17 @@
         "scheduled_task": "定時任務",
         "tools": "實用工具",
         "monitoring": "系統監控",
-        "system_event": "系統事件"
+        "system_event": "系統事件",
+        "credential_rotation": "憑據輪換"
       }
     },
     "identity": {
-      "label": "身分認證",
+      "label": "身分管理",
       "submenus": {
         "user": "使用者",
         "department": "部門",
         "role": "角色",
-        "access_policy": "存取控制",
+        "access_policy": "身分存取策略",
         "login_locked": "登入鎖定",
         "oidc_client": "OIDC 用戶端"
       }
@@ -217,9 +220,9 @@
       "submenus": {
         "command_filter": "命令攔截器",
         "strategy": "授權策略",
-        "authorised_asset": "授權資產",
-        "authorised_website": "授權 Web 資產",
-        "authorised_database_asset": "授權資料庫資產"
+        "authorised_asset": "主機授權",
+        "authorised_website": "Web 授權",
+        "authorised_database_asset": "資料庫授權"
       }
     },
     "setting": {
@@ -434,7 +437,12 @@
       "reset_otp": {
         "action": "重設雙因素認證",
         "confirm_title": "確認重設使用者雙因素認證？",
-        "confirm_content": "重設後使用者無需雙因素認證即可登入。"
+        "confirm_content": "重設後使用者無需雙因素認證即可登入。確認後需要管理員本人完成二次驗證。"
+      },
+      "clear_passkeys": {
+        "action": "清除 Passkey",
+        "confirm_title": "確認清除使用者的全部 Passkey？",
+        "confirm_content": "清除後無法復原；如果 Passkey 是使用者最後一種登入方式，系統將拒絕操作。確認後需要管理員本人完成二次驗證。"
       },
       "external_identity": {
         "title": "第三方帳號",
@@ -459,7 +467,7 @@
       }
     },
     "options": {
-        "access_policy": "存取控制"
+      "access_policy": "存取控制"
     },
     "oidc_client": {
       "created_success": "OIDC 用戶端建立成功",
@@ -469,6 +477,7 @@
       "new_secret_tip": "⚠️ 請立即複製保存新密鑰，關閉後將無法再次查看",
       "redirect_uris": "回呼地址",
       "grant_types": "授權類型",
+      "response_types": "回應類型",
       "scopes": "Scopes",
       "regenerate_secret": "輪換密鑰",
       "regenerate_secret_confirm": "確定要輪換此用戶端的密鑰嗎？舊密鑰將立即失效。",
@@ -484,6 +493,7 @@
       "redirect_uris_add": "添加回呼地址",
       "redirect_uri_required": "請輸入回呼地址",
       "grant_types_required": "請至少選擇一種授權類型",
+      "response_types_required": "請至少選擇一種回應類型",
       "scopes_required": "請至少選擇一個 scope",
       "access_control": "訪問控制",
       "access_control_tip": "控制哪些使用者可以使用此 OIDC 用戶端",
@@ -779,6 +789,7 @@
       "clear_remote_exec_confirm": "確認清空全部遠端執行命令記錄嗎？"
     },
     "accessLog": {
+      "requestId": "請求 ID",
       "uri": "請求 URI",
       "statusCode": "狀態碼",
       "clientStatusCode": "用戶端狀態",
@@ -924,7 +935,7 @@
         "website_group": "網站分組",
         "certificate": "憑證",
         "dns_provider": "DNS 服務商",
-        "ssh_gateway": "SSH 閘道",
+        "ssh_gateway": "SSH 網關",
         "agent_gateway": "Agent 閘道",
         "agent_gateway_token": "Agent 閘道權杖",
         "gateway_group": "閘道分組",
@@ -1075,6 +1086,19 @@
         "upload_transfer_active": "已有 ZMODEM 傳輸正在進行。",
         "upload_no_files": "未選擇要上傳的檔案。",
         "ssh_only": "ZMODEM 僅支援 SSH 終端。"
+      },
+      "auth": {
+        "title_username": "需要使用者名稱",
+        "title_password": "需要密碼",
+        "title_passphrase": "需要私鑰口令",
+        "title_keyboard_interactive": "鍵盤互動認證",
+        "auth_required": "目標主機要求認證",
+        "username": "使用者名稱",
+        "password": "密碼",
+        "passphrase": "私鑰口令",
+        "answer": "回答",
+        "cancel": "取消",
+        "connect": "連線"
       }
     },
     "playback": {
@@ -1613,6 +1637,49 @@
       "command_policy": "AI 執行命令策略",
       "command_policy_extra": "為空時跟隨全域 AI 設定。",
       "follow_global": "跟隨全域設定"
+    },
+    "rotation": {
+      "rotate": "輪換憑據",
+      "batch_title": "批量輪換憑據",
+      "manual_warning": "輪換將修改遠端主機上的賬號密碼/密鑰，並同步更新系統中存儲的憑據，請謹慎操作。",
+      "credential_confirm": "確認輪換該憑證？",
+      "credential_confirm_tip": "將在所有引用該憑證的 SSH 資產上修改密碼/密鑰，並更新憑證內容。",
+      "result_title": "輪換完成（成功 {{success}}/{{total}}）",
+      "type_label": "輪換類型",
+      "type": {
+        "password": "密碼",
+        "private_key": "私鑰",
+        "auto": "自動（按賬號類型）"
+      },
+      "scope": "輪換範圍",
+      "pwd_length": "密碼長度",
+      "pwd_length_tip": "隨機密碼長度，8-64 位",
+      "pwd_symbol": "包含特殊字符",
+      "keep_old_key": "保留舊公鑰",
+      "keep_old_key_tip": "啟用後不在遠端刪除舊公鑰，更安全；禁用後將自動清理舊公鑰",
+      "policy_warning": "輪換會直接修改遠端主機上的賬號密碼或密鑰，請確認目標主機支持並保留好備用登錄方式。",
+      "cron_preset": "常用週期",
+      "cron_presets": {
+        "daily": "每天 {{time}}",
+        "monday": "每週一 {{time}}",
+        "monthly": "每月 1 日 {{time}}",
+        "every_six_hours": "每 6 小時"
+      },
+      "logs_tab": "輪換記錄",
+      "policies_tab": "輪換策略",
+      "status": {
+        "success": "成功",
+        "failed": "失敗"
+      },
+      "trigger": {
+        "manual": "手動觸發",
+        "scheduled": "定時任務"
+      },
+      "trigger_label": "觸發方式",
+      "operator": "操作人",
+      "message": "備註",
+      "scope_empty_tip": "留空表示輪換所有 SSH 資產",
+      "scope_all": "全部資產"
     }
   },
   "group_tree": {
@@ -1642,7 +1709,11 @@
     "test_failed": "代理連線測試失敗",
     "delete_referenced_title": "代理伺服器正在使用中，無法刪除"
   },
-  "ip_whitelist": {
+  "ip_set": {
+    "policy_reference_tip": "手動 IP 與引用的 IP 位址集符合任一項即滿足 IP 條件；地區與時間條件仍需同時滿足。",
+    "manage": "管理 IP 位址集",
+    "load_error": "IP 位址集載入失敗，請重試。",
+    "retry": "重試",
     "source": "來源",
     "source_manual": "手動維護",
     "source_url": "URL 同步",
@@ -1657,8 +1728,8 @@
     "refresh_minutes_tip": "同步間隔最少為 5 分鐘。",
     "rules": "IP 規則",
     "rules_tip": "每行填寫一個 IP、CIDR 或 IP 範圍。",
-    "reference": "引用 IP 白名單",
-    "reference_tip": "命中任一引用的白名單即可通過 IP 規則。",
+    "reference": "引用 IP 位址集",
+    "reference_tip": "符合任一引用的 IP 位址集即可通過 IP 規則。",
     "sync": "立即同步",
     "last_synced_at": "最近同步時間"
   },
@@ -1974,7 +2045,7 @@
       "usage": "使用說明",
       "usage_tip": "SSH 服務支援進入資產選擇介面，也支援連線時直接指定資產。",
       "mode_proxy": "代理模式",
-      "mode_proxy_tip": "只登入堡壘機帳號，連線後在終端資產列表中選擇目標資產。",
+      "mode_proxy_tip": "只登入堡壘機帳號，連線後在主機資產列表中選擇目標資產。",
       "direct_proxy": "直連模式",
       "direct_proxy_tip": "連線時指定目標資產，認證成功後直接進入該資產。asset-name 可填寫資產名稱，asset-alias 建議填寫資產別名。",
       "direct_proxy_cli": "命令列客戶端：",
@@ -2006,6 +2077,9 @@
       "public_addr_extra": "產生 .rdp 檔案時使用的位址；留空時會根據監聽位址和目前請求自動推導。",
       "ticket_ttl": "票據有效期（秒）",
       "ticket_ttl_extra": "預設 300 秒，票據解析成功後會被標記為已使用。",
+      "certificate": "代理憑證",
+      "certificate_extra": "留空時自動產生專用自簽憑證，也可從憑證清單選擇。",
+      "certificate_auto": "自動產生憑證",
       "usage": "使用說明",
       "usage_tip": "使用者在 Web 端選擇 RDP 資產後產生票據，RDP 用戶端連線代理位址，再由代理解析到真實資產。",
       "ticket_flow": "票據格式",
@@ -2256,6 +2330,12 @@
     },
     "license": {
       "setting": "授權",
+      "loading": "正在載入許可證資訊...",
+      "load_error": {
+        "title": "許可證資訊載入失敗",
+        "description": "暫時無法確認目前許可證支援的功能，請檢查網路連線後重試。",
+        "retry": "重新載入"
+      },
       "machine_id": "機器碼",
       "import": "匯入授權",
       "request": "更新授權",
@@ -2491,7 +2571,9 @@
       "type_mysql": "MySQL",
       "type_pg": "PostgreSQL",
       "host": "主機",
-      "database": "資料庫"
+      "database": "資料庫",
+      "postgres_ssl_mode": "PostgreSQL 後端 TLS 模式",
+      "postgres_ssl_mode_extra": "verify-ca 和 verify-full 使用系統信任的 CA；透過閘道連線時仍依資產主機名稱驗證憑證。"
     },
     "work_order": {
       "new": "新增工單",
@@ -2512,10 +2594,13 @@
       }
     },
     "sql_log": {
+      "parameter_template_tip": "此處為預處理 SQL 範本，未記錄綁定參數原值。",
       "sql": "SQL",
       "duration_ms": "耗時（ms）",
       "rows_affected": "影響行數",
+      "db_type": "資料庫類型",
       "status": {
+        "unknown": "結果未知",
         "blocked": "已攔截"
       },
       "source": {
@@ -2524,19 +2609,68 @@
       }
     },
     "proxy": {
-      "setting": "資料庫代理",
       "enabled": "啟用資料庫代理",
+      "mysql_setting": "MySQL 代理",
+      "pg_setting": "PostgreSQL 代理",
+      "mysql_enabled": "啟用 MySQL 代理",
+      "mysql_tls_enabled": "啟用 TLS 加密（用戶端到代理）",
+      "mysql_tls_enabled_tip": "啟用後使用下方選擇的憑證加密用戶端到 MySQL 代理的連線；不選擇憑證時自動產生專用自簽憑證。",
+      "mysql_certificate": "代理憑證",
+      "mysql_certificate_extra": "留空時自動產生專用自簽憑證，也可從憑證清單選擇。",
+      "mysql_certificate_auto": "自動產生憑證",
+      "pg_policy": "SQL 策略",
+      "pg_policy_allow": "允許 SQL，記錄審計",
+      "pg_policy_guarded": "攔截寫入及高風險 SQL",
+      "pg_policy_tip": "SQL 攔截用於減少誤操作；完整唯讀權限請在資料庫帳號側設定。審計採用非同步寫入，請關注丟棄和寫入失敗計數。",
+      "pg_reject_tip": "策略拒絕會關閉連線，活動交易隨連線關閉回滾。",
+      "pg_tls_mode": "用戶端 TLS 模式",
+      "pg_tls_mode_tip": "此處控制用戶端到代理的連線加密；代理到資料庫的 SSL 模式在資料庫資產中設定。",
+      "pg_tls_disabled": "停用 TLS（明文）",
+      "pg_tls_optional": "可選 TLS（相容明文）",
+      "pg_tls_required": "強制 TLS",
+      "pg_config_error": "設定載入或儲存失敗，請重試。",
+      "pg_certificate_error": "憑證載入失敗，請檢查憑證是否存在並重試。",
+      "pg_connection_unavailable": "代理執行後顯示目前生效設定的連線命令。",
+      "pg_connection_tls_tip": "命令中的 require 要求加密，但不驗證伺服器身分。需要驗證身分時，請設定可信憑證並使用 sslmode=verify-full；自簽憑證需要先匯入信任。",
+      "pg_running": "執行中",
+      "pg_stopped": "已停止",
+      "pg_applying": "設定正在套用",
+      "pg_apply_error": "設定已儲存，但套用失敗；目前執行狀態見上方。",
+      "pg_enabled": "啟用 PostgreSQL 代理",
       "block_dml": "阻止 DML/DDL",
-      "block_dml_tip": "啟用後僅允許只讀 SQL。",
+      "block_dml_tip": "用於防止誤操作：攔截寫入、鎖定讀取、檔案匯出及未允許的 SET。完整唯讀權限仍需在資料庫帳號設定；不支援多語句及預備語句協定。",
+      "mysql_tls_mode": "用戶端 TLS 模式",
+      "mysql_tls_disabled": "停用 TLS（明文）",
+      "mysql_tls_optional": "可選 TLS（相容明文）",
+      "mysql_tls_required": "強制 TLS",
+      "mysql_config_error": "設定載入或儲存失敗，請重試。",
+      "mysql_certificate_error": "憑證載入失敗，請檢查憑證是否存在並重試。",
+      "mysql_connection_unavailable": "代理執行後顯示目前生效設定的連線命令。",
+      "mysql_tls_mode_tip": "僅控制用戶端到 MySQL 代理的連線。可選模式相容明文，強制模式拒絕明文連線。",
+      "mysql_connection_tls_tip": "REQUIRED 僅要求加密；驗證伺服器身分請使用可信憑證、--ssl-ca 和 --ssl-mode=VERIFY_IDENTITY。",
       "tip": "啟用代理以允許用戶端連線並執行 SQL。",
+      "stats": {
+        "title": "運行統計",
+        "sessions": "活動會話",
+        "queries": "查詢數",
+        "blocked": "已攔截",
+        "audit_drops": "審計丟棄",
+        "audit_errors": "審計失敗"
+      },
       "usage_title": "使用說明",
       "usage_tip": "使用者可透過資料庫用戶端連線代理位址，再由代理轉發到已授權的資料庫資產。",
       "usage_client": "用戶端連線",
+      "pg_addr": "PG 監聽位址",
+      "pg_tls_enabled": "啟用 TLS 加密（用戶端到代理）",
+      "pg_tls_enabled_tip": "啟用後使用下方選擇的憑證加密用戶端到 PG 代理的連線；不選擇憑證時自動產生專用自簽憑證。未啟用時仍相容明文連線。",
+      "pg_certificate": "代理憑證",
+      "pg_certificate_extra": "留空時自動產生專用自簽憑證，也可從憑證清單選擇。",
       "public_addr": "對外訪問位址",
       "public_addr_extra": "一般使用者快速訪問入口顯示的位址；留空時會根據監聽位址自動推導。",
       "password_tip_prefix": "請前往",
       "password_tip_link": "個人中心-授權令牌",
-      "password_tip_suffix": "建立資料庫密碼。"
+      "password_tip_suffix": "建立資料庫密碼。",
+      "usage_client_pg": "PG 用戶端連線"
     }
   },
   "ai_assistant": {
@@ -2612,5 +2746,129 @@
     "history_delete_error": "刪除會話失敗：{{message}}",
     "history_clear_error": "清空會話失敗：{{message}}",
     "invalid_response": "收到無法解析的 AI 回應"
+  },
+  "restricted_features": {
+    "credential_rotation": {
+      "title": "憑據輪換",
+      "description": "集中更新 SSH 資產的密碼與私鑰，減少長期使用固定憑據的維護負擔。",
+      "benefit_1": "支援手動批次輪換與定時策略。",
+      "benefit_2": "統一處理共用憑證所關聯的多台資產。",
+      "benefit_3": "記錄輪換結果與失敗原因，方便核對及後續處理。"
+    },
+    "label": "進階功能",
+    "license_note": "目前的授權未包含此功能。",
+    "learn_more": "了解版本與授權",
+    "access_policy": {
+      "title": "身分存取策略",
+      "description": "依人員、來源與時間定義存取範圍，適合分部門管理或遠端連線的團隊。",
+      "benefit_1": "組合 IP 位址集、地區與時間條件。",
+      "benefit_2": "將策略綁定至使用者或部門，減少重複設定。",
+      "benefit_3": "依優先順序執行允許或拒絕規則。"
+    },
+    "agent_gateway": {
+      "title": "安全網關",
+      "description": "在目標網路部署 Agent，提供跨網路資產連線的統一入口。",
+      "benefit_1": "透過 Agent 建立通道，適用於內網資產。",
+      "benefit_2": "集中查看網關上線狀態與版本。",
+      "benefit_3": "多台資產共用網關，簡化跨網路設定。"
+    },
+    "gateway_group": {
+      "title": "網關分組",
+      "description": "將多個網關組成可重複使用的連線群組，適合多入口環境。",
+      "benefit_1": "集中維護成員，減少資產側重複設定。",
+      "benefit_2": "支援依優先順序、延遲或隨機選擇網關。",
+      "benefit_3": "資產共用同一群組，方便日後調整入口。"
+    },
+    "authorization_strategy": {
+      "title": "授權策略",
+      "description": "依工作職責管理檔案操作與剪貼簿功能。",
+      "benefit_1": "分別控制檔案上傳與下載。",
+      "benefit_2": "細分建立、編輯、刪除及重新命名權限。",
+      "benefit_3": "依工作需要配置複製與貼上能力。"
+    },
+    "command_filter": {
+      "title": "命令攔截器",
+      "description": "為終端操作配置命令規則，適合需要限制高風險命令的情境。",
+      "benefit_1": "集中維護命令比對規則。",
+      "benefit_2": "透過資源授權套用命令限制。",
+      "benefit_3": "減少誤執行高風險命令的機會。"
+    },
+    "oidc": {
+      "title": "OIDC 單一登入",
+      "description": "對接既有 OIDC 身分提供者，讓團隊使用企業帳號登入。",
+      "benefit_1": "沿用企業登入入口，減少帳號維護。",
+      "benefit_2": "透過標準 OIDC 協定整合。",
+      "benefit_3": "設定登入使用者的部門歸屬。"
+    },
+    "ldap": {
+      "title": "LDAP 目錄認證",
+      "description": "使用企業 LDAP 目錄中的既有使用者資訊完成認證。",
+      "benefit_1": "沿用目錄帳號，減少重複維護。",
+      "benefit_2": "以搜尋範圍與篩選條件限定使用者。",
+      "benefit_3": "透過屬性對應適配既有目錄結構。"
+    },
+    "wechat_work": {
+      "title": "企業微信登入",
+      "description": "讓已使用企業微信的團隊透過企業身分登入平台。",
+      "benefit_1": "使用熟悉的身分入口簡化登入。",
+      "benefit_2": "集中設定企業與應用程式資訊。",
+      "benefit_3": "設定使用者部門歸屬，銜接權限管理。"
+    },
+    "branding": {
+      "title": "品牌自訂",
+      "description": "以企業名稱與標誌建立一致的平台品牌體驗。",
+      "benefit_1": "使用自訂系統名稱與 Logo。",
+      "benefit_2": "設定備案與版權資訊。",
+      "benefit_3": "統一登入及管理介面的品牌標識。"
+    },
+    "session_sharing": {
+      "title": "工作階段分享",
+      "description": "分享目前工作階段的連結，方便協作者查看現場與討論問題。",
+      "benefit_1": "直接分享目前畫面脈絡，減少重複描述。",
+      "benefit_2": "透過連結進入共享工作階段。",
+      "benefit_3": "工作完成後可取消分享。"
+    },
+    "website_geo": {
+      "title": "網站地區存取規則",
+      "description": "依國家、省份或城市限制公開存取，明確網站的開放範圍。",
+      "benefit_1": "分別設定國家、省份與城市條件。",
+      "benefit_2": "結合既有 IP 規則，細化存取範圍。",
+      "benefit_3": "集中維護網站的區域存取要求。"
+    },
+    "response_rewrite": {
+      "title": "網站回應修改",
+      "description": "在代理層調整網站回傳內容，適用於需要修改回應的接入情境。",
+      "benefit_1": "集中管理回應修改規則。",
+      "benefit_2": "由代理層處理，減少原始網站程式碼改動。",
+      "benefit_3": "為不同網站設定各自的規則。"
+    },
+    "geodata": {
+      "title": "IP 地理資料管理",
+      "description": "維護地域存取規則與來源分析所需的 IP 地理資料。",
+      "benefit_1": "查看地理資料的狀態。",
+      "benefit_2": "支援上傳與更新，維護資料版本。",
+      "benefit_3": "設定自動更新，減少手動維護。"
+    },
+    "recording_conversion": {
+      "title": "錄影轉換策略",
+      "description": "安排工作階段錄影轉換時間，平衡可用時間與伺服器負載。",
+      "benefit_1": "選擇立即轉換或閒置時段轉換。",
+      "benefit_2": "設定適合的轉換時間範圍。",
+      "benefit_3": "依儲存需求選擇保留原始錄影。"
+    },
+    "access_request": {
+      "title": "存取申請",
+      "description": "讓臨時資產存取需求進入申請與審核流程。",
+      "benefit_1": "提供統一的資產存取申請入口。",
+      "benefit_2": "透過審核處理需求，減少線下溝通。",
+      "benefit_3": "銜接資源存取管理，方便追蹤處理過程。"
+    },
+    "sql_work_order": {
+      "title": "SQL 工單審批",
+      "description": "將資料庫變更納入申請、審批與執行流程，減少未經審核的 SQL 操作。",
+      "benefit_1": "執行前審核 SQL 內容與目標資料庫，明確變更範圍。",
+      "benefit_2": "審批通過後由平台執行，減少人工交接與重複操作。",
+      "benefit_3": "集中記錄申請人、審批人與執行結果，方便追溯。"
+    }
   }
 }

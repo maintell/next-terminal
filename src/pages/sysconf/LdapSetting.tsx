@@ -25,7 +25,7 @@ const LdapSetting = ({
     useFormRequest(form, ["form-request", "web/src/pages/sysconf/LdapSetting.tsx"], wrapGet, true);
 
     return <div>
-        <Disabled disabled={!license.hasPremiumFeatures()}>
+        <Disabled feature="ldap" disabled={!license.hasPremiumFeatures()}>
             <Form form={form} onFinish={set} layout="vertical">
                 <Form.Item name="ldap-enabled" label={t('settings.ldap.setting')} required={true}
                            valuePropName="checked">

@@ -38,6 +38,27 @@ const AccessLogPage = () => {
 
     const columns: NColumn<AccessLog>[] = [
         {
+            title: t('audit.accessLog.requestId'),
+            key: 'requestId',
+            dataIndex: 'id',
+            formItemProps: {
+                name: 'requestId',
+            },
+            width: 220,
+            ellipsis: true,
+            render: (text) => (
+                <Typography.Text
+                    className="text-xs font-mono"
+                    ellipsis={{tooltip: String(text)}}
+                    style={{display: 'block', width: '100%'}}
+                    copyable={{text: String(text)}}
+                >
+                    {text}
+                </Typography.Text>
+            ),
+            fixed: !isMobile ? 'left' : undefined,
+        },
+        {
             title: t('assets.domain'),
             key: 'domain',
             dataIndex: 'domain',
@@ -248,6 +269,7 @@ const AccessLogPage = () => {
                         pageSize: params.pageSize,
                         sortOrder: sortOrder,
                         sortField: sortField,
+                        requestId: params.requestId,
                         domain: params.domain,
                         method: params.method,
                         statusCode: params.statusCode,

@@ -1,15 +1,16 @@
 import portalApi, {WebsiteUser} from "@/api/portal-api";
 import strings from "@/utils/strings";
 import { useMutation,useQuery } from "@tanstack/react-query";
-import { App,Empty,Segmented,Tooltip } from "antd";
+import { App,Button,Empty,Segmented,Tooltip } from "antd";
 import { useEffect,useState,type Key } from 'react';
 import { useTranslation } from "react-i18next";
 import FacadeCardSkeleton from './components/FacadeCardSkeleton';
 import FacadeCompactSearch from './components/FacadeCompactSearch';
 import FacadeGroupTree from './components/FacadeGroupTree';
 import FacadeLogo from './components/FacadeLogo';
+import FacadeResourceDetailModal from './components/FacadeResourceDetailModal';
 import { checkItemInGroups,findNode,getAllKeys,getGroupAndChildIds } from './utils/facade-utils';
-import {ExternalLink,LayoutGrid,List,Shield} from "lucide-react";
+import {ArrowUpRight,ExternalLink,Eye,LayoutGrid,List,Shield} from "lucide-react";
 
 type WebsiteViewMode = 'list' | 'card';
 
@@ -34,6 +35,7 @@ const WebsiteFacadePage = () => {
     let [selectedGroupKey, setSelectedGroupKey] = useState<string>('');
     let [expandedKeys, setExpandedKeys] = useState<Key[]>([]);
     let [viewMode, setViewMode] = useState<WebsiteViewMode>(getInitialWebsiteViewMode);
+    const [selectedWebsite, setSelectedWebsite] = useState<WebsiteUser>();
 
     let queryWebsites = useQuery({
         queryKey: ['my-websites'],
@@ -91,6 +93,9 @@ const WebsiteFacadePage = () => {
     const selectedGroup = selectedGroupKey && queryWebsiteGroupTree.data
         ? findNode(queryWebsiteGroupTree.data, selectedGroupKey)
         : null;
+    const selectedWebsiteGroup = selectedWebsite && queryWebsiteGroupTree.data
+        ? findNode(queryWebsiteGroupTree.data, selectedWebsite.groupId)
+        : null;
 
     const buildWebsiteHref = (websiteId: string) => {
         return `/browser?websiteId=${websiteId}&t=${new Date().getTime()}`;
@@ -106,9 +111,6 @@ const WebsiteFacadePage = () => {
     };
 
     const renderWebsiteRow = (item: WebsiteUser) => {
-        const tempAllowEnabled = Boolean(item.attrs?.tempAllowEnabled);
-        const isAllowing = allowTempIPMutation.isPending && allowTempIPMutation.variables === item.id;
-
         return (
             <div
                 key={item.id}
@@ -131,76 +133,43 @@ const WebsiteFacadePage = () => {
                             {item.protocol}
                         </span>
                     </div>
-                    <div className={'mt-1 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-slate-400'}>
-                        {item.description && (
-                            <Tooltip title={item.description}>
-                                <span className={'max-w-96 truncate'}>{item.description}</span>
-                            </Tooltip>
-                        )}
-                    </div>
-                    {item.tags && item.tags.length > 0 && (
-                        <div className={'mt-2 flex flex-wrap gap-1.5'}>
-                            {item.tags.slice(0, 4).map(tag => (
-                                <span
-                                    key={tag}
-                                    className={'rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200/60 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700/60'}
-                                >
-                                    {tag}
-                                </span>
-                            ))}
-                            {item.tags.length > 4 && (
-                                <span className={'text-[11px] text-slate-400'}>+{item.tags.length - 4}</span>
-                            )}
-                        </div>
-                    )}
                 </div>
-                <div className={'flex flex-none items-center gap-2 text-xs text-slate-400'}>
-                    {tempAllowEnabled && (
-                        <button
-                            type="button"
-                            disabled={isAllowing}
-                            onClick={() => allowTempIPMutation.mutate(item.id)}
-                            className={'hidden cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs text-slate-400 transition-colors hover:text-[#1A73E8] disabled:cursor-not-allowed disabled:opacity-50 sm:flex'}
-                        >
-                            {isAllowing ? (
-                                <span className={'h-3.5 w-3.5 rounded-full border-2 border-slate-300 border-t-transparent animate-spin'} />
-                            ) : (
-                                <Shield className={'h-3.5 w-3.5'} />
-                            )}
-                            {t('assets.temp_allow_action')}
-                        </button>
-                    )}
-                    <a
+                <div className={'flex flex-none items-center gap-1'}>
+                    <Button type={'text'} size={'small'} icon={<Eye className={'h-3.5 w-3.5'} />} onClick={() => setSelectedWebsite(item)}>
+                        {t('actions.detail')}
+                    </Button>
+                    <Button
+                        type={'link'}
+                        size={'small'}
                         href={buildWebsiteHref(item.id)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={'flex flex-none cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs text-slate-400 transition-colors hover:text-[#1A73E8]'}
+                        icon={<ExternalLink className={'h-3.5 w-3.5'} />}
+                        iconPlacement={'end'}
                     >
-                        <span>{t('assets.access')}</span>
-                        <ExternalLink className={'h-3.5 w-3.5'} />
-                    </a>
+                        {t('assets.access')}
+                    </Button>
                 </div>
             </div>
         );
     };
 
     const renderWebsiteCard = (item: WebsiteUser) => {
-        const tempAllowEnabled = Boolean(item.attrs?.tempAllowEnabled);
-        const isAllowing = allowTempIPMutation.isPending && allowTempIPMutation.variables === item.id;
-
         return (
             <div
                 key={item.id}
-                className={'group relative flex min-h-40 flex-col overflow-hidden rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200/70 transition-all hover:-translate-y-0.5 hover:shadow-md hover:ring-slate-300/80 dark:bg-[#141414] dark:ring-slate-700/70 dark:hover:ring-slate-600/80'}
+                className={'group relative flex min-h-32 flex-col rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200/70 transition-[box-shadow,border-color] hover:shadow-md hover:ring-slate-300 dark:bg-[#141414] dark:ring-slate-700/70 dark:hover:ring-slate-600'}
             >
-                <span className={'absolute right-3 top-3 z-30 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300'}>
+                <span className={'absolute right-4 top-4 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300'}>
                     {item.protocol}
                 </span>
-                <div className={'flex items-start gap-2.5'}>
+                <div className={'flex items-start gap-3'}>
                     <FacadeLogo
                         name={item.name}
                         logo={item.logo}
                         protocol={item.protocol}
+                        borderless
+                        size={'small'}
                     />
                     <div className={'min-w-0 flex-1 pr-14'}>
                         <Tooltip title={item.name}>
@@ -208,58 +177,30 @@ const WebsiteFacadePage = () => {
                                 {item.name}
                             </div>
                         </Tooltip>
+                        {item.description && (
+                            <Tooltip title={item.description}>
+                                <div className={'mt-1 truncate text-xs text-slate-500 dark:text-slate-400'}>{item.description}</div>
+                            </Tooltip>
+                        )}
                     </div>
                 </div>
-
-                <div className={'mt-2 min-h-8 flex-1'}>
-                    {item.description && (
-                        <Tooltip title={item.description}>
-                            <div className={'line-clamp-1 text-xs leading-5 text-slate-600 dark:text-slate-300'}>
-                                {item.description}
-                            </div>
-                        </Tooltip>
-                    )}
-                    {item.tags && item.tags.length > 0 && (
-                        <div className={'mt-2 flex flex-wrap gap-1.5'}>
-                            {item.tags.slice(0, 4).map(tag => (
-                                <span
-                                    key={tag}
-                                    className={'rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600 ring-1 ring-slate-200/60 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700/60'}
-                                >
-                                    {tag}
-                                </span>
-                            ))}
-                            {item.tags.length > 4 && (
-                                <span className={'text-[11px] text-slate-400'}>+{item.tags.length - 4}</span>
-                            )}
-                        </div>
-                    )}
-                </div>
-
-                <div className={'mt-3 flex items-center justify-end gap-2 border-t border-slate-100 pt-2 text-xs text-slate-400 dark:border-slate-800'}>
-                    {tempAllowEnabled && (
-                        <button
-                            type="button"
-                            disabled={isAllowing}
-                            onClick={() => allowTempIPMutation.mutate(item.id)}
-                            className={'flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs text-slate-400 transition-colors hover:text-[#1A73E8] disabled:cursor-not-allowed disabled:opacity-50'}
-                        >
-                            {isAllowing ? (
-                                <span className={'h-3.5 w-3.5 rounded-full border-2 border-slate-300 border-t-transparent animate-spin'} />
-                            ) : (
-                                <Shield className={'h-3.5 w-3.5'} />
-                            )}
-                            <span className={'hidden sm:inline'}>{t('assets.temp_allow_action')}</span>
-                        </button>
-                    )}
+                <div className={'flex-1'} />
+                <div className={'mt-5 flex items-center justify-between'}>
+                    <button
+                        type={'button'}
+                        className={'cursor-pointer text-xs text-slate-400 transition-colors hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200'}
+                        onClick={() => setSelectedWebsite(item)}
+                    >
+                        {t('actions.detail')}
+                    </button>
                     <a
                         href={buildWebsiteHref(item.id)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={'flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-xs text-slate-400 transition-colors hover:text-[#1A73E8]'}
+                        className={'inline-flex h-8 items-center gap-1 rounded-md bg-slate-100 px-2.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 hover:text-slate-900 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:text-white'}
                     >
-                        <span>{t('assets.access')}</span>
-                        <ExternalLink className={'h-3.5 w-3.5'} />
+                        {t('assets.access')}
+                        <ArrowUpRight className={'h-3.5 w-3.5'} />
                     </a>
                 </div>
             </div>
@@ -344,6 +285,33 @@ const WebsiteFacadePage = () => {
                     )}
                 </div>
             </div>
+            <FacadeResourceDetailModal
+                open={Boolean(selectedWebsite)}
+                resource={selectedWebsite}
+                resourceType={'website'}
+                groupName={selectedWebsiteGroup?.title}
+                onClose={() => setSelectedWebsite(undefined)}
+                actions={selectedWebsite ? <>
+                    {Boolean(selectedWebsite.attrs?.tempAllowEnabled) && (
+                        <Button
+                            icon={<Shield className={'h-4 w-4'} />}
+                            loading={allowTempIPMutation.isPending && allowTempIPMutation.variables === selectedWebsite.id}
+                            onClick={() => allowTempIPMutation.mutate(selectedWebsite.id)}
+                        >
+                            {t('assets.temp_allow_action')}
+                        </Button>
+                    )}
+                    <Button
+                        href={buildWebsiteHref(selectedWebsite.id)}
+                        target={'_blank'}
+                        rel={'noopener noreferrer'}
+                        icon={<ExternalLink className={'h-4 w-4'} />}
+                        iconPlacement={'end'}
+                    >
+                        {t('assets.access')}
+                    </Button>
+                </> : undefined}
+            />
         </div>
     );
 };

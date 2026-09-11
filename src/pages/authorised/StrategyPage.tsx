@@ -162,7 +162,7 @@ const StrategyPage = () => {
 
     return (
         <div>
-            <Disabled disabled={!hasPremiumFeatures}>
+            <Disabled feature="authorization_strategy" disabled={!hasPremiumFeatures}>
                 <NTable
                     columns={columns}
                     actionRef={actionRef}

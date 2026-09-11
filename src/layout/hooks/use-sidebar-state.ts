@@ -1,35 +1,32 @@
 import {useEffect, useState} from 'react';
+import type {MenuProps} from 'antd';
 import {useMobile} from '@/hook/use-mobile.ts';
 
-/**
- * 侧边栏状态管理 Hook
- * 管理侧边栏的折叠状态、移动端菜单可见性、菜单展开键等
- */
-export function useSidebarState() {
+/** 侧边栏只展开一个分组，路由变化或展开侧边栏时定位当前页面。 */
+export function useSidebarState(menus: MenuProps['items'], pathname: string) {
     const {isMobile} = useMobile();
-
-    // 侧边栏折叠状态
     const [collapsed, setCollapsed] = useState(false);
-
-    // 移动端菜单可见性
     const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+    const [stateOpenKeys, setStateOpenKeys] = useState<string[]>([]);
+    const current = pathname.split('/')[1] ?? '';
+    const groups = (menus ?? []).filter(item => item && 'children' in item && item.children?.length);
+    const activeGroup = groups.find(item => item && 'children' in item && item.children?.some(child => child?.key === current));
+    const activeGroupKey = activeGroup?.key === undefined ? '' : String(activeGroup.key);
 
-    // 菜单展开键（从 sessionStorage 读取）
-    const [stateOpenKeys, setStateOpenKeys] = useState<string[]>(
-        JSON.parse(sessionStorage.getItem('openKeys') || '[]')
-    );
-
-    // 移动端自动收起侧边栏
     useEffect(() => {
         if (isMobile) {
             setCollapsed(true);
         }
     }, [isMobile]);
 
-    // 子菜单展开/折叠处理（同步到 sessionStorage）
+    useEffect(() => {
+        setStateOpenKeys(activeGroupKey && (!collapsed || isMobile) ? [activeGroupKey] : []);
+    }, [pathname, activeGroupKey, collapsed, isMobile, mobileMenuVisible]);
+
     const subMenuChange = (openKeys: string[]) => {
-        setStateOpenKeys(openKeys);
-        sessionStorage.setItem('openKeys', JSON.stringify(openKeys));
+        const validKeys = openKeys.filter(key => groups.some(item => String(item?.key) === key));
+        const newlyOpened = validKeys.find(key => !stateOpenKeys.includes(key));
+        setStateOpenKeys(newlyOpened ? [newlyOpened] : validKeys.slice(-1));
     };
 
     return {
@@ -37,7 +34,7 @@ export function useSidebarState() {
         setCollapsed,
         mobileMenuVisible,
         setMobileMenuVisible,
-        stateOpenKeys,
+        stateOpenKeys: stateOpenKeys.filter(key => groups.some(item => String(item?.key) === key)),
         subMenuChange,
     };
 }

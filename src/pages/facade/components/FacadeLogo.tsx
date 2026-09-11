@@ -8,19 +8,26 @@ interface FacadeLogoProps {
     protocol: string;   // 用于颜色
     className?: string;
     borderless?: boolean;
+    size?: 'small' | 'default';
 }
 
 /**
  * Facade Logo 组件 - 简洁现代风格
  * 灵感来自 Apple、Notion 的设计
  */
-const FacadeLogo: React.FC<FacadeLogoProps> = React.memo(({ name, logo, protocol, className, borderless = false }) => {
+const FacadeLogo: React.FC<FacadeLogoProps> = React.memo(({ name, logo, protocol, className, borderless = false, size = 'default' }) => {
+    const containerSize = size === 'small' ? 'h-10 w-10' : 'h-12 w-12';
+    const imageRadius = size === 'small' ? 'rounded-md' : 'rounded-lg';
+    const textSize = size === 'small' ? 'text-base' : 'text-lg';
+
     if (logo && logo !== "") {
         return (
-            <div className={clsx('w-12 h-12 flex-shrink-0', className)}>
+            <div className={clsx(containerSize, 'flex-shrink-0', className)}>
                 <img
                     className={clsx(
-                        "w-12 h-12 rounded-lg object-cover",
+                        containerSize,
+                        imageRadius,
+                        'object-cover',
                         !borderless && "ring-1 ring-slate-200 dark:ring-slate-700"
                     )}
                     src={logo}
@@ -34,8 +41,10 @@ const FacadeLogo: React.FC<FacadeLogoProps> = React.memo(({ name, logo, protocol
     return (
         <div
             className={clsx(
-                'w-12 h-12 flex-shrink-0 rounded-lg flex items-center justify-center',
-                'text-white font-bold text-lg',
+                containerSize,
+                imageRadius,
+                'flex flex-shrink-0 items-center justify-center font-bold text-white',
+                textSize,
                 !borderless && 'ring-1 ring-white/10',
                 getImgColor(protocol),
                 className

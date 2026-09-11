@@ -29,6 +29,7 @@ interface WebsiteDrawerProps {
   onSuccess?: () => void;
   id?: string;
   groupId?: string;
+  copy?: boolean;
 }
 
 const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
@@ -36,7 +37,8 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
   onClose,
   onSuccess,
   id,
-  groupId
+  groupId,
+  copy
 }) => {
   const {message} = App.useApp();
   const {t} = useTranslation();
@@ -130,10 +132,11 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
       targetUrl: `${values.scheme}://${values.host}:${values.port}`,
     };
 
-    if (id) {
+    if (id && !copy) {
       await websiteApi.updateById(id, submitData);
       return undefined;
     }
+    delete submitData.id;
     return await websiteApi.create(submitData);
   };
 
@@ -150,7 +153,7 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
     mutation.mutate(values);
   };
 
-  useFormRequest(form, ["form-request", "web/src/pages/assets/WebsiteDrawer.tsx", open, id, groupId], loadWebsiteData, {enabled: open && !licenseLoading});
+  useFormRequest(form, ["form-request", "web/src/pages/assets/WebsiteDrawer.tsx", open, id, groupId, copy], loadWebsiteData, {enabled: open && !licenseLoading});
 
   const drawerExtra = (
     <Space size={8}>
@@ -204,7 +207,7 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
       key: 'modify-response',
       label: t('assets.modify_response'),
       children: (
-        <Disabled disabled={!hasPremiumFeatures}>
+        <Disabled feature="response_rewrite" compact disabled={!hasPremiumFeatures}>
           <WebsiteModifyResponseView/>
         </Disabled>
       ),
@@ -214,7 +217,7 @@ const WebsiteDrawer: React.FC<WebsiteDrawerProps> = ({
 
   return (
     <Drawer
-      title={id ? t('actions.edit') : t('actions.new')}
+      title={copy ? t('actions.copy') : id ? t('actions.edit') : t('actions.new')}
       onClose={onClose}
       open={open}
       size={960}

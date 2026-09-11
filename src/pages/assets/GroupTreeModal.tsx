@@ -1,7 +1,6 @@
 import {useEffect, useRef} from 'react';
 import {Form, Input, InputRef, Modal, TreeSelect} from 'antd';
 import {useTranslation} from 'react-i18next';
-import {useLicense} from '@/hook/LicenseContext';
 import GatewayChainEditor from '@/pages/assets/components/GatewayChainEditor';
 import type {GroupTreeNode, GroupTreeOperation} from '@/pages/assets/GroupTree';
 
@@ -44,30 +43,26 @@ const GroupTreeModal = ({
     const [form] = Form.useForm<GroupTreeFormValues>();
     const {t} = useTranslation();
     const inputRef = useRef<InputRef>(null);
-    const {license, isLoading: licenseLoading} = useLicense();
-    const hasPremiumFeatures = !licenseLoading && license.hasPremiumFeatures();
 
     useEffect(() => {
-        if (!open || licenseLoading) {
+        if (!open) {
             return;
         }
 
         form.setFieldsValue({
             key: node?.key,
             title: node?.title,
-            gatewayChain: hasPremiumFeatures ? node?.gatewayChain || [] : [],
+            gatewayChain: node?.gatewayChain || [],
             parentKey,
         });
 
         const timer = window.setTimeout(() => inputRef.current?.focus(), 300);
         return () => window.clearTimeout(timer);
-    }, [form, hasPremiumFeatures, licenseLoading, node, open, parentKey]);
+    }, [form, node, open, parentKey]);
 
     const onOk = () => {
         form.validateFields().then(values => {
-            if (!hasPremiumFeatures) {
-                values.gatewayChain = [];
-            }
+
             handleOk(values);
         });
     };
@@ -106,7 +101,7 @@ const GroupTreeModal = ({
                         treeData={buildParentOptions(treeData, op === 'edit' ? node?.key : undefined)}
                     />
                 </Form.Item>
-                <GatewayChainEditor disabled={!hasPremiumFeatures}/>
+                <GatewayChainEditor/>
             </Form>
         </Modal>
     );

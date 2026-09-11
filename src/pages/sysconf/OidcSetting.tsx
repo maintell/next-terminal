@@ -23,7 +23,7 @@ const OidcSetting = ({
     };
     useFormRequest(form, ["form-request", "web/src/pages/sysconf/OidcSetting.tsx"], wrapGet, true);
     return <div>
-        <Disabled disabled={!license.hasPremiumFeatures()}>
+        <Disabled feature="oidc" disabled={!license.hasPremiumFeatures()}>
             <Form form={form} onFinish={set} layout="vertical">
                 <Form.Item name="oidc-enabled" label={t("settings.oidc.enabled")} rules={[{
                     required: true

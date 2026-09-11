@@ -1,3 +1,4 @@
+import ipSetApi from "@/api/ip-set-api";
 import {useLicense} from "@/hook/LicenseContext";
 import {SafetyCertificateOutlined, StopOutlined} from "@ant-design/icons";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
@@ -22,6 +23,7 @@ const AccessPolicyRules = ({active, groupId}: AccessPolicyRulesProps) => {
         queryFn: () => accessPolicyApi.getRules(groupId),
         enabled: active && hasPremiumFeatures && !!groupId,
     });
+    const ipSetsQuery = useQuery({queryKey: ['ip-set-options'], queryFn: ipSetApi.options, enabled: active && hasPremiumFeatures});
     const deleteMutation = useMutation({
         mutationFn: (ruleId: string) => accessPolicyApi.deleteRuleById(groupId, ruleId),
         onSuccess: () => queryClient.invalidateQueries({queryKey: ['access-policy-rules', groupId]}),
@@ -34,6 +36,14 @@ const AccessPolicyRules = ({active, groupId}: AccessPolicyRulesProps) => {
             title: t('identity.policy.ip_group'),
             dataIndex: 'ipGroup',
             render: value => value || '-',
+        },
+        {
+            title: t('ip_set.reference'),
+            dataIndex: 'ipSetIds',
+            render: (ids: string[] | undefined) => ids?.length ? ids.map(id => {
+                const item = ipSetsQuery.data?.find(set => set.id === id);
+                return <Tag key={id} color={item && !item.enabled ? 'warning' : undefined}>{item?.name ?? id}</Tag>;
+            }) : '-',
         },
         {
             title: t('identity.policy.geo'),

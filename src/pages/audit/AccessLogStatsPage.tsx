@@ -1,6 +1,5 @@
 import accessLogApi, {RealtimeMetrics, TopPages, TopReferers, WebsiteStats} from "@/api/access-log-api";
 import websiteApi from "@/api/website-api";
-import Disabled from "@/components/Disabled";
 import {
     ChartConfig,
     ChartContainer,
@@ -9,7 +8,6 @@ import {
     ChartTooltip,
     ChartTooltipContent
 } from "@/components/ui/chart";
-import {useLicense} from "@/hook/LicenseContext";
 import {renderSize} from "@/utils/utils";
 import {useQuery} from "@tanstack/react-query";
 import {Card, Select, Table} from "antd";
@@ -36,8 +34,8 @@ const formatNumber = (num: number | undefined): string => {
 
 const AccessLogStatsPage = () => {
     const {t} = useTranslation();
-    const {license} = useLicense();
-    const hasPremiumFeatures = license.hasPremiumFeatures();
+
+
 
     // 时间周期选项
     const PERIOD_OPTIONS = [
@@ -53,56 +51,48 @@ const AccessLogStatsPage = () => {
     const websitesQuery = useQuery({
         queryKey: ['websites'],
         queryFn: () => websiteApi.getAll(),
-        enabled: hasPremiumFeatures,
     });
 
     // 获取网站统计数据
     const websiteStatsQuery = useQuery({
         queryKey: ['website-stats', selectedWebsiteId, period],
         queryFn: () => accessLogApi.getWebsiteStats(selectedWebsiteId, period),
-        enabled: hasPremiumFeatures,
     });
 
     // 获取流量趋势
     const trafficTrendQuery = useQuery({
         queryKey: ['website-traffic-trend', selectedWebsiteId, period],
         queryFn: () => accessLogApi.getWebsiteTrafficTrend(selectedWebsiteId, period),
-        enabled: hasPremiumFeatures,
     });
 
     // 获取小时统计
     const hourlyStatsQuery = useQuery({
         queryKey: ['website-hourly-stats', selectedWebsiteId, period],
         queryFn: () => accessLogApi.getWebsiteHourlyStats(selectedWebsiteId, period),
-        enabled: hasPremiumFeatures,
     });
 
     // 获取状态码统计
     const statusCodeStatsQuery = useQuery({
         queryKey: ['website-status-code-stats', selectedWebsiteId, period],
         queryFn: () => accessLogApi.getWebsiteStatusCodeStats(selectedWebsiteId, period),
-        enabled: hasPremiumFeatures,
     });
 
     // 获取热门页面
     const topPagesQuery = useQuery({
         queryKey: ['top-pages', selectedWebsiteId, period],
         queryFn: () => accessLogApi.getTopPages(selectedWebsiteId, period, 10),
-        enabled: hasPremiumFeatures,
     });
 
     // 获取热门来源
     const topReferersQuery = useQuery({
         queryKey: ['top-referers', selectedWebsiteId, period],
         queryFn: () => accessLogApi.getTopReferers(selectedWebsiteId, period, 10),
-        enabled: hasPremiumFeatures,
     });
 
     // 获取实时指标
     const realtimeMetricsQuery = useQuery({
         queryKey: ['realtime-metrics', selectedWebsiteId],
         queryFn: () => accessLogApi.getRealtimeMetrics(selectedWebsiteId),
-        enabled: hasPremiumFeatures,
         refetchInterval: 30000, // 30秒刷新
     });
 
@@ -311,7 +301,7 @@ const AccessLogStatsPage = () => {
     ];
 
     return (
-        <Disabled disabled={!hasPremiumFeatures}>
+        <>
             <div className="space-y-4 max-w-full overflow-hidden">
                 {/* 页面标题和控制器 */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -531,7 +521,7 @@ const AccessLogStatsPage = () => {
                     </Card>
                 </div>
             </div>
-        </Disabled>
+        </>
     );
 };
 

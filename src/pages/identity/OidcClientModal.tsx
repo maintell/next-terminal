@@ -27,6 +27,7 @@ interface OidcClientFormValues {
     clientId?: string;
     redirectUris?: RedirectUriItem[];
     grantTypes?: string[];
+    responseTypes?: string[];
     scopes?: string[];
     accessControl?: "all" | "department" | "user";
     boundUserIds?: string[];
@@ -37,7 +38,8 @@ interface OidcClientFormValues {
 
 const defaultFormValues: OidcClientFormValues = {
     grantTypes: ["authorization_code", "refresh_token"],
-    scopes: ["openid", "profile", "email"],
+    responseTypes: ["code"],
+    scopes: ["openid", "profile", "email", "offline_access"],
     redirectUris: [],
     accessControl: "all",
     skipConsent: false,
@@ -78,8 +80,23 @@ const OidcClientModal = ({
             value: "refresh_token",
         },
         {
+            label: "Implicit",
+            value: "implicit",
+        },
+        {
             label: "Client Credentials",
             value: "client_credentials",
+        },
+    ];
+
+    const responseTypeOptions = [
+        {
+            label: "code",
+            value: "code",
+        },
+        {
+            label: "id_token",
+            value: "id_token",
         },
     ];
 
@@ -130,6 +147,7 @@ const OidcClientModal = ({
         return {
             ...client,
             redirectUris: toRedirectUriItems(client.redirectUris),
+            responseTypes: client.responseTypes?.length ? client.responseTypes : ["code"],
             accessControl: client.accessControl || "all",
         };
     };
@@ -361,6 +379,19 @@ const OidcClientModal = ({
                     ]}
                 >
                     <Checkbox.Group options={grantTypeOptions} />
+                </Form.Item>
+
+                <Form.Item
+                    name="responseTypes"
+                    label={t("identity.oidc_client.response_types")}
+                    rules={[
+                        {
+                            required: true,
+                            message: t("identity.oidc_client.response_types_required"),
+                        },
+                    ]}
+                >
+                    <Checkbox.Group options={responseTypeOptions} />
                 </Form.Item>
 
                 <Form.Item

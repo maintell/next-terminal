@@ -152,7 +152,7 @@ const GeoDataSetting = () => {
 
     return <>
         {contextHolder}
-        <Disabled disabled={!hasPremiumFeatures}>
+        <Disabled feature="geodata" disabled={!hasPremiumFeatures}>
             <div className="space-y-4 max-w-4xl">
             <section>
                 <Typography.Title level={5}>{t('settings.geodata.current_database')}</Typography.Title>

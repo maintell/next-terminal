@@ -8,8 +8,6 @@ export const getImgColor = (protocol: string) => {
             return `bg-rose-500`;
         case 'vnc':
             return `bg-amber-500`;
-        case 'kubernetes':
-            return `bg-rose-500`;
         case 'http':
             return `bg-orange-500`;
     }
@@ -25,8 +23,6 @@ export const getProtocolColor = (protocol: string) => {
             return `bg-rose-400`;
         case 'vnc':
             return `bg-amber-400`;
-        case 'kubernetes':
-            return `bg-rose-400`;
         case 'http':
             return `bg-orange-400`;
     }

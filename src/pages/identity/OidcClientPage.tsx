@@ -133,6 +133,17 @@ const OidcClientPage = () => {
             }
         },
         {
+            title: t('identity.oidc_client.response_types'),
+            dataIndex: 'responseTypes',
+            search: false,
+            render: (_, record) => {
+                const responseTypes = record.responseTypes?.length ? record.responseTypes : ['code'];
+                return responseTypes.map(type => (
+                    <Tag key={type}>{type}</Tag>
+                ))
+            }
+        },
+        {
             title: t('identity.oidc_client.scopes'),
             dataIndex: 'scopes',
             search: false,

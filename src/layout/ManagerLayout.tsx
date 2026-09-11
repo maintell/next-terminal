@@ -43,6 +43,8 @@ const ManagerLayout: React.FC = () => {
     // 主题切换
     const {isDarkMode, toggleDarkMode} = useThemeToggle();
 
+    const {filteredMenus, breadcrumbNameMap} = useFilteredMenus();
+
     // 侧边栏状态
     const {
         collapsed,
@@ -51,10 +53,9 @@ const ManagerLayout: React.FC = () => {
         setMobileMenuVisible,
         stateOpenKeys,
         subMenuChange,
-    } = useSidebarState();
+    } = useSidebarState(filteredMenus, location.pathname);
 
-    // 菜单和面包屑
-    const {filteredMenus, breadcrumbNameMap} = useFilteredMenus();
+    // 面包屑
     const {breakItems} = useBreadcrumb(breadcrumbNameMap);
     const {dropMenus} = useUserDropdownMenu();
 

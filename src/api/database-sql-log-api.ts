@@ -7,11 +7,17 @@ export interface DatabaseSQLLog {
     assetId: string;
     assetName: string;
     database: string;
+    dbType: string;
     userId: string;
     userName: string;
     clientIp: string;
     regionInfo?: RegionInfo;
     sql: string;
+    operationKind?: string;
+    sessionId?: string;
+    executionId?: string;
+    sqlState?: string;
+    outcomeDetail?: string;
     durationMs: number;
     rowsAffected: number;
     status: string;

@@ -165,6 +165,7 @@ export type AssetAccessMode = 'access-page' | 'standalone-page';
 
 export interface AccessPreferences {
     assetAccessMode: AssetAccessMode;
+    rdpProxyEnabled: boolean;
 }
 
 export interface RdpProxyTicket {
@@ -205,7 +206,7 @@ class PortalApi {
 
     getDbProxyInfo = async () => {
         const data = await requests.get(`/${this.group}/db-proxy-info`);
-        return data as { host: string; port: string };
+        return data as { host: string; port: string; pgHost?: string; pgPort?: string };
     }
 
     getAccessPreferences = async () => {
@@ -265,10 +266,7 @@ class PortalApi {
     }
 
     createSessionByAssetsId = async (assetId: string, securityToken?: string) => {
-        if(!securityToken) {
-            securityToken = '';
-        }
-        return await requests.post(`/${this.group}/sessions?securityToken=${securityToken}`, {"assetId": assetId}) as ExportSession;
+        return await requests.post(`/${this.group}/sessions`, {assetId}, {securityToken}) as ExportSession;
     }
 
     getSessionById = async (sessionId: string, sharerToken?: string) => {

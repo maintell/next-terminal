@@ -3,7 +3,7 @@ import {Checkbox, DatePicker, Form, Input, Select, Switch} from "antd";
 import {useTranslation} from "react-i18next";
 import dayjs, {Dayjs} from "dayjs";
 import Disabled from "@/components/Disabled";
-import ipWhitelistApi from "@/api/ip-whitelist-api";
+import ipSetApi from "@/api/ip-set-api";
 import {useQuery} from "@tanstack/react-query";
 import StringListInput from "@/components/StringListInput";
 
@@ -28,7 +28,7 @@ const PublicView: React.FC<PublicViewProps> = ({hasPremiumFeatures}) => {
     };
 
     const tagSeparators = [',', '，'];
-	const ipWhitelistsQuery = useQuery({queryKey: ['ip-whitelists'], queryFn: ipWhitelistApi.all});
+	const ipSetsQuery = useQuery({queryKey: ['ip-set-options'], queryFn: ipSetApi.options});
 
     return <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
@@ -71,10 +71,10 @@ const PublicView: React.FC<PublicViewProps> = ({hasPremiumFeatures}) => {
                             autoSize={{minRows: 3, maxRows: 8}}
                             placeholder={"192.168.1.0/24\n10.0.0.1\n172.16.0.1-172.16.0.255"}/>
                     </Form.Item>
-					<Form.Item label={t('ip_whitelist.reference')} name={['public', 'ipWhitelistIds']} extra={t('ip_whitelist.reference_tip')}>
-						<Select mode="multiple" loading={ipWhitelistsQuery.isLoading} options={(ipWhitelistsQuery.data || []).filter(item => item.enabled).map(item => ({value: item.id, label: item.name}))}/>
+					<Form.Item label={t('ip_set.reference')} name={['public', 'ipSetIds']} extra={t('ip_set.reference_tip')}>
+						<Select mode="multiple" loading={ipSetsQuery.isLoading} options={(ipSetsQuery.data || []).filter(item => item.enabled).map(item => ({value: item.id, label: item.name}))}/>
 					</Form.Item>
-                    <Disabled disabled={!hasPremiumFeatures}>
+                    <Disabled feature="website_geo" compact disabled={!hasPremiumFeatures}>
                         <div className="mb-6">
                             <div className="mb-2 text-sm">{t('assets.public_geo_rules')}</div>
                             <div className="mb-3 text-xs text-gray-500">{t('assets.public_geo_rules_tip')}</div>

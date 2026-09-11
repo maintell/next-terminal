@@ -1,8 +1,6 @@
 import sshGatewayApi,{ GatewayReferenceError, SSHGateway } from "@/api/ssh-gateway-api";
-import Disabled from "@/components/Disabled";
 import NButton from "@/components/NButton";
 import NTable,{ type NColumn,type NTableActionType } from "@/components/NTable";
-import { useLicense } from "@/hook/LicenseContext";
 import SshGatewayModal from "@/pages/gateway/SshGatewayModal";
 import { getSort } from "@/utils/sort";
 import { useMutation } from "@tanstack/react-query";
@@ -14,8 +12,6 @@ const api = sshGatewayApi;
 
 const SshGatewayPage = () => {
 
-    let { license } = useLicense();
-    const hasPremiumFeatures = license.hasPremiumFeatures();
     const {t} = useTranslation();
     const actionRef = useRef<NTableActionType>(null);
 
@@ -190,18 +186,10 @@ const SshGatewayPage = () => {
 
     return (
         <div>
-            <Disabled disabled={!hasPremiumFeatures}>
                 <NTable
                     columns={columns}
                     actionRef={actionRef}
                     request={async (params = {}, sort, _filter) => {
-                        if (!hasPremiumFeatures) {
-                            return {
-                                data: [],
-                                success: true,
-                                total: 0
-                            };
-                        }
 
                         let [sortOrder, sortField] = getSort(sort);
 
@@ -249,7 +237,6 @@ const SshGatewayPage = () => {
                     }}
                     handleOk={mutation.mutate}
                 />
-            </Disabled>
 
         </div>
     );

@@ -94,6 +94,7 @@
     "batch_delete": "一括削除",
     "refresh": "更新",
     "retry": "再試行",
+    "filter": "フィルター",
     "confirm": "確認",
     "test_connection": "接続テスト"
   },
@@ -140,7 +141,8 @@
     "database_asset_placeholder": "資産名、ユーザー名、タグ、タイプ",
     "database_access_work_order": "SQL ワークオーダーへ",
     "website_placeholder": "サイト名、タグ、タイプ",
-    "in_use": "使用中",
+    "current_users": "現在のユーザー",
+    "status_detail": "ステータス詳細",
     "clear_search": "検索をクリア",
     "list_view": "リスト",
     "card_view": "カード"
@@ -152,13 +154,13 @@
     "resource": {
       "label": "リソース管理",
       "submenus": {
-        "asset": "資産",
+        "asset": "ホスト資産",
         "database_asset": "データベース資産",
-        "credential": "認証情報",
+        "credential": "アクセス認証情報",
         "snippet": "コマンドスニペット",
         "storage": "ストレージ",
         "website": "Web 資産",
-        "ip_whitelist": "IP ホワイトリスト",
+        "ip_set": "IP アドレスセット",
         "certificate": "証明書管理"
       }
     },
@@ -198,16 +200,17 @@
         "scheduled_task": "定期タスク",
         "tools": "ツール",
         "monitoring": "監視",
-        "system_event": "システムイベント"
+        "system_event": "システムイベント",
+        "credential_rotation": "認証情報ローテーション"
       }
     },
     "identity": {
-      "label": "認証",
+      "label": "ID 管理",
       "submenus": {
         "user": "ユーザー",
         "department": "部門",
         "role": "ロール",
-        "access_policy": "アクセス制御",
+        "access_policy": "ID アクセスポリシー",
         "login_locked": "ログインロック",
         "oidc_client": "OIDC クライアント"
       }
@@ -217,9 +220,9 @@
       "submenus": {
         "command_filter": "コマンドフィルタ",
         "strategy": "認可ポリシー",
-        "authorised_asset": "認可済み資産",
-        "authorised_website": "認可済み Web 資産",
-        "authorised_database_asset": "認可済み DB 資産"
+        "authorised_asset": "ホスト認可",
+        "authorised_website": "Web 認可",
+        "authorised_database_asset": "データベース認可"
       }
     },
     "setting": {
@@ -434,7 +437,12 @@
       "reset_otp": {
         "action": "二要素認証をリセット",
         "confirm_title": "ユーザーの二要素認証をリセットしますか？",
-        "confirm_content": "リセット後は二要素認証なしでログインできます。"
+        "confirm_content": "リセット後は二要素認証なしでログインできます。確認後、管理者本人の二次認証が必要です。"
+      },
+      "clear_passkeys": {
+        "action": "Passkey を削除",
+        "confirm_title": "ユーザーのすべての Passkey を削除しますか？",
+        "confirm_content": "この操作は元に戻せません。Passkey がユーザーの最後のログイン方法である場合、操作は拒否されます。確認後、管理者本人の二次認証が必要です。"
       },
       "external_identity": {
         "title": "外部アカウント",
@@ -469,6 +477,7 @@
       "new_secret_tip": "⚠️ すぐに新しいシークレットをコピーして保存してください。閉じると再表示できません。",
       "redirect_uris": "リダイレクト URI",
       "grant_types": "グラントタイプ",
+      "response_types": "レスポンスタイプ",
       "scopes": "Scopes",
       "regenerate_secret": "シークレットをローテーション",
       "regenerate_secret_confirm": "このクライアントのシークレットをローテーションしますか？旧シークレットは直ちに無効になります。",
@@ -484,6 +493,7 @@
       "redirect_uris_add": "リダイレクト URI を追加",
       "redirect_uri_required": "リダイレクト URI を入力してください",
       "grant_types_required": "少なくとも 1 つのグラントタイプを選択してください",
+      "response_types_required": "少なくとも 1 つのレスポンスタイプを選択してください",
       "scopes_required": "少なくとも 1 つの scope を選択してください",
       "access_control": "アクセス制御",
       "access_control_tip": "この OIDC クライアントを利用できるユーザーを制御します",
@@ -779,6 +789,7 @@
       "clear_remote_exec_confirm": "すべてのリモート実行コマンド記録をクリアしますか？"
     },
     "accessLog": {
+      "requestId": "リクエスト ID",
       "uri": "リクエスト URI",
       "statusCode": "ステータスコード",
       "clientStatusCode": "クライアント状態",
@@ -1075,6 +1086,19 @@
         "upload_transfer_active": "ZMODEM 転送がすでに実行中です。",
         "upload_no_files": "アップロードするファイルがありません。",
         "ssh_only": "ZMODEM は SSH 端末でのみ使用できます。"
+      },
+      "auth": {
+        "title_username": "ユーザー名が必要です",
+        "title_password": "パスワードが必要です",
+        "title_passphrase": "秘密鍵のパスフレーズが必要です",
+        "title_keyboard_interactive": "キーボードインタラクティブ認証",
+        "auth_required": "接続先の認証が必要です",
+        "username": "ユーザー名",
+        "password": "パスワード",
+        "passphrase": "パスフレーズ",
+        "answer": "回答",
+        "cancel": "キャンセル",
+        "connect": "接続"
       }
     },
     "playback": {
@@ -1613,6 +1637,49 @@
       "command_policy": "AI コマンド実行ポリシー",
       "command_policy_extra": "空の場合はグローバル AI 設定に従います。",
       "follow_global": "グローバル設定に従う"
+    },
+    "rotation": {
+      "rotate": "認証情報をローテーション",
+      "batch_title": "認証情報の一括ローテーション",
+      "manual_warning": "ローテーションはリモートホストのパスワード/鍵を変更し、保存された認証情報も更新します。慎重に操作してください。",
+      "credential_confirm": "この認証情報をローテーションしますか？",
+      "credential_confirm_tip": "この認証情報を参照するすべての SSH 資産でパスワード/鍵が変更され、認証情報が更新されます。",
+      "result_title": "ローテーション完了（成功 {{success}}/{{total}}）",
+      "type_label": "ローテーション種別",
+      "type": {
+        "password": "パスワード",
+        "private_key": "秘密鍵",
+        "auto": "自動（アカウント種別による）"
+      },
+      "scope": "対象範囲",
+      "pwd_length": "パスワード長",
+      "pwd_length_tip": "ランダムパスワードの長さ、8〜64 文字",
+      "pwd_symbol": "記号を含む",
+      "keep_old_key": "旧公開鍵を保持",
+      "keep_old_key_tip": "有効にするとリモートで旧公開鍵を削除しません（安全）。無効にすると自動的に削除します",
+      "policy_warning": "ローテーションはリモートホストのアカウントパスワードや鍵を直接変更します。必ず代替のログイン手段を確保してください。",
+      "cron_preset": "プリセット",
+      "cron_presets": {
+        "daily": "毎日 {{time}}",
+        "monday": "毎週月曜日 {{time}}",
+        "monthly": "毎月1日 {{time}}",
+        "every_six_hours": "6時間ごと"
+      },
+      "logs_tab": "ローテーション履歴",
+      "policies_tab": "ローテーションポリシー",
+      "status": {
+        "success": "成功",
+        "failed": "失敗"
+      },
+      "trigger": {
+        "manual": "手動",
+        "scheduled": "定時"
+      },
+      "trigger_label": "トリガー",
+      "operator": "操作者",
+      "message": "メッセージ",
+      "scope_empty_tip": "空欄の場合はすべての SSH 資産をローテーションします",
+      "scope_all": "すべての資産"
     }
   },
   "group_tree": {
@@ -1642,7 +1709,11 @@
     "test_failed": "プロキシ接続テストに失敗しました",
     "delete_referenced_title": "使用中のプロキシサーバーは削除できません"
   },
-  "ip_whitelist": {
+  "ip_set": {
+    "policy_reference_tip": "手動 IP または参照する IP アドレスセットのいずれかに一致すると IP 条件を満たします。地域と時間の条件も満たす必要があります。",
+    "manage": "IP アドレスセットを管理",
+    "load_error": "IP アドレスセットを読み込めませんでした。再試行してください。",
+    "retry": "再試行",
     "source": "ソース",
     "source_manual": "手動管理",
     "source_url": "URL 同期",
@@ -1657,8 +1728,8 @@
     "refresh_minutes_tip": "更新間隔は 5 分以上にしてください。",
     "rules": "IP ルール",
     "rules_tip": "IP、CIDR、または IP 範囲を 1 行ずつ入力します。",
-    "reference": "参照する IP ホワイトリスト",
-    "reference_tip": "参照するいずれかのホワイトリストに一致すると IP ルールを通過します。",
+    "reference": "参照する IP アドレスセット",
+    "reference_tip": "参照するいずれかの IP アドレスセットに一致すると IP ルールを通過します。",
     "sync": "今すぐ同期",
     "last_synced_at": "最終同期日時"
   },
@@ -2006,6 +2077,9 @@
       "public_addr_extra": "生成する .rdp ファイルで使用するアドレスです。空の場合はリッスンアドレスと現在のリクエストから推測します。",
       "ticket_ttl": "チケット有効期間（秒）",
       "ticket_ttl_extra": "既定は 300 秒です。チケットは解決成功後に使用済みとしてマークされます。",
+      "certificate": "プロキシ証明書",
+      "certificate_extra": "空の場合は専用の自己署名証明書を自動生成します。証明書リストから選択することもできます。",
+      "certificate_auto": "証明書を自動生成",
       "usage": "使用方法",
       "usage_tip": "ユーザーが Web UI で RDP 資産を選択してチケットを作成し、RDP クライアントはプロキシアドレスへ接続します。プロキシが実際の資産へ解決します。",
       "ticket_flow": "チケット形式",
@@ -2256,6 +2330,12 @@
     },
     "license": {
       "setting": "ライセンス",
+      "loading": "ライセンス情報を読み込んでいます...",
+      "load_error": {
+        "title": "ライセンス情報を読み込めませんでした",
+        "description": "現在のライセンスで利用可能な機能を確認できません。ネットワーク接続を確認して、もう一度お試しください。",
+        "retry": "再読み込み"
+      },
       "machine_id": "マシン ID",
       "import": "ライセンスをインポート",
       "request": "ライセンス更新",
@@ -2491,7 +2571,9 @@
       "type_mysql": "MySQL",
       "type_pg": "PostgreSQL",
       "host": "ホスト",
-      "database": "データベース"
+      "database": "データベース",
+      "postgres_ssl_mode": "PostgreSQL バックエンド TLS モード",
+      "postgres_ssl_mode_extra": "verify-ca と verify-full はシステムで信頼された CA を使用します。ゲートウェイ経由でも資産のホスト名で証明書を検証します。"
     },
     "work_order": {
       "new": "新規ワークオーダー",
@@ -2512,10 +2594,13 @@
       }
     },
     "sql_log": {
+      "parameter_template_tip": "プリペアド SQL のテンプレートです。バインドしたパラメーターの元の値は記録されません。",
       "sql": "SQL",
       "duration_ms": "所要時間（ms）",
       "rows_affected": "影響行数",
+      "db_type": "データベース種類",
       "status": {
+        "unknown": "結果不明",
         "blocked": "ブロック済み"
       },
       "source": {
@@ -2524,19 +2609,68 @@
       }
     },
     "proxy": {
-      "setting": "データベースプロキシ",
       "enabled": "データベースプロキシを有効化",
+      "mysql_setting": "MySQL プロキシ",
+      "pg_setting": "PostgreSQL プロキシ",
+      "mysql_enabled": "MySQL プロキシを有効化",
+      "mysql_tls_enabled": "TLS 暗号化を有効化（クライアント〜プロキシ）",
+      "mysql_tls_enabled_tip": "有効にすると、下で選択した証明書を使用してクライアントから MySQL プロキシへの接続を暗号化します。証明書未選択の場合は専用の自己署名証明書を自動生成します。",
+      "mysql_certificate": "プロキシ証明書",
+      "mysql_certificate_extra": "空の場合は専用の自己署名証明書を自動生成します。証明書リストから選択することもできます。",
+      "mysql_certificate_auto": "証明書を自動生成",
+      "pg_policy": "SQL ポリシー",
+      "pg_policy_allow": "SQL を許可して監査",
+      "pg_policy_guarded": "書き込みと高リスク SQL をブロック",
+      "pg_policy_tip": "SQL フィルターは誤操作を減らすための機能です。読み取り専用権限はデータベースアカウントで設定してください。監査は非同期です。破棄件数と書き込み失敗件数を確認してください。",
+      "pg_reject_tip": "ポリシーによる拒否で接続を閉じ、実行中のトランザクションをロールバックします。",
+      "pg_tls_mode": "クライアント TLS モード",
+      "pg_tls_mode_tip": "クライアントからプロキシへの暗号化を設定します。データベースへの SSL モードはデータベース資産で設定してください。",
+      "pg_tls_disabled": "TLS 無効（平文）",
+      "pg_tls_optional": "TLS 任意（平文も許可）",
+      "pg_tls_required": "TLS 必須",
+      "pg_config_error": "設定の読み込みまたは保存に失敗しました。再試行してください。",
+      "pg_certificate_error": "証明書を読み込めません。証明書の存在を確認して再試行してください。",
+      "pg_connection_unavailable": "プロキシの実行中に有効な設定の接続コマンドを表示します。",
+      "pg_connection_tls_tip": "require は暗号化のみを要求し、サーバーの身元を検証しません。身元確認には信頼できる証明書と sslmode=verify-full を使用してください。自己署名証明書は事前に信頼の登録が必要です。",
+      "pg_running": "実行中",
+      "pg_stopped": "停止中",
+      "pg_applying": "設定を適用中",
+      "pg_apply_error": "設定は保存されましたが、適用に失敗しました。現在の実行状態は上に表示されています。",
+      "pg_enabled": "PostgreSQL プロキシを有効化",
       "block_dml": "DML/DDL をブロック",
-      "block_dml_tip": "有効にすると読み取り専用 SQL のみ許可します。",
+      "block_dml_tip": "誤操作を防ぐため、書き込み、ロック付き読み取り、ファイル出力、許可されていない SET を拒否します。完全な読み取り専用アクセスはデータベース権限で設定してください。複数文とプリペアドステートメントプロトコルは未対応です。",
+      "mysql_tls_mode": "クライアント TLS モード",
+      "mysql_tls_disabled": "TLS 無効（平文）",
+      "mysql_tls_optional": "TLS 任意（平文も許可）",
+      "mysql_tls_required": "TLS 必須",
+      "mysql_config_error": "設定の読み込みまたは保存に失敗しました。再試行してください。",
+      "mysql_certificate_error": "証明書を読み込めません。証明書の存在を確認して再試行してください。",
+      "mysql_connection_unavailable": "プロキシの実行中に有効な設定の接続コマンドを表示します。",
+      "mysql_tls_mode_tip": "クライアントから MySQL プロキシへの接続のみを設定します。任意モードは平文も許可し、必須モードは平文を拒否します。",
+      "mysql_connection_tls_tip": "REQUIRED は暗号化のみを要求します。サーバーの本人確認には信頼できる証明書、--ssl-ca と --ssl-mode=VERIFY_IDENTITY を使用してください。",
       "tip": "プロキシを有効化してクライアント接続と SQL 実行を許可します。",
+      "stats": {
+        "title": "統計",
+        "sessions": "アクティブセッション",
+        "queries": "クエリ数",
+        "blocked": "ブロック済み",
+        "audit_drops": "監査破棄",
+        "audit_errors": "監査エラー"
+      },
       "usage_title": "使用方法",
       "usage_tip": "ユーザーはデータベースクライアントからプロキシアドレスに接続し、プロキシが許可されたデータベース資産へ転送します。",
       "usage_client": "クライアント接続",
+      "pg_addr": "PG リッスンアドレス",
+      "pg_tls_enabled": "TLS 暗号化を有効化（クライアント〜プロキシ）",
+      "pg_tls_enabled_tip": "有効にすると、下で選択した証明書を使用してクライアントから PG プロキシへの接続を暗号化します。証明書未選択の場合は専用の自己署名証明書を自動生成します。無効時は平文接続を使用できます。",
+      "pg_certificate": "プロキシ証明書",
+      "pg_certificate_extra": "空の場合は専用の自己署名証明書を自動生成します。証明書リストから選択することもできます。",
       "public_addr": "公開アドレス",
       "public_addr_extra": "一般ユーザー向けのクイックアクセスに表示するアドレスです。空の場合はリッスンアドレスから推測します。",
       "password_tip_prefix": "次へ進み、",
       "password_tip_link": "プロフィール - アクセストークン",
-      "password_tip_suffix": "でデータベースパスワードを作成してください。"
+      "password_tip_suffix": "でデータベースパスワードを作成してください。",
+      "usage_client_pg": "PG クライアント接続"
     }
   },
   "ai_assistant": {
@@ -2612,5 +2746,129 @@
     "history_delete_error": "会話の削除に失敗しました：{{message}}",
     "history_clear_error": "会話履歴のクリアに失敗しました：{{message}}",
     "invalid_response": "解析できない AI 応答を受信しました"
+  },
+  "restricted_features": {
+    "credential_rotation": {
+      "title": "認証情報のローテーション",
+      "description": "SSH 資産のパスワードと秘密鍵をまとめて更新し、固定認証情報の管理負担を減らします。",
+      "benefit_1": "手動の一括更新と定期実行に対応します。",
+      "benefit_2": "同じ認証情報を共有する複数資産をまとめて処理します。",
+      "benefit_3": "更新結果と失敗理由を記録し、確認や後続対応に役立てます。"
+    },
+    "label": "プレミアム機能",
+    "license_note": "現在のライセンスにはこの機能が含まれていません。",
+    "learn_more": "プランとライセンスを見る",
+    "access_policy": {
+      "title": "ID アクセスポリシー",
+      "description": "利用者、接続元、時間帯でアクセス範囲を定義します。部門別管理やリモート接続に適しています。",
+      "benefit_1": "IP アドレスセット、地域、時間の条件を組み合わせます。",
+      "benefit_2": "ユーザーや部門にポリシーを割り当て、重複設定を減らします。",
+      "benefit_3": "優先順位に従って許可・拒否ルールを適用します。"
+    },
+    "agent_gateway": {
+      "title": "Agent ゲートウェイ",
+      "description": "対象ネットワークに Agent を配置し、資産接続の共通入口を提供します。",
+      "benefit_1": "内部ネットワークの資産向けに Agent の接続経路を使用します。",
+      "benefit_2": "オンライン状態やバージョンをまとめて確認できます。",
+      "benefit_3": "複数資産でゲートウェイを共用し、設定を簡素化します。"
+    },
+    "gateway_group": {
+      "title": "ゲートウェイグループ",
+      "description": "複数のゲートウェイを再利用可能な接続グループにまとめます。",
+      "benefit_1": "メンバーを一元管理し、資産側の重複設定を減らします。",
+      "benefit_2": "優先順位、遅延、ランダムの選択方式に対応します。",
+      "benefit_3": "共通グループにより接続先の変更を管理しやすくします。"
+    },
+    "authorization_strategy": {
+      "title": "認可ポリシー",
+      "description": "担当業務に応じてファイル操作とクリップボードの権限を設定します。",
+      "benefit_1": "アップロードとダウンロードを個別に制御します。",
+      "benefit_2": "作成、編集、削除、名前変更の権限を分けられます。",
+      "benefit_3": "コピーと貼り付けの利用を業務に合わせて設定します。"
+    },
+    "command_filter": {
+      "title": "コマンドフィルター",
+      "description": "高リスクなコマンドを制限するための端末操作ルールを設定します。",
+      "benefit_1": "コマンドの照合ルールを一元管理します。",
+      "benefit_2": "リソース認可を通じてルールを適用します。",
+      "benefit_3": "危険なコマンドを誤って実行する機会を減らします。"
+    },
+    "oidc": {
+      "title": "OIDC シングルサインオン",
+      "description": "既存の OIDC ID プロバイダーと連携し、企業アカウントでログインします。",
+      "benefit_1": "企業のログイン入口を共用し、アカウント管理を減らします。",
+      "benefit_2": "標準の OIDC プロトコルで連携します。",
+      "benefit_3": "ログインユーザーの所属部門を設定できます。"
+    },
+    "ldap": {
+      "title": "LDAP ディレクトリ認証",
+      "description": "企業の LDAP ディレクトリにあるユーザー情報で認証します。",
+      "benefit_1": "既存アカウントを利用して重複管理を減らします。",
+      "benefit_2": "検索範囲とフィルターで対象ユーザーを指定します。",
+      "benefit_3": "属性マッピングで既存の構造に対応します。"
+    },
+    "wechat_work": {
+      "title": "WeCom ログイン",
+      "description": "WeCom を利用する組織向けに、企業 ID によるログインを提供します。",
+      "benefit_1": "使い慣れた ID 基盤でログインを簡素化します。",
+      "benefit_2": "企業とアプリの接続情報をまとめて設定します。",
+      "benefit_3": "部門への割り当てを権限管理につなげます。"
+    },
+    "branding": {
+      "title": "ブランドのカスタマイズ",
+      "description": "企業名やロゴを使い、運用ポータルの見た目を統一します。",
+      "benefit_1": "独自のシステム名とロゴを設定できます。",
+      "benefit_2": "登録情報や著作権情報を表示できます。",
+      "benefit_3": "ログイン画面と管理画面のブランドを統一します。"
+    },
+    "session_sharing": {
+      "title": "セッション共有",
+      "description": "現在のセッションのリンクを共有し、状況確認や共同調査を支援します。",
+      "benefit_1": "現在の状況を直接共有して説明の手間を減らします。",
+      "benefit_2": "リンクから共有セッションに参加できます。",
+      "benefit_3": "作業完了後に共有を解除できます。"
+    },
+    "website_geo": {
+      "title": "Web サイトの地域ルール",
+      "description": "国、地域、都市に基づいて公開アクセスの範囲を限定します。",
+      "benefit_1": "国、地域、都市の条件を個別に設定します。",
+      "benefit_2": "既存の IP ルールと組み合わせられます。",
+      "benefit_3": "サイトの地域別アクセス要件を一元管理します。"
+    },
+    "response_rewrite": {
+      "title": "Web レスポンスの変更",
+      "description": "プロキシ層でサイトの返却内容を変更するルールを設定します。",
+      "benefit_1": "レスポンス変更ルールを一元管理します。",
+      "benefit_2": "元のアプリのコード変更を減らせます。",
+      "benefit_3": "サイトごとに異なるルールを適用できます。"
+    },
+    "geodata": {
+      "title": "IP 地理データ管理",
+      "description": "地域ルールや接続元分析に使用する IP 地理データを管理します。",
+      "benefit_1": "データセットの状態を確認できます。",
+      "benefit_2": "アップロードと更新でバージョンを管理します。",
+      "benefit_3": "自動更新で定期的な手作業を減らします。"
+    },
+    "recording_conversion": {
+      "title": "録画変換ポリシー",
+      "description": "録画の利用開始時間とサーバー負荷に合わせて変換をスケジュールします。",
+      "benefit_1": "即時変換と空き時間の変換を選択できます。",
+      "benefit_2": "変換処理の時間帯を設定できます。",
+      "benefit_3": "元の録画を保持するか選択できます。"
+    },
+    "access_request": {
+      "title": "アクセス申請",
+      "description": "一時的な資産アクセスを申請と承認のフローで管理します。",
+      "benefit_1": "資産へのアクセス申請入口を統一します。",
+      "benefit_2": "承認フローで要望を処理し、個別連絡を減らします。",
+      "benefit_3": "リソース管理と申請を結び付け、処理を追跡しやすくします。"
+    },
+    "sql_work_order": {
+      "title": "SQL 変更申請の承認",
+      "description": "データベース変更を申請・承認・実行の流れで管理し、未確認の SQL 操作を減らします。",
+      "benefit_1": "実行前に SQL と対象データベースを確認できます。",
+      "benefit_2": "承認された変更をプラットフォームで実行し、手作業の引き継ぎを減らします。",
+      "benefit_3": "申請者、承認者、実行結果をまとめて記録し、追跡できます。"
+    }
   }
 }

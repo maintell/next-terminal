@@ -5,6 +5,7 @@ Alert,
 Button,
 Form,
 Input,
+Popover,
 Radio,
 Select,
 Space,
@@ -133,9 +134,9 @@ const normalizeSearchValues = (values: Record<string, any>) => {
     );
 };
 
-const buildSearchField = <T extends object, >(column: NColumn<T>, form: any) => {
+const buildSearchField = <T extends object, >(column: NColumn<T>, form: any, placeholder?: string) => {
     if (column.renderFormItem) {
-        return column.renderFormItem(column, {type: 'table'}, form);
+        return column.renderFormItem(column, {type: 'table', placeholder}, form);
     }
 
     if (column.valueEnum) {
@@ -146,10 +147,10 @@ const buildSearchField = <T extends object, >(column: NColumn<T>, form: any) => 
         if (column.valueType === 'radio') {
             return <Radio.Group options={options}/>;
         }
-        return <Select allowClear options={options} style={{minWidth: 160}}/>;
+        return <Select allowClear options={options} placeholder={placeholder} style={{width: '100%'}}/>;
     }
 
-    return <Input allowClear/>;
+    return <Input allowClear placeholder={placeholder}/>;
 };
 
 const normalizeColumns = <T extends object, >(
@@ -380,64 +381,110 @@ const NTable = <T extends object, >({
         onChange: handleTableChange,
         size: size || defaultSize || 'small',
     };
-    const searchForm = search !== false && searchableColumns.length > 0 && (
-        <Form form={form} layout="inline" onFinish={handleSearch} onValuesChange={handleSearchValuesChange}>
-            <Space wrap>
-                {searchableColumns.map((column) => {
-                    const name = column.formItemProps?.name || getColumnKey(column);
-                    return (
-                        <Form.Item
-                            key={name}
-                            name={name}
-                            label={getSearchLabel(column)}
-                            {...column.formItemProps}
-                            style={{marginInlineEnd: 0}}
-                        >
-                            {buildSearchField(column, form)}
-                        </Form.Item>
-                    );
-                })}
-            </Space>
-        </Form>
+    const buildSearchItems = (showLabel: boolean) => searchableColumns.map((column) => {
+        const name = column.formItemProps?.name || getColumnKey(column);
+        const label = getSearchLabel(column);
+        const placeholder = typeof label === 'string' ? label : undefined;
+        return (
+            <Form.Item
+                key={name}
+                name={name}
+                label={showLabel ? label : undefined}
+                {...column.formItemProps}
+                style={{
+                    width: showLabel ? undefined : 180,
+                    marginBottom: 0,
+                    marginInlineEnd: 0,
+                    ...column.formItemProps?.style,
+                }}
+            >
+                {buildSearchField(column, form, placeholder)}
+            </Form.Item>
+        );
+    });
+
+    const compactSearch = search !== false && searchableColumns.length > 0 && (
+        searchableColumns.length <= 2 ? (
+            <Form
+                form={form}
+                layout="inline"
+                onFinish={handleSearch}
+                onValuesChange={handleSearchValuesChange}
+                className="gap-2"
+            >
+                {buildSearchItems(false)}
+            </Form>
+        ) : (
+            <Popover
+                placement="bottomRight"
+                trigger="click"
+                content={(
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        onFinish={handleSearch}
+                        onValuesChange={handleSearchValuesChange}
+                        className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2"
+                        style={{width: 'min(560px, calc(100vw - 48px))'}}
+                    >
+                        {buildSearchItems(true)}
+                    </Form>
+                )}
+            >
+                <Button>
+                    {t('actions.filter')}{Object.keys(filters).length > 0 ? ` (${Object.keys(filters).length})` : ''}
+                </Button>
+            </Popover>
+        )
     );
+
+    const showTopToolbar = (headerTitle !== false && !!headerTitle)
+        || !!toolbar?.menu
+        || toolbarActions.length > 0
+        || !!searchPrefix
+        || !!compactSearch
+        || (showKeywordSearch && search === false)
+        || !!request;
 
     return (
         <div className="overflow-hidden rounded-md bg-white dark:bg-[#141414]">
-            {(headerTitle !== false || toolbar?.menu || toolbarActions.length > 0 || showKeywordSearch || searchForm || searchPrefix) && (
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3 dark:border-gray-800">
-                    <Space orientation="vertical" size={0}>
-                        {headerTitle !== false && headerTitle && <div className="font-medium">{headerTitle}</div>}
-                        {toolbar?.menu && (
-                            <Tabs
-                                size="small"
-                                activeKey={toolbar.menu.activeKey}
-                                items={toolbar.menu.items}
-                                onChange={toolbar.menu.onChange}
-                                style={{marginBottom: -12}}
-                            />
-                        )}
-                    </Space>
-                    <Space wrap className="justify-end">
-                        {searchPrefix}
-                        {searchForm}
-                        {showKeywordSearch && search === false && (
-                            <Input.Search
-                                allowClear
-                                placeholder={t('general.search_placeholder')}
-                                onSearch={(value) => {
-                                    setKeyword(value.trim());
-                                    setPagination((prev) => ({...prev, current: 1}));
-                                }}
-                                style={{width: 240}}
-                            />
-                        )}
-                        {request && (
-                            <Button loading={manualRefreshing} onClick={reload}>
-                                {t('actions.refresh')}
-                            </Button>
-                        )}
-                        {toolbarActions}
-                    </Space>
+            {showTopToolbar && (
+                <div className="border-b border-gray-100 pb-3 dark:border-gray-800">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <Space orientation="vertical" size={0}>
+                            {headerTitle !== false && headerTitle && <div className="font-medium">{headerTitle}</div>}
+                            {toolbar?.menu && (
+                                <Tabs
+                                    size="small"
+                                    activeKey={toolbar.menu.activeKey}
+                                    items={toolbar.menu.items}
+                                    onChange={toolbar.menu.onChange}
+                                    style={{marginBottom: -12}}
+                                />
+                            )}
+                        </Space>
+                        <Space wrap className="justify-end">
+                            {searchPrefix}
+                            {compactSearch}
+                            {showKeywordSearch && search === false && (
+                                <Input.Search
+                                    allowClear
+                                    placeholder={t('general.search_placeholder')}
+                                    onSearch={(value) => {
+                                        setKeyword(value.trim());
+                                        setPagination((prev) => ({...prev, current: 1}));
+                                    }}
+                                    style={{width: 240}}
+                                />
+                            )}
+                            {request && (
+                                <Button loading={manualRefreshing} onClick={reload}>
+                                    {t('actions.refresh')}
+                                </Button>
+                            )}
+                            {toolbarActions}
+                        </Space>
+                    </div>
                 </div>
             )}
 

@@ -1,8 +1,10 @@
-import {Alert, Button, Form, Input, InputNumber, Switch, Typography} from "antd";
+import {Alert, Button, Form, Input, InputNumber, Select, Switch, Typography} from "antd";
 import {useState} from "react";
 import {useTranslation} from "react-i18next";
 import {useFormRequest} from "@/hook/use-antd-form-query";
 import {SettingProps} from "./SettingPage";
+import {useQuery} from "@tanstack/react-query";
+import certificateApi from "@/api/certificate-api";
 
 const {
     Paragraph,
@@ -16,6 +18,16 @@ const RdpProxySetting = ({
     const {t} = useTranslation();
     const [form] = Form.useForm();
     const [enabled, setEnabled] = useState(false);
+
+    const certificateQuery = useQuery({
+        queryKey: ['rdp-proxy-certificates'],
+        queryFn: () => certificateApi.getPaging({pageIndex: 1, pageSize: 100}),
+        staleTime: 60 * 1000,
+    });
+    const certificateOptions = (certificateQuery.data?.['items'] ?? []).map((item: any) => ({
+        label: item.commonName,
+        value: item.id,
+    }));
 
     const wrapGet = async () => {
         const values = await get();
@@ -62,6 +74,13 @@ const RdpProxySetting = ({
                         <InputNumber disabled={!enabled} precision={0} min={60} max={3600} style={{
                             width: '100%'
                         }} placeholder="300"/>
+                    </Form.Item>
+                    <Form.Item name="rdp-proxy-certificate-id" label={t('settings.rdp_proxy.certificate')}
+                               extra={t('settings.rdp_proxy.certificate_extra')}>
+                        <Select disabled={!enabled} allowClear={true}
+                                placeholder={t('settings.rdp_proxy.certificate_auto')}
+                                loading={certificateQuery.isLoading}
+                                options={certificateOptions}/>
                     </Form.Item>
 
                     <Form.Item>

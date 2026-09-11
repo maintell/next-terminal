@@ -62,10 +62,15 @@ const DatabaseAssetFacadePage = () => {
     const proxyAccess = {
         host: proxyInfo?.host || '<proxy_host>',
         port: proxyInfo?.port || '<proxy_port>',
+        pgHost: proxyInfo?.pgHost || proxyInfo?.host || '<proxy_host>',
+        pgPort: proxyInfo?.pgPort || '<proxy_port>',
     };
     const currentUsername = getCurrentUser()?.username || '<username>';
 
     const buildCommand = (asset: DatabaseAssetUser) => {
+        if (asset.type === 'pg') {
+            return `psql "host=${proxyAccess.pgHost} port=${proxyAccess.pgPort} user=${currentUsername}@${asset.name} dbname=postgres"`;
+        }
         return `mysql -h ${proxyAccess.host} -P ${proxyAccess.port} -u ${currentUsername}@${asset.name} -p`;
     };
 

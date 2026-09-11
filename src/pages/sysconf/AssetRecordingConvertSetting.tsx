@@ -70,7 +70,7 @@ const AssetRecordingConvertSetting = ({
     useFormRequest(form, ["form-request", "web/src/pages/sysconf/AssetRecordingConvertSetting.tsx"], wrapGet, true);
 
     return <Form form={form} onFinish={wrapSet} layout="vertical">
-        <Disabled disabled={!hasPremiumFeatures} className="mb-4">
+        <Disabled feature="recording_conversion" disabled={!hasPremiumFeatures} className="mb-4">
             <div className={'flex items-start gap-2'}>
                 <Form.Item name="recording-convert-enabled" label={t('settings.system.recording_convert.enabled')} required={true}
                            valuePropName="checked">

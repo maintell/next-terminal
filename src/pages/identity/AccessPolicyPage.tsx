@@ -1,3 +1,4 @@
+import {hasMenu} from "@/utils/permission";
 import Disabled from "@/components/Disabled";
 import NLink from "@/components/NLink";
 import NTable, {type NColumn, type NTableActionType} from "@/components/NTable";
@@ -101,7 +102,7 @@ const AccessPolicyPage = () => {
     ];
 
     return (
-        <Disabled disabled={!hasPremiumFeatures}>
+        <Disabled feature="access_policy" disabled={!hasPremiumFeatures}>
             <Alert
                 type="info"
                 showIcon
@@ -131,6 +132,7 @@ const AccessPolicyPage = () => {
                 dateFormatter="string"
                 headerTitle={t('identity.policy.groups')}
                 toolBarRender={() => [
+                    hasMenu('ip-set') && <Link key="ip-sets" to="/ip-set"><Button>{t('ip_set.manage')}</Button></Link>,
                     <Link key="new" to="/access-policy/new">
                         <Button type="primary">{t('identity.policy.new_group')}</Button>
                     </Link>,

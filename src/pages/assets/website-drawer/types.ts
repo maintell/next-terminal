@@ -48,6 +48,7 @@ export interface WebsiteFormData {
     port: number;
     targetUrl: string;
     logo?: string;
+    tags?: string[];
     groupId?: string;
     connectionMode: ConnectionMode;
     gatewayChain?: GatewayHop[];
@@ -72,7 +73,7 @@ export interface WebsiteFormData {
         enabled: boolean;
         expiredAt?: number | Dayjs;
         ip?: string;
-		ipWhitelistIds?: string[];
+		ipSetIds?: string[];
         password?: string;
         timeLimit?: boolean;
         countries?: string[];

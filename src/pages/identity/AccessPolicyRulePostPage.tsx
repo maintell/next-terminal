@@ -1,11 +1,13 @@
+import {hasMenu} from "@/utils/permission";
+import ipSetApi from "@/api/ip-set-api";
 import Disabled from "@/components/Disabled";
 import {useFormRequest} from "@/hook/use-antd-form-query";
 import {useLicense} from "@/hook/LicenseContext";
-import {useMutation} from "@tanstack/react-query";
+import {useMutation, useQuery} from "@tanstack/react-query";
 import {Alert, Button, Checkbox, DatePicker, Form, Input, InputNumber, Radio, Select, Typography} from "antd";
 import dayjs from "dayjs";
 import {useTranslation} from "react-i18next";
-import {useNavigate, useParams, useSearchParams} from "react-router-dom";
+import {Link, useNavigate, useParams, useSearchParams} from "react-router-dom";
 import accessPolicyApi, {type AccessPolicyRule} from "../../api/access-policy-api";
 import DragWeekTime from "../../components/drag-weektime/DragWeekTime";
 import {maybe} from "../../utils/maybe";
@@ -15,6 +17,7 @@ const {Title} = Typography;
 const hasRuleMatchCondition = (values: Partial<AccessPolicyRule>) => {
     return Boolean(
         values.ipGroup?.trim()
+        || values.ipSetIds?.length
         || values.countries?.length
         || values.provinces?.length
         || values.cities?.length
@@ -32,6 +35,8 @@ const AccessPolicyRulePostPage = () => {
     const [form] = Form.useForm();
     const navigate = useNavigate();
 
+    const ipSetsQuery = useQuery({queryKey: ['ip-set-options'], queryFn: ipSetApi.options, enabled: hasPremiumFeatures});
+
     const get = async () => {
         if (ruleId) {
             const data: any = await accessPolicyApi.getRuleById(groupId, ruleId);
@@ -43,6 +48,7 @@ const AccessPolicyRulePostPage = () => {
             groupId,
             name: '',
             ipGroup: '',
+            ipSetIds: [],
             priority: 50,
             action: 'reject',
             enabled: false,
@@ -78,7 +84,7 @@ const AccessPolicyRulePostPage = () => {
             <Title level={5} style={{marginTop: 0}}>
                 {ruleId ? t('identity.policy.edit_rule') : t('identity.policy.new_rule')}
             </Title>
-            <Disabled disabled={!hasPremiumFeatures}>
+            <Disabled feature="access_policy" disabled={!hasPremiumFeatures}>
                 <Form form={form} layout="vertical" onFinish={values => mutation.mutate(values)}>
                     <Form.Item hidden name="id"><Input/></Form.Item>
                     <Form.Item hidden name="groupId"><Input/></Form.Item>
@@ -99,6 +105,21 @@ const AccessPolicyRulePostPage = () => {
                     >
                         <InputNumber min={1} max={100} style={{width: '100%'}}/>
                     </Form.Item>
+                    <Form.Item name="ipSetIds" label={t('ip_set.reference')} extra={t('ip_set.policy_reference_tip')}>
+                        <Select
+                            mode="multiple"
+                            allowClear
+                            showSearch={{optionFilterProp: 'label'}}
+                            loading={ipSetsQuery.isLoading}
+                            options={(ipSetsQuery.data ?? []).map(item => ({
+                                value: item.id,
+                                label: item.enabled ? item.name : `${item.name} (${t('general.disabled')})`,
+                                disabled: !item.enabled,
+                            }))}
+                        />
+                    </Form.Item>
+                    {ipSetsQuery.isError && <div className="mb-4"><Alert type="error" showIcon title={t('ip_set.load_error')} action={<Button onClick={() => ipSetsQuery.refetch()}>{t('ip_set.retry')}</Button>}/></div>}
+                    {hasMenu('ip-set') && <div className="mb-4"><Link to="/ip-set">{t('ip_set.manage')}</Link></div>}
                     <Form.Item name="ipGroup" label={t('identity.policy.ip_group')} extra={t('identity.policy.ip_group_extra')}>
                         <Input.TextArea
                             autoSize={{minRows: 3, maxRows: 8}}
@@ -135,6 +156,7 @@ const AccessPolicyRulePostPage = () => {
                         noStyle
                         shouldUpdate={(previous, current) => (
                             previous.ipGroup !== current.ipGroup
+                            || previous.ipSetIds !== current.ipSetIds
                             || previous.countries !== current.countries
                             || previous.provinces !== current.provinces
                             || previous.cities !== current.cities

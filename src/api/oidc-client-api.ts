@@ -8,6 +8,7 @@ export interface OidcClient {
     clientSecret?: string;
     redirectUris: string[];
     grantTypes: string[];
+    responseTypes: string[];
     scopes: string[];
     description?: string;
     accessControl?: string; // all/department/user
@@ -25,6 +26,7 @@ export interface OidcClientCreateRequest {
     clientId: string;
     redirectUris: string[];
     grantTypes?: string[];
+    responseTypes?: string[];
     scopes?: string[];
     description?: string;
     accessControl?: string;
@@ -38,6 +40,7 @@ export interface OidcClientUpdateRequest {
     clientId: string;
     redirectUris: string[];
     grantTypes?: string[];
+    responseTypes?: string[];
     scopes?: string[];
     description?: string;
     status?: string;

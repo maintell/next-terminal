@@ -24,6 +24,7 @@ interface PostParams {
     open: boolean;
     websiteId?: string;
     groupId?: string;
+    copy?: boolean;
 }
 
 const WebsitePage = () => {
@@ -37,6 +38,7 @@ const WebsitePage = () => {
     let [pagination, setPagination] = useState({current: 1, pageSize: 10, total: 0});
     let [sort, setSort] = useState<Record<string, string | null>>({});
     let [keyword, setKeyword] = useState('');
+    let [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [groupDrawerOpen, setGroupDrawerOpen] = useState<boolean>(false);
     const [batchEditorOpen, setBatchEditorOpen] = useState<boolean>(false);
     const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>('');
@@ -44,6 +46,7 @@ const WebsitePage = () => {
         open: false,
         websiteId: undefined,
         groupId: undefined,
+        copy: false,
     });
     const [isTreeCollapsed, setIsTreeCollapsed] = useState<boolean>(() => {
         const saved = localStorage.getItem('website-tree-collapsed');
@@ -111,16 +114,22 @@ const WebsitePage = () => {
         resetTableToFirstPage();
     };
 
+    const handleTagChange = (newTags: string[]) => {
+        setSelectedTags(newTags);
+        resetTableToFirstPage();
+    };
+
     const openWebsiteEditor = (websiteId?: string, options?: Partial<PostParams>) => {
         setParams({
             open: true,
             websiteId,
             groupId: options?.groupId ?? (!websiteId ? groupId : undefined),
+            copy: options?.copy ?? false,
         });
     };
 
     const websitePagingQuery = useQuery({
-        queryKey: ['websites', pagination.current, pagination.pageSize, sort, groupId, keyword],
+        queryKey: ['websites', pagination.current, pagination.pageSize, sort, groupId, selectedTags, keyword],
         queryFn: async () => {
             let [sortOrder, sortField] = getSort(sort);
             if (sortOrder === "" && sortField === "") {
@@ -135,10 +144,18 @@ const WebsitePage = () => {
                 sortField: sortField,
                 keyword: keyword || undefined,
                 groupId: groupId || undefined,
+                tags: selectedTags.length > 0 ? selectedTags.join(',') : undefined,
             });
         },
         refetchOnWindowFocus: false,
     });
+
+    const tagsQuery = useQuery({
+        queryKey: ['website-tags'],
+        queryFn: websiteApi.getTags,
+        refetchOnWindowFocus: false,
+    });
+    const tags = (tagsQuery.data ?? []).filter(tag => tag !== '-');
 
     useEffect(() => {
         if (!websitePagingQuery.data) {
@@ -193,6 +210,7 @@ const WebsitePage = () => {
                     trigger={compact ? ['click'] : ['hover']}
                     menu={{
                         items: [
+                            {key: 'copy', label: t('assets.copy')},
                             {key: 'config', label: t('actions.config')},
                             {
                                 key: 'view-authorised',
@@ -202,6 +220,9 @@ const WebsitePage = () => {
                         ],
                         onClick: ({key}) => {
                             switch (key) {
+                                case 'copy':
+                                    openWebsiteEditor(record.id, {groupId: record.groupId, copy: true});
+                                    break;
                                 case 'config':
                                     openWebsiteEditor(record.id);
                                     break;
@@ -216,6 +237,7 @@ const WebsitePage = () => {
                                         onOk: async () => {
                                             await api.deleteById(record.id);
                                             websitePagingQuery.refetch();
+                                            tagsQuery.refetch();
                                         },
                                     });
                                     break;
@@ -297,6 +319,23 @@ const WebsitePage = () => {
                     onChange={() => toggleEnabledMutation.mutate(record)}
                 />
             )
+        },
+        {
+            title: t('assets.public'),
+            dataIndex: ['public', 'enabled'],
+            width: 100,
+            render: (enabled: boolean) => (
+                <Tag color={enabled ? 'success' : 'default'}>
+                    {enabled ? t('general.yes') : t('general.no')}
+                </Tag>
+            ),
+        },
+        {
+            title: t('assets.tags'),
+            dataIndex: 'tags',
+            key: 'tags',
+            width: isMobile ? 100 : 160,
+            render: (recordTags?: string[]) => recordTags?.map(tag => <Tag key={tag}>{tag}</Tag>),
         },
         {
             title: t('assets.domain'),
@@ -473,6 +512,31 @@ const WebsitePage = () => {
 
     const treeCollapseTitle = isTreeCollapsed ? t('assets.expand_group_tree') : t('assets.collapse_group_tree');
 
+    const tagFilter = tags.length === 0 ? null : (
+        <div className={cn('flex items-center flex-wrap pb-0', isMobile && 'gap-y-1')}>
+            <span className={cn('font-medium', isMobile && 'w-full text-sm')}>{t('assets.tags')}：</span>
+            <Tag.CheckableTag
+                checked={selectedTags.length === 0}
+                onChange={() => handleTagChange([])}
+            >
+                {t('general.all')}
+            </Tag.CheckableTag>
+            {tags.map(tag => (
+                <Tag.CheckableTag
+                    key={tag}
+                    checked={selectedTags.includes(tag)}
+                    onChange={checked => {
+                        handleTagChange(
+                            checked ? [...selectedTags, tag] : selectedTags.filter(item => item !== tag)
+                        );
+                    }}
+                >
+                    {tag}
+                </Tag.CheckableTag>
+            ))}
+        </div>
+    );
+
     return (<div>
         <div>
             {isMobile ? (
@@ -483,6 +547,7 @@ const WebsitePage = () => {
                             onSelect={handleGroupChange}
                         />
                     </div>
+                    {tagFilter}
                     {renderTable({x: 760})}
                 </div>
             ) : (
@@ -541,6 +606,7 @@ const WebsitePage = () => {
                         )}
                     </div>
                     <div className="overflow-hidden rounded-md">
+                        {tagFilter}
                         {renderTable({x: 'max-content'})}
                     </div>
                 </div>
@@ -557,11 +623,14 @@ const WebsitePage = () => {
                     open: false,
                     websiteId: undefined,
                     groupId: undefined,
+                    copy: false,
                 });
             }}
             onSuccess={() => {
                 websitePagingQuery.refetch();
+                tagsQuery.refetch();
             }}
+            copy={params.copy}
         />
 
         <WebsiteGroupDrawer

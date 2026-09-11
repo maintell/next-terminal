@@ -24,7 +24,7 @@ const AccessPolicyInfo = ({active, id}: AccessPolicyInfoProps) => {
     const group = groupQuery.data;
 
     return (
-        <Disabled disabled={!hasPremiumFeatures}>
+        <Disabled feature="access_policy" compact disabled={!hasPremiumFeatures}>
             <Spin spinning={groupQuery.isLoading}>
                 <Descriptions
                     column={1}

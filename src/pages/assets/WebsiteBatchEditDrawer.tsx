@@ -1,7 +1,6 @@
 import type {BatchUpdateWebsiteRequest} from "@/api/website-api";
 import websiteApi from "@/api/website-api";
 import type {GatewayHop} from "@/api/gateway-chain";
-import {useLicense} from "@/hook/LicenseContext";
 import ConnectionModeFields from "@/pages/assets/components/ConnectionModeFields";
 import {DEFAULT_ORIGIN_TIMEOUT} from "@/pages/assets/website-drawer/basic";
 import type {ConnectionMode, WebsiteOriginHostMode} from "@/pages/assets/website-drawer/types";
@@ -55,8 +54,6 @@ const WebsiteBatchEditDrawer = ({websiteIds, open, onClose, onSuccess}: Props) =
     const {t} = useTranslation();
     const {message} = App.useApp();
     const [form] = Form.useForm<BatchEditFormValues>();
-    const {license, isLoading: licenseLoading} = useLicense();
-    const hasPremiumFeatures = !licenseLoading && license.hasPremiumFeatures();
 
     const updateEnabled = Form.useWatch('updateEnabled', form);
     const updateOriginHost = Form.useWatch('updateOriginHost', form);
@@ -238,7 +235,7 @@ const WebsiteBatchEditDrawer = ({websiteIds, open, onClose, onSuccess}: Props) =
                 {updateConnection && (
                     <ConnectionModeFields
                         allowInheritedGateway
-                        gatewayDisabled={!hasPremiumFeatures}
+
                     />
                 )}
             </Form>

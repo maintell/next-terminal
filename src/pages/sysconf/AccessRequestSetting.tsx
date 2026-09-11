@@ -26,7 +26,7 @@ const AccessRequestSetting = ({
     };
 
     return <Form form={form} onFinish={wrapSet} layout="vertical">
-        <Disabled disabled={!hasPremiumFeatures} className="mb-4">
+        <Disabled feature="access_request" disabled={!hasPremiumFeatures} className="mb-4">
             <Form.Item
                 name="access-request-enabled"
                 label={t('settings.access_request.enabled')}

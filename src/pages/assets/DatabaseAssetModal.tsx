@@ -6,7 +6,6 @@ import {useMutation} from "@tanstack/react-query";
 import databaseAssetApi from "@/api/database-asset-api";
 import {EyeInvisibleOutlined, EyeTwoTone} from "@ant-design/icons";
 import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
-import {useLicense} from "@/hook/LicenseContext";
 import ConnectionModeFields from "@/pages/assets/components/ConnectionModeFields";
 
 const api = databaseAssetApi;
@@ -29,11 +28,10 @@ const DatabaseAssetModal = ({
     const {t} = useTranslation();
     const {message} = App.useApp();
     const [form] = Form.useForm();
+    const databaseType = Form.useWatch('type', form);
     const [decrypted, setDecrypted] = useState(false);
     const [mfaOpen, setMfaOpen] = useState(false);
     const formItemStyle = {marginBottom: 12};
-    const {license, isLoading: licenseLoading} = useLicense();
-    const hasPremiumFeatures = !licenseLoading && license.hasPremiumFeatures();
 
     useEffect(() => {
         if (!open) {
@@ -46,10 +44,8 @@ const DatabaseAssetModal = ({
             const asset = await api.getById(id);
             return {
                 ...asset,
-                connectionMode: hasPremiumFeatures || asset.connectionMode !== 'gateway'
-                    ? asset.connectionMode || 'direct'
-                    : 'direct',
-                gatewayChain: hasPremiumFeatures ? asset.gatewayChain || [] : []
+                connectionMode: asset.connectionMode || 'direct',
+                gatewayChain: asset.gatewayChain || []
             };
         }
         return {
@@ -57,18 +53,16 @@ const DatabaseAssetModal = ({
             port: 3306,
             connectionMode: 'direct',
             gatewayChain: [],
+            attrs: {
+                'postgres-ssl-mode': 'prefer'
+            },
             tags: []
         };
     };
     const handleSave = () => {
         form.validateFields().then(async values => {
             delete values.gatewaySource;
-            if (!hasPremiumFeatures) {
-                if (values.connectionMode === 'gateway') {
-                    values.connectionMode = 'direct';
-                    values.gatewayChain = [];
-                }
-            }
+
             handleOk(values);
         });
     };
@@ -81,12 +75,7 @@ const DatabaseAssetModal = ({
     const handleTest = () => {
         form.validateFields().then(values => {
             delete values.gatewaySource;
-            if (!hasPremiumFeatures) {
-                if (values.connectionMode === 'gateway') {
-                    values.connectionMode = 'direct';
-                    values.gatewayChain = [];
-                }
-            }
+
             testMutation.mutate(values);
         });
     };
@@ -102,7 +91,7 @@ const DatabaseAssetModal = ({
         </Button>
     </Space>;
 
-    useFormRequest(form, ["form-request", "web/src/pages/assets/DatabaseAssetModal.tsx", open, id], get, {enabled: open && !licenseLoading});
+    useFormRequest(form, ["form-request", "web/src/pages/assets/DatabaseAssetModal.tsx", open, id], get, {enabled: open});
     return <Modal title={id ? t('actions.edit') : t('actions.new')}
                   open={open}
                   onCancel={handleCancel}
@@ -125,13 +114,19 @@ const DatabaseAssetModal = ({
                     <Col span={12}>
                         <Form.Item label={t('db.asset.type')} name='type' rules={[{required: true}]}
                                    style={formItemStyle}>
-                            <Select options={[{
+                            <Select onChange={type => {
+                                const currentPort = form.getFieldValue('port');
+                                if (!currentPort || type === 'pg' && currentPort === 3306) {
+                                    form.setFieldValue('port', 5432);
+                                } else if (type === 'mysql' && currentPort === 5432) {
+                                    form.setFieldValue('port', 3306);
+                                }
+                            }} options={[{
                                 label: t('db.asset.type_mysql'),
                                 value: 'mysql'
                             }, {
                                 label: t('db.asset.type_pg'),
-                                value: 'pg',
-                                disabled: true
+                                value: 'pg'
                             }]}/>
                         </Form.Item>
                     </Col>
@@ -182,6 +177,20 @@ const DatabaseAssetModal = ({
                                 }}/>
                         </Form.Item>
                     </Col>
+                    {databaseType === 'pg' && <Col span={24}>
+                        <Form.Item label={t('db.asset.postgres_ssl_mode')}
+                                   extra={t('db.asset.postgres_ssl_mode_extra')}
+                                   name={['attrs', 'postgres-ssl-mode']}
+                                   style={formItemStyle}>
+                            <Select options={[
+                                {label: 'disable', value: 'disable'},
+                                {label: 'prefer', value: 'prefer'},
+                                {label: 'require', value: 'require'},
+                                {label: 'verify-ca', value: 'verify-ca'},
+                                {label: 'verify-full', value: 'verify-full'}
+                            ]}/>
+                        </Form.Item>
+                    </Col>}
                 </Row>
 
                 <Collapse
@@ -192,7 +201,7 @@ const DatabaseAssetModal = ({
                             key: 'advanced-settings',
                             label: t('assets.advanced_settings'),
                             forceRender: true,
-                            children: <ConnectionModeFields gatewayDisabled={!hasPremiumFeatures}/>
+                            children: <ConnectionModeFields/>
                         }
                     ]}
                 />

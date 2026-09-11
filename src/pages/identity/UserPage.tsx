@@ -5,6 +5,7 @@ import NButton from "@/components/NButton";
 import NLink from "@/components/NLink";
 import NTable,{ type NColumn,type NTableActionType } from "@/components/NTable";
 import UserResetPasswordModal from "@/pages/identity/UserResetPasswordModal";
+import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
 import { maybe } from "@/utils/maybe";
 import { getSort } from "@/utils/sort";
 import { useMutation } from "@tanstack/react-query";
@@ -30,6 +31,11 @@ import UserModal from "./UserModal";
 
 const api = userApi;
 
+type UserAuthenticationAction = {
+    type: 'reset-totp' | 'clear-passkeys';
+    keys: string[];
+};
+
 function downloadImportExampleCsv() {
     let csvString = `name, account, password, email, recording(true,false), watermark(true,false), group1|group2`;
     const blob = new Blob(["\uFEFF" + csvString], {type: 'text/csv;charset=gb2312;'});
@@ -48,6 +54,7 @@ const UserPage = () => {
 
     let [selectedRowKeys, setSelectedRowKeys] = useState<string[]>();
     let [resetPasswordOpen, setResetPasswordOpen] = useState<boolean>(false);
+    const [pendingAuthenticationAction, setPendingAuthenticationAction] = useState<UserAuthenticationAction>();
 
     let [searchParams, setSearchParams] = useSearchParams();
     let [userType, setUserType] = useState<string>(maybe(searchParams.get('type'), 'super-admin'));
@@ -110,6 +117,18 @@ ${t('assets.password')}: ${result.password}`)
                 }
             })
         }
+    });
+
+    const resetTotpMutation = useMutation({
+        mutationFn: ({keys, securityToken}: {keys: string[]; securityToken: string}) =>
+            userApi.resetTOTP(keys, securityToken),
+        onSuccess: showSuccess,
+    });
+
+    const clearPasskeysMutation = useMutation({
+        mutationFn: ({keys, securityToken}: {keys: string[]; securityToken: string}) =>
+            userApi.clearPasskeys(keys, securityToken),
+        onSuccess: showSuccess,
     });
 
     const columns: NColumn<User>[] = [
@@ -242,6 +261,7 @@ ${t('assets.password')}: ${result.password}`)
                                 {key: 'view-authorised-website', label: `${t('menus.resource.submenus.website')}${t('actions.authorized')}`},
                                 {key: 'reset-password', label: t('identity.user.reset_password.action')},
                                 {key: 'reset-totp', label: t('identity.user.reset_otp.action')},
+                                {key: 'clear-passkeys', label: t('identity.user.clear_passkeys.action'), danger: true},
                                 {key: 'access-policy', label: t('identity.options.access_policy')},
                             ],
                             onClick: ({key}) => {
@@ -260,6 +280,9 @@ ${t('assets.password')}: ${result.password}`)
                                         break;
                                     case 'reset-totp':
                                         bulkResetTOTP([record['id']])
+                                        break;
+                                    case 'clear-passkeys':
+                                        bulkClearPasskeys([record['id']])
                                         break;
                                     case 'access-policy':
                                         navigate(`/user/${record['id']}?activeKey=access-policy`);
@@ -294,9 +317,36 @@ ${t('assets.password')}: ${result.password}`)
             title: t('identity.user.reset_otp.confirm_title'),
             content: t('identity.user.reset_otp.confirm_content'),
             onOk() {
-                userApi.resetTOTP(keys).then(showSuccess)
+                setPendingAuthenticationAction({type: 'reset-totp', keys});
             },
         });
+    }
+
+    const bulkClearPasskeys = (keys: string[]) => {
+        modal.confirm({
+            title: t('identity.user.clear_passkeys.confirm_title'),
+            content: t('identity.user.clear_passkeys.confirm_content'),
+            okButtonProps: {danger: true},
+            onOk: () => {
+                setPendingAuthenticationAction({type: 'clear-passkeys', keys});
+            },
+        });
+    }
+
+    const handleAuthenticationOk = async (securityToken: string) => {
+        const action = pendingAuthenticationAction;
+        if (!action) {
+            return;
+        }
+        try {
+            if (action.type === 'reset-totp') {
+                await resetTotpMutation.mutateAsync({keys: action.keys, securityToken});
+            } else {
+                await clearPasskeysMutation.mutateAsync({keys: action.keys, securityToken});
+            }
+        } finally {
+            setPendingAuthenticationAction(undefined);
+        }
     }
 
     const importExampleContent = <>
@@ -336,6 +386,12 @@ ${t('assets.password')}: ${result.password}`)
                                bulkResetTOTP(selectedRowKeys as string[])
                            }}>
                             {t('identity.user.reset_otp.action')}
+                        </a>
+                        <a className='danger'
+                           onClick={() => {
+                               bulkClearPasskeys(selectedRowKeys as string[])
+                           }}>
+                            {t('identity.user.clear_passkeys.action')}
                         </a>
                     </Space>
                 );
@@ -426,6 +482,13 @@ ${t('assets.password')}: ${result.password}`)
                 setSelectedRowKeys([]);
             }}
             handleOk={resetPasswordMutation.mutate}
+        />
+
+        <MultiFactorAuthentication
+            open={!!pendingAuthenticationAction}
+            forceReauth
+            handleOk={handleAuthenticationOk}
+            handleCancel={() => setPendingAuthenticationAction(undefined)}
         />
     </div>);
 }

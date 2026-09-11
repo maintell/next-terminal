@@ -51,10 +51,8 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
                             onClick={onMenuClick}
                             selectedKeys={[current]}
                             onOpenChange={onSubMenuChange}
-                            defaultOpenKeys={stateOpenKeys}
                             openKeys={stateOpenKeys}
                             mode="inline"
-                            defaultSelectedKeys={['']}
                             items={filteredMenus}
                             style={{
                                 backgroundColor: 'transparent',

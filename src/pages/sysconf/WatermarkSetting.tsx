@@ -2,8 +2,6 @@ import {useState} from "react";
 import {Button, Checkbox, ColorPicker, ColorPickerProps, Form, Input, Slider, Switch, theme} from "antd";
 import {useTranslation} from "react-i18next";
 import {generate, green, presetPalettes, red} from "@ant-design/colors";
-import {useLicense} from "@/hook/LicenseContext";
-import Disabled from "@/components/Disabled";
 import {useMobile} from "@/hook/use-mobile";
 import {cn} from "@/lib/utils";
 import {useFormRequest} from "@/hook/use-antd-form-query";
@@ -25,7 +23,7 @@ const WatermarkSetting = ({
     const {isMobile} = useMobile();
     const {t} = useTranslation();
     const [form] = Form.useForm();
-    const {license} = useLicense();
+
     const {token} = theme.useToken();
     const [watermarkEnabled, setWatermarkEnabled] = useState(false);
     const [watermarkFontColor, setWatermarkFontColor] = useState('');
@@ -50,7 +48,6 @@ const WatermarkSetting = ({
     useFormRequest(form, ["form-request", "web/src/pages/sysconf/WatermarkSetting.tsx"], wrapGet, true);
 
     return <Form form={form} onFinish={wrapSet} layout="vertical">
-        <Disabled disabled={!license.hasPremiumFeatures()} className={'mb-4'}>
             <Form.Item
                 name="watermark-enabled"
                 label={t("identity.user.watermark")}
@@ -99,7 +96,6 @@ const WatermarkSetting = ({
             <Form.Item>
                 <Button type="primary" htmlType="submit">{t("actions.save")}</Button>
             </Form.Item>
-        </Disabled>
     </Form>;
 };
 

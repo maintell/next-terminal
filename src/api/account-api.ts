@@ -263,8 +263,7 @@ class AccountApi {
     }
 
     deleteSSHKey = async (id: string, securityToken?: string) => {
-        const query = securityToken ? `?securityToken=${encodeURIComponent(securityToken)}` : '';
-        return await requests.delete(`/${this.group}/ssh-keys/${encodeURIComponent(id)}${query}`);
+        return await requests.delete(`/${this.group}/ssh-keys/${encodeURIComponent(id)}`, {securityToken});
     }
 
     downloadClientCert = async () => {
@@ -297,7 +296,7 @@ class AccountApi {
     }
 
     resetTotp = async (securityToken: string) => {
-        await requests.post(`/${this.group}/reset-totp?securityToken=${securityToken}`);
+        await requests.post(`/${this.group}/reset-totp`, undefined, {securityToken});
     }
 
     getCaptcha = async () => {
@@ -313,13 +312,11 @@ class AccountApi {
     }
 
     deleteWebauthnCredentials = async (id: string, securityToken?: string) => {
-        const tokenParam = securityToken ? `?securityToken=${encodeURIComponent(securityToken)}` : '';
-        await requests.delete(`/${this.group}/webauthn/credentials/${id}${tokenParam}`);
+        await requests.delete(`/${this.group}/webauthn/credentials/${id}`, {securityToken});
     }
 
     webauthnCredentialStart = async (securityToken?: string) => {
-        const tokenParam = securityToken ? `?securityToken=${encodeURIComponent(securityToken)}` : '';
-        return await requests.post(`/${this.group}/webauthn/credentials/start${tokenParam}`) as WebauthnCredentialCreation;
+        return await requests.post(`/${this.group}/webauthn/credentials/start`, undefined, {securityToken}) as WebauthnCredentialCreation;
     }
 
     webauthnCredentialFinish = async (val: any) => {
@@ -355,7 +352,7 @@ class AccountApi {
     }
 
     validateSecurityToken = async (token: string) => {
-        let data = await requests.post(`/${this.group}/security-token/validate?securityToken=${token}`);
+        let data = await requests.post(`/${this.group}/security-token/validate`, undefined, {securityToken: token});
         return data['ok'] as boolean;
     }
 

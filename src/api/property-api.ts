@@ -60,8 +60,7 @@ class PropertyApi {
     }
 
     set = async (values: any, securityToken?: string) => {
-        const tokenParam = securityToken ? `?securityToken=${encodeURIComponent(securityToken)}` : '';
-        await requests.put(`/${this.group}${tokenParam}`, values);
+        await requests.put(`/${this.group}`, values, {securityToken});
     }
 
     genRSAPrivateKey = async () => {

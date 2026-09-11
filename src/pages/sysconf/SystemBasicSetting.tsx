@@ -60,7 +60,7 @@ const SystemBasicSetting = ({
     useFormRequest(form, ["form-request", "web/src/pages/sysconf/SystemBasicSetting.tsx"], wrapGet, true);
 
     return <Form form={form} onFinish={wrapSet} layout="vertical">
-        <Disabled disabled={!license.hasPremiumFeatures()}>
+        <Disabled feature="branding" disabled={!license.hasPremiumFeatures()}>
             <div className={cn('flex gap-6', isMobile ? 'flex-col' : 'items-start')}>
                 <div className={cn(isMobile ? 'w-full flex justify-center' : 'w-24 shrink-0')}>
                     <Form.Item name="system-logo" label={t('settings.system.logo')} rules={[{

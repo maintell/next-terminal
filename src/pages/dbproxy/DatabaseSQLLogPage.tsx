@@ -48,12 +48,13 @@ const DatabaseSQLLogPage = () => {
 
     const statusTag = (status: string, errorMessage?: string) => {
         const map: Record<string, {color: string; label: string}> = {
+            unknown: {color: 'default', label: t('db.sql_log.status.unknown')},
             success: {color: 'success', label: t('general.success')},
             failed: {color: 'error', label: t('general.failed')},
             blocked: {color: 'warning', label: t('db.sql_log.status.blocked')},
         };
         const item = map[status] || {color: 'default', label: status};
-        if ((status === 'failed' || status === 'blocked') && errorMessage) {
+        if ((status === 'failed' || status === 'blocked' || status === 'unknown') && errorMessage) {
             return (
                 <Tooltip title={errorMessage}>
                     <Tag color={item.color}>{item.label}</Tag>
@@ -91,6 +92,24 @@ const DatabaseSQLLogPage = () => {
             ellipsis: true,
         },
         {
+            title: t('db.sql_log.db_type'),
+            dataIndex: 'dbType',
+            valueEnum: {
+                mysql: {text: t('db.asset.type_mysql')},
+                pg: {text: t('db.asset.type_pg')},
+            },
+            render: (_, record) => {
+                if (record.dbType === 'mysql') {
+                    return <Tag color="blue">{t('db.asset.type_mysql')}</Tag>;
+                }
+                if (record.dbType === 'pg') {
+                    return <Tag color="purple">{t('db.asset.type_pg')}</Tag>;
+                }
+                return '-';
+            },
+            width: 100,
+        },
+        {
             title: t('menus.identity.submenus.user'),
             dataIndex: 'userName',
             renderFormItem: (_, {type, ...rest}) => {
@@ -125,6 +144,7 @@ const DatabaseSQLLogPage = () => {
             title: t('general.status'),
             dataIndex: 'status',
             valueEnum: {
+                unknown: {text: t('db.sql_log.status.unknown')},
                 success: {text: t('general.success')},
                 failed: {text: t('general.failed')},
                 blocked: {text: t('db.sql_log.status.blocked')},
@@ -161,7 +181,7 @@ const DatabaseSQLLogPage = () => {
                     return '-';
                 }
                 return (
-                    <Tooltip title={cleanedSQL} placement="topLeft">
+                    <Tooltip title={<><div>{cleanedSQL}</div>{record.dbType === 'pg' && record.operationKind === 'execute' && <div>{t('db.sql_log.parameter_template_tip')}</div>}</>} placement="topLeft">
                         <Text ellipsis style={{maxWidth: 300}}>{cleanedSQL}</Text>
                     </Tooltip>
                 );
@@ -193,6 +213,7 @@ const DatabaseSQLLogPage = () => {
                         userId: params.userId,
                         status: params.status,
                         source: params.source,
+                        dbType: params.dbType,
                     };
                     const result = await databaseSQLLogApi.paging(queryParams);
                     return {

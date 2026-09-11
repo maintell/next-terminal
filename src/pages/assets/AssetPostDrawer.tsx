@@ -7,7 +7,6 @@ import {RefreshCwIcon, ZapIcon} from "lucide-react";
 import {useTranslation} from "react-i18next";
 import assetsApi, {Asset} from "../../api/asset-api";
 import strings from "@/utils/strings";
-import {useLicense} from "@/hook/LicenseContext";
 import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
 import LogoSelector from "@/pages/assets/components/LogoSelector";
 import AccountTypeForm from "./components/AccountTypeForm";
@@ -64,8 +63,6 @@ const AssetPostDrawer = ({
     let [decrypted, setDecrypted] = useState(false);
     let [mfaOpen, setMfaOpen] = useState(false);
     let {message} = App.useApp();
-    const {license, isLoading: licenseLoading} = useLicense();
-    const hasPremiumFeatures = !licenseLoading && license.hasPremiumFeatures();
 
     const get = async () => {
         form.resetFields();
@@ -86,8 +83,8 @@ const AssetPostDrawer = ({
             }
             const formAsset = {
                 ...asset,
-                connectionMode: hasPremiumFeatures || asset.connectionMode !== 'gateway' ? asset.connectionMode || 'direct' : 'direct',
-                gatewayChain: hasPremiumFeatures ? asset.gatewayChain || [] : [],
+                connectionMode: asset.connectionMode || 'direct',
+                gatewayChain: asset.gatewayChain || [],
                 gatewaySource: asset.gatewayChain?.length ? 'custom' : 'inherit'
             };
             setLogo(strings.hasText(asset.logo) ? asset.logo : undefined);
@@ -124,12 +121,7 @@ const AssetPostDrawer = ({
     const saveAsset = async (values: any) => {
         values['logo'] = logo;
         delete values.gatewaySource;
-        if (!hasPremiumFeatures) {
-            values.gatewayChain = [];
-            if (values.connectionMode === 'gateway') {
-                values.connectionMode = 'direct';
-            }
-        }
+
         if (!copy && values['id']) {
             await assetsApi.updateById(values['id'], values);
             return undefined;
@@ -249,9 +241,8 @@ const AssetPostDrawer = ({
         });
     };
 
-
     useFormRequest(form, ["form-request", "web/src/pages/assets/AssetPostDrawer.tsx", open, assetId, groupId, copy], get, {
-        enabled: open && !licenseLoading
+        enabled: open
     });
 
     const renderPane = (children: React.ReactNode) => (
@@ -367,7 +358,6 @@ const AssetPostDrawer = ({
                 </Space>
             </div>
 
-
             {renderProtocol(protocol)}
 
             <Form.Item label={t('assets.tags')} name='tags'>
@@ -380,7 +370,6 @@ const AssetPostDrawer = ({
                 }}/>
             </Form.Item>
 
-
             <Form.Item label={t('general.remark')} name='description'>
                 <Input.TextArea rows={4}/>
             </Form.Item>
@@ -390,7 +379,7 @@ const AssetPostDrawer = ({
     const connectionFields = (
         <ConnectionModeFields
             allowInheritedGateway
-            gatewayDisabled={!hasPremiumFeatures}
+
             proxyDisabled={protocol === 'rdp' || protocol === 'vnc'}
             proxyTip={t('assets.proxy_protocol_tip')}
         />

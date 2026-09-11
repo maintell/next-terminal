@@ -372,7 +372,7 @@ const AgentGatewayPage = () => {
 
     return (
         <div className={'w-full'}>
-            <Disabled disabled={!hasPremiumFeatures}>
+            <Disabled feature="agent_gateway" disabled={!hasPremiumFeatures}>
                 <NTable
                     headerTitle={
                         <div className={'flex items-center gap-2'}>

@@ -123,7 +123,7 @@ const CommandFilterPage = () => {
 
     return (
         <div>
-            <Disabled disabled={!hasPremiumFeatures}>
+            <Disabled feature="command_filter" disabled={!hasPremiumFeatures}>
                 <NTable
                     columns={columns}
                     actionRef={actionRef}

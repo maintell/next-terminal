@@ -50,7 +50,7 @@ class CredentialApi extends Api<Credential> {
     }
 
     decrypt = async (id: string, securityToken: string) => {
-        return await requests.get(`/${this.group}/${id}/decrypted?securityToken=${securityToken}`) as Credential;
+        return await requests.get(`/${this.group}/${id}/decrypted`, {securityToken}) as Credential;
     }
 }
 

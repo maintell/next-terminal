@@ -26,6 +26,10 @@ import {
 } from "@/pages/access/Terminal";
 import {normalizeTerminalBackspace} from "@/pages/access/terminal-backspace";
 import {TerminalRuntime} from "@/pages/access/terminal/terminal-runtime";
+import TerminalPreConnect, {
+    type TerminalAuthReply,
+    type TerminalPreConnectState
+} from "@/pages/access/terminal/TerminalPreConnect";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {ZmodemController} from "@/pages/access/lrzsz/zmodemController";
 import {MOBILE_TOOL_DRAWER_SIZE} from "@/pages/access/terminal-tool-drawer";
@@ -165,10 +169,8 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
     let [searchMatchIndex, setSearchMatchIndex] = useState(0);
     let [searchMatchCount, setSearchMatchCount] = useState(0);
 
-    // 交互式认证状态
-    let [authMode, setAuthMode] = useState<'none' | 'username' | 'password'>('none');
-    let [authUsername, setAuthUsername] = useState('');
-    let [authPassword, setAuthPassword] = useState('');
+    // 交互式认证状态:服务端 AuthPrompt 驱动的 pre-connect 面板
+    let [preConnect, setPreConnect] = useState<TerminalPreConnectState | null>(null);
 
     useEffect(() => {
         if (!aiEnabled) {
@@ -507,18 +509,39 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
                     }
                     break;
                 case MessageTypeAuthPrompt:
-                    // 收到认证提示，根据内容决定提示什么
-                    if (msg.content === 'password') {
-                        // 只需要密码
-                        terminal.write('Password: ');
-                        setAuthMode('password');
-                        setAuthPassword('');
-                    } else {
-                        // 需要用户名和密码
-                        terminal.write('Username: ');
-                        setAuthMode('username');
-                        setAuthUsername('');
-                        setAuthPassword('');
+                    // SDK 标准认证挑战:JSON payload 决定渲染哪种面板
+                    try {
+                        const prompt = JSON.parse(msg.content);
+                        switch (prompt.kind) {
+                            case 'username':
+                                setPreConnect({type: 'username', message: prompt.message, retry: prompt.retry});
+                                break;
+                            case 'passphrase':
+                                setPreConnect({type: 'passphrase', message: prompt.message, retry: prompt.retry});
+                                break;
+                            case 'keyboard-interactive':
+                                setPreConnect({
+                                    type: 'keyboard-interactive',
+                                    challenge: {
+                                        name: prompt.challenge?.name,
+                                        instruction: prompt.challenge?.instruction,
+                                        questions: prompt.challenge?.questions ?? [],
+                                        echos: prompt.challenge?.echos ?? [],
+                                    },
+                                    message: prompt.message,
+                                    retry: prompt.retry,
+                                });
+                                break;
+                            default:
+                                setPreConnect({
+                                    type: 'password',
+                                    username: prompt.username ?? '',
+                                    message: prompt.message,
+                                    retry: prompt.retry,
+                                });
+                        }
+                    } catch (e) {
+                        console.error('failed to parse auth prompt', e);
                     }
                     break;
                 case MessageTypePing:
@@ -555,88 +578,32 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
         }
     }
 
-    // 处理认证输入
-    const handleAuthInput = (data: string) => {
-        const terminal = terminalRef.current;
-        if (!terminal) {
-            return;
+    // 提交认证回复给服务端的建连流程
+    const handleAuthSubmit = (reply: TerminalAuthReply) => {
+        setPreConnect(null);
+        if (!runtimeRef.current?.sendMessage(MessageTypeAuthReply, JSON.stringify(reply))) {
+            setPreConnect(null);
+            terminalRef.current?.writeln('\r\n\x1b[41m ERROR \x1b[0m : Connection lost, please try again');
         }
+    };
 
-        if (authMode === 'username') {
-            // 输入用户名
-            if (data === '\r' || data === '\n') {
-                // 用户按下回车，切换到密码输入
-                terminal.writeln('');
-                terminal.write('Password: ');
-                setAuthMode('password');
-            } else if (data === '\x7f' || data === '\b') {
-                // 退格键
-                if (authUsername.length > 0) {
-                    setAuthUsername(authUsername.slice(0, -1));
-                    terminal.write('\b \b');
-                }
-            } else if (data >= ' ' && data <= '~') {
-                // 可打印字符
-                setAuthUsername(authUsername + data);
-                terminal.write(data);
-            }
-        } else if (authMode === 'password') {
-            // 输入密码
-            if (data === '\r' || data === '\n') {
-                // 用户按下回车，提交认证信息
-                terminal.writeln('');
-
-                // 根据是否有用户名来决定发送内容
-                let authContent: string;
-                if (authUsername) {
-                    // 有用户名，发送 username\npassword
-                    authContent = `${authUsername}\n${authPassword}`;
-                } else {
-                    // 只有密码，直接发送密码
-                    authContent = authPassword;
-                }
-
-                if (!runtimeRef.current?.sendMessage(MessageTypeAuthReply, authContent)) {
-                    console.error('WebSocket is not open');
-                    terminal.writeln('\r\n\x1b[41m ERROR \x1b[0m : Connection lost, please try again');
-                }
-
-                // 重置认证状态
-                setAuthMode('none');
-                setAuthUsername('');
-                setAuthPassword('');
-            } else if (data === '\x7f' || data === '\b') {
-                // 退格键
-                if (authPassword.length > 0) {
-                    setAuthPassword(authPassword.slice(0, -1));
-                    terminal.write('\b \b');
-                }
-            } else if (data >= ' ' && data <= '~') {
-                // 可打印字符，不回显
-                setAuthPassword(authPassword + data);
-                terminal.write('*'); // 显示星号
-            }
-        }
-    }
+    // 取消认证:关闭连接,服务端 Prompt 将感知断开并清理会话
+    const handleAuthCancel = () => {
+        setPreConnect(null);
+        runtimeRef.current?.closeSocket();
+    };
 
     useEffect(() => {
         const runtime = runtimeRef.current;
         if (!runtime) {
             return;
         }
-        setAuthMode('none');
         void connectWrap(runtime);
     }, [reconnected]);
 
     useEffect(() => {
         const runtime = runtimeRef.current;
         runtime?.setInputHandler((data) => {
-            // 如果处于认证模式，拦截输入用于认证
-            if (authMode !== 'none') {
-                handleAuthInput(data);
-                return;
-            }
-
             if (!runtime.socket) {
                 // 忽略鼠标上报，避免鼠标移动就触发重连（残留的鼠标追踪模式可能仍在生成上报）
                 if (data.startsWith('\x1b[<') || data.startsWith('\x1b[M')) return;
@@ -649,7 +616,7 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
         return () => {
             runtime?.setInputHandler();
         }
-    }, [authMode, authUsername, authPassword, session?.attrs?.backspaceMode]);
+    }, [session?.attrs?.backspaceMode]);
 
     // 搜索功能函数
     const handleSearch = (term: string) => {
@@ -1064,6 +1031,13 @@ const AccessTerminal = ({assetId, standalone = false, active: activeProp}: Props
                                         </div>
                                     )}
                                     <div className={'h-full min-h-0 w-full overflow-hidden'} ref={divRef}/>
+                                    {preConnect && (
+                                        <TerminalPreConnect
+                                            state={preConnect}
+                                            onSubmit={handleAuthSubmit}
+                                            onCancel={handleAuthCancel}
+                                        />
+                                    )}
                                 </div>
 
                                 {isMobile && (

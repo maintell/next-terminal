@@ -1,3 +1,5 @@
+import Disabled from "@/components/Disabled";
+import {useLicense} from "@/hook/LicenseContext";
 import { useState } from 'react';
 
 import NButton from "@/components/NButton";
@@ -17,16 +19,20 @@ import copy from "copy-to-clipboard";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import credentialApi,{ Credential, CredentialReferenceError } from '../../api/credential-api';
+import credentialRotationApi, { RotationResult } from '../../api/credential-rotation-api';
 import CredentialModal from "./CredentialModal";
+import RotationResultModal from "./RotationResultModal";
 
 const api = credentialApi;
 
 const CredentialPage = () => {
+    const {license, isLoading: licenseLoading} = useLicense();
 
     const {t} = useTranslation();
 
     let [open, setOpen] = useState<boolean>(false);
     let [selectedRowKey, setSelectedRowKey] = useState<string>();
+    let [rotationResults, setRotationResults] = useState<RotationResult[]>([]);
     let [pagination, setPagination] = useState({current: 1, pageSize: 10});
     let [sort, setSort] = useState<Record<string, string | null>>({});
     let [keyword, setKeyword] = useState('');
@@ -123,6 +129,13 @@ const CredentialPage = () => {
         onError: showDeleteError,
     });
 
+    const rotateMutation = useMutation({
+        mutationFn: (id: string) => credentialRotationApi.rotateCredential(id),
+        onSuccess: (results) => {
+            setRotationResults(results);
+        },
+    });
+
     const handleTableChange: TableProps<Credential>['onChange'] = (nextPagination, _filters, sorter) => {
         const activeSorter = Array.isArray(sorter) ? sorter.find((item) => item.order) : sorter;
         const field = activeSorter?.field;
@@ -183,7 +196,7 @@ const CredentialPage = () => {
         {
             title: t('actions.label'),
             key: 'option',
-            width: 150,
+            width: 210,
             render: (_text, record) => (
                 <Space size={8}>
                     <NButton
@@ -195,6 +208,26 @@ const CredentialPage = () => {
                         }}
                     >
                         {t('assets.copy_public_key')}
+                    </NButton>
+                    <NButton
+                        onClick={() => {
+                            if (licenseLoading || !license.hasPremiumFeatures()) {
+                                modal.info({
+                                    title: t('restricted_features.credential_rotation.title'),
+                                    icon: null,
+                                    width: 620,
+                                    content: <Disabled feature="credential_rotation" compact disabled/>,
+                                });
+                                return;
+                            }
+                            modal.confirm({
+                                title: t('assets.rotation.credential_confirm'),
+                                content: t('assets.rotation.credential_confirm_tip'),
+                                onOk: () => rotateMutation.mutateAsync(record.id),
+                            });
+                        }}
+                    >
+                        {t('assets.rotation.rotate')}
                     </NButton>
                     <NButton
                         onClick={() => {
@@ -267,6 +300,12 @@ const CredentialPage = () => {
                 setSelectedRowKey(undefined);
             }}
             handleOk={mutation.mutate}
+        />
+
+        <RotationResultModal
+            open={rotationResults.length > 0}
+            handleCancel={() => setRotationResults([])}
+            results={rotationResults}
         />
 
     </div>);

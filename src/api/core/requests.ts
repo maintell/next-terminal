@@ -34,6 +34,7 @@ export type ApiErrorMode = 'global' | 'local' | 'silent';
 
 export interface RequestOptions {
     errorMode?: ApiErrorMode;
+    securityToken?: string;
 }
 
 const parseResponse = async <T>(response: Response): Promise<T> => {
@@ -109,7 +110,11 @@ const handleCrossPageError = (error: ApiError, errorMode: ApiErrorMode): boolean
 
 const execute = async <T>(url: string, init: RequestInit, options: RequestOptions = {}): Promise<T> => {
     try {
-        const response = await fetch(baseUrl() + url, init);
+        const headers = new Headers(init.headers);
+        if (options.securityToken) {
+            headers.set('X-Security-Token', options.securityToken);
+        }
+        const response = await fetch(baseUrl() + url, {...init, headers});
         if (!response.ok) {
             throw await createHttpError(response);
         }

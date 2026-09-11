@@ -1,7 +1,6 @@
 import type {AICommandPolicy, BatchUpdateAssetRequest, BatchUpdateAssetResult} from "@/api/asset-api";
 import assetApi from "@/api/asset-api";
 import type {GatewayHop} from "@/api/gateway-chain";
-import {useLicense} from "@/hook/LicenseContext";
 import {DefaultTerminalConnectTimeout} from "@/pages/assets/components/AssetAdvancedSettings";
 import ConnectionModeFields from "@/pages/assets/components/ConnectionModeFields";
 import {useMutation} from "@tanstack/react-query";
@@ -72,8 +71,6 @@ const AssetBatchEditDrawer = ({assetIds, open, onClose, onSuccess}: Props) => {
     const {t} = useTranslation();
     const {message} = App.useApp();
     const [form] = Form.useForm<BatchEditFormValues>();
-    const {license, isLoading: licenseLoading} = useLicense();
-    const hasPremiumFeatures = !licenseLoading && license.hasPremiumFeatures();
 
     const updateAIEnabled = Form.useWatch('updateAIEnabled', form);
     const updateRestrictedShell = Form.useWatch('updateRestrictedShell', form);
@@ -341,7 +338,7 @@ const AssetBatchEditDrawer = ({assetIds, open, onClose, onSuccess}: Props) => {
                 {updateConnection && (
                     <ConnectionModeFields
                         allowInheritedGateway
-                        gatewayDisabled={!hasPremiumFeatures}
+
                         proxyTip={t('assets.proxy_protocol_tip')}
                     />
                 )}

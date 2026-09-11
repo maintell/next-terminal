@@ -119,7 +119,7 @@ const GatewayGroupPage: React.FC = () => {
     ];
 
     return (
-        <Disabled disabled={!hasPremiumFeatures}>
+        <Disabled feature="gateway_group" disabled={!hasPremiumFeatures}>
             <NTable<GatewayGroup>
                 columns={columns}
                 actionRef={actionRef}

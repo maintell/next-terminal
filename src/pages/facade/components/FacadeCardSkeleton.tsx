@@ -17,37 +17,19 @@ const FacadeCardSkeleton: React.FC<FacadeCardSkeletonProps> = React.memo(({ coun
                     className="animate-in fade-in duration-500"
                     style={{ animationDelay: `${index * 50}ms` }}
                 >
-                    <div className="rounded-xl ring-1 ring-slate-200/60 dark:ring-slate-700/60 bg-white dark:bg-[#141414] shadow-sm dark:shadow-md p-4 space-y-3">
-                        {/* Logo 和标题区域 */}
+                    <div className="relative flex min-h-32 flex-col rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200/60 dark:bg-[#141414] dark:ring-slate-700/60">
+                        <Skeleton className="absolute right-4 top-4 h-4 w-9 rounded" />
                         <div className="flex gap-3">
-                            {/* Logo 骨架 */}
-                            <Skeleton className="w-12 h-12 rounded-lg flex-shrink-0" />
-
-                            {/* 内容骨架 */}
-                            <div className="flex-1 min-w-0 space-y-1.5">
-                                {/* 标题 */}
+                            <Skeleton className="h-10 w-10 flex-shrink-0 rounded-md" />
+                            <div className="min-w-0 flex-1 space-y-2 pr-12">
                                 <Skeleton className="h-4 w-3/4" />
-                                {/* 地址 */}
-                                <Skeleton className="h-3 w-full" />
+                                <Skeleton className="h-3 w-1/2" />
                             </div>
                         </div>
-
-                        {/* 描述骨架 */}
-                        <div className="space-y-1.5">
-                            <Skeleton className="h-3 w-full" />
-                            <Skeleton className="h-3 w-2/3" />
-                        </div>
-
-                        {/* 标签骨架 */}
-                        <div className="flex gap-1.5">
-                            <Skeleton className="h-5 w-14 rounded-md" />
-                            <Skeleton className="h-5 w-16 rounded-md" />
-                        </div>
-
-                        {/* 按钮骨架 */}
-                        <div className="flex gap-1.5 pt-2.5 border-t border-slate-100 dark:border-slate-800">
-                            <Skeleton className="h-8 flex-1 rounded-lg" />
-                            <Skeleton className="h-8 w-28 rounded-lg" />
+                        <div className="flex-1" />
+                        <div className="mt-5 flex items-center justify-between">
+                            <Skeleton className="h-3 w-12" />
+                            <Skeleton className="h-8 w-16 rounded-md" />
                         </div>
                     </div>
                 </div>

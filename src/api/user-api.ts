@@ -135,8 +135,12 @@ class UserApi extends Api<User> {
         super("admin/users");
     }
 
-    resetTOTP = async (keys: string[]) => {
-        await requests.post(`/${this.group}/reset-totp`, keys);
+    resetTOTP = async (keys: string[], securityToken: string) => {
+        await requests.post(`/${this.group}/reset-totp`, keys, {securityToken});
+    }
+
+    clearPasskeys = async (keys: string[], securityToken: string) => {
+        await requests.post(`/${this.group}/clear-passkeys`, keys, {securityToken});
     }
 
     resetPassword = async (keys: string[], password?: string) => {
@@ -206,8 +210,8 @@ class UserApi extends Api<User> {
         return await requests.get(`/${this.group}/${userId}/webauthn/credentials`) as UserWebauthnCredential[];
     }
 
-    deleteWebauthnCredential = async (userId: string, credentialId: string) => {
-        return await requests.delete(`/${this.group}/${userId}/webauthn/credentials/${credentialId}`);
+    deleteWebauthnCredential = async (userId: string, credentialId: string, securityToken: string) => {
+        return await requests.delete(`/${this.group}/${userId}/webauthn/credentials/${credentialId}`, {securityToken});
     }
 
     getSSHKeys = async (userId: string) => {

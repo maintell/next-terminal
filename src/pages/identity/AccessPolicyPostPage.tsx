@@ -55,7 +55,7 @@ const AccessPolicyPostPage = () => {
             <Title level={5} style={{marginTop: 0}}>
                 {id ? t('identity.policy.edit_group') : t('identity.policy.new_group')}
             </Title>
-            <Disabled disabled={!hasPremiumFeatures}>
+            <Disabled feature="access_policy" disabled={!hasPremiumFeatures}>
                 <Form form={form} layout="vertical" onFinish={values => mutation.mutate(values)}>
                     <Form.Item hidden name="id"><Input/></Form.Item>
                     <Alert

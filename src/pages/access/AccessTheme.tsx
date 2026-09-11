@@ -3,8 +3,6 @@ import XtermThemes from "@/color-theme/XtermThemes";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {useTerminalTheme} from "@/pages/access/hooks/use-terminal-theme";
 import {useTranslation} from 'react-i18next';
-import {useLicense} from "@/hook/LicenseContext";
-import Disabled from "@/components/Disabled";
 import {Card, Radio} from "antd";
 import {cn} from "@/lib/utils";
 import type {ITheme} from "@xterm/xterm";
@@ -42,18 +40,14 @@ const AccessTheme = () => {
 
     let [accessTheme, setAccessTheme] = useTerminalTheme();
     let {t} = useTranslation();
-    let { license } = useLicense();
 
     return (
         <ScrollArea className="h-full">
             <div className={'flex items-center justify-center'}>
                 <div className={'m-8'}>
-                    <Disabled disabled={!license.hasPremiumFeatures()}>
                         <div className={'text-lg font-bold'}>{t('access.settings.theme')}</div>
-                    </Disabled>
                     <Radio.Group
                         className="w-full"
-                        disabled={!license.hasPremiumFeatures()}
                         onChange={(value) => {
                             let name = value.target.value as string;
                             let v = XtermThemes.find(item => item.name == name);
@@ -72,15 +66,12 @@ const AccessTheme = () => {
                                 return <Card
                                     key={item.name}
                                     size="small"
-                                    hoverable={license.hasPremiumFeatures()}
+                                    hoverable
                                     className={cn(
                                         'cursor-pointer transition-colors',
                                         checked && 'border-blue-500 shadow-sm'
                                     )}
                                     onClick={() => {
-                                        if (!license.hasPremiumFeatures()) {
-                                            return;
-                                        }
                                         let v = XtermThemes.find(theme => theme.name == item.name);
                                         setAccessTheme({
                                             ...accessTheme,
@@ -89,7 +80,7 @@ const AccessTheme = () => {
                                         });
                                     }}
                                 >
-                                    <Radio value={item.name} disabled={!license.hasPremiumFeatures()}>
+                                    <Radio value={item.name}>
                                         {item.name}
                                     </Radio>
                                     <div>

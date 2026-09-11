@@ -25,7 +25,7 @@ const WechatWorkSetting = ({
     };
     useFormRequest(form, ["form-request", "web/src/pages/sysconf/WechatWorkSetting.tsx"], wrapGet, true);
     return <div>
-        <Disabled disabled={!license.hasPremiumFeatures()}>
+        <Disabled feature="wechat_work" disabled={!license.hasPremiumFeatures()}>
             <Form form={form} onFinish={set} layout="vertical">
                 <Form.Item name="wechat-work-enabled" label={t("settings.wechat_work.enabled")} rules={[{
                     required: true

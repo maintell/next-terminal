@@ -60,7 +60,7 @@ const AccessPolicyBindingEditor = ({active, subjectType, subjectId}: AccessPolic
         return <Spin/>;
     }
     if (!hasPremiumFeatures) {
-        return <Disabled disabled><div/></Disabled>;
+        return <Disabled feature="access_policy" compact disabled/>;
     }
 
     const items = (accessPolicyQuery.data ?? [])

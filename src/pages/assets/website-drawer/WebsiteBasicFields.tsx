@@ -6,6 +6,7 @@ import {RefreshCwIcon} from "lucide-react";
 import ProFormTreeSelect from "@/components/ProFormTreeSelect";
 import websiteApi from "@/api/website-api";
 import LogoSelector from "@/pages/assets/components/LogoSelector";
+import QuerySelect from "@/components/QuerySelect";
 
 interface WebsiteBasicFieldsProps {
     showLogo?: boolean;
@@ -122,6 +123,18 @@ const WebsiteBasicFields: React.FC<WebsiteBasicFieldsProps> = ({
 
             <Form.Item label={t('assets.domain')} name="domain" rules={[{required: true}]} extra={t('assets.domain_tip')}>
                 <Input placeholder="example.com"/>
+            </Form.Item>
+
+            <Form.Item label={t('assets.tags')} name="tags">
+                <QuerySelect
+                    queryKey={['website-tags']}
+                    mode="tags"
+                    showSearch
+                    request={async () => {
+                        const tags = await websiteApi.getTags();
+                        return tags.map(tag => ({label: tag, value: tag}));
+                    }}
+                />
             </Form.Item>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-12">

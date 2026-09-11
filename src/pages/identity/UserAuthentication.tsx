@@ -3,8 +3,10 @@ import userApi, {
     type UserWebauthnCredential,
 } from "@/api/user-api";
 import times from "@/components/time/times";
+import MultiFactorAuthentication from "@/pages/account/MultiFactorAuthentication";
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {App, Button, Descriptions, Empty, Popconfirm, Space, Table, Tag, Typography, type TableColumnsType} from "antd";
+import {useState} from "react";
 import {useTranslation} from "react-i18next";
 
 interface UserAuthenticationProps {
@@ -12,9 +14,14 @@ interface UserAuthenticationProps {
     userId: string;
 }
 
+type PendingAuthenticationAction =
+    | {type: 'reset-totp'}
+    | {type: 'delete-passkey'; credentialId: string};
+
 const UserAuthentication = ({active, userId}: UserAuthenticationProps) => {
     const {t} = useTranslation();
     const {message} = App.useApp();
+    const [pendingAuthenticationAction, setPendingAuthenticationAction] = useState<PendingAuthenticationAction>();
 
     const userQuery = useQuery({
         queryKey: ['user', userId],
@@ -35,7 +42,7 @@ const UserAuthentication = ({active, userId}: UserAuthenticationProps) => {
     });
 
     const resetTotpMutation = useMutation({
-        mutationFn: () => userApi.resetTOTP([userId]),
+        mutationFn: (securityToken: string) => userApi.resetTOTP([userId], securityToken),
         onSuccess: () => {
             message.success(t('general.success'));
             userQuery.refetch();
@@ -43,12 +50,29 @@ const UserAuthentication = ({active, userId}: UserAuthenticationProps) => {
     });
 
     const deletePasskeyMutation = useMutation({
-        mutationFn: (credentialId: string) => userApi.deleteWebauthnCredential(userId, credentialId),
+        mutationFn: ({credentialId, securityToken}: {credentialId: string; securityToken: string}) =>
+            userApi.deleteWebauthnCredential(userId, credentialId, securityToken),
         onSuccess: () => {
             message.success(t('general.success'));
             passkeyQuery.refetch();
         },
     });
+
+    const handleAuthenticationOk = async (securityToken: string) => {
+        const action = pendingAuthenticationAction;
+        if (!action) {
+            return;
+        }
+        try {
+            if (action.type === 'reset-totp') {
+                await resetTotpMutation.mutateAsync(securityToken);
+            } else {
+                await deletePasskeyMutation.mutateAsync({credentialId: action.credentialId, securityToken});
+            }
+        } finally {
+            setPendingAuthenticationAction(undefined);
+        }
+    };
 
     const deleteSSHKeyMutation = useMutation({
         mutationFn: (sshKeyId: string) => userApi.deleteSSHKey(userId, sshKeyId),
@@ -86,7 +110,7 @@ const UserAuthentication = ({active, userId}: UserAuthenticationProps) => {
             render: (_, record) => (
                 <Popconfirm
                     title={t('account.passkey_delete_title')}
-                    onConfirm={() => deletePasskeyMutation.mutate(record.id)}
+                    onConfirm={() => setPendingAuthenticationAction({type: 'delete-passkey', credentialId: record.id})}
                 >
                     <Button danger type="link" loading={deletePasskeyMutation.isPending}>
                         {t('actions.delete')}
@@ -181,7 +205,7 @@ const UserAuthentication = ({active, userId}: UserAuthenticationProps) => {
                                     {user?.enabledTotp && (
                                         <Popconfirm
                                             title={t('identity.user.reset_otp.confirm_title')}
-                                            onConfirm={() => resetTotpMutation.mutate()}
+                                            onConfirm={() => setPendingAuthenticationAction({type: 'reset-totp'})}
                                         >
                                             <Button size="small" danger loading={resetTotpMutation.isPending}>
                                                 {t('identity.user.reset_otp.action')}
@@ -239,6 +263,13 @@ const UserAuthentication = ({active, userId}: UserAuthenticationProps) => {
                     locale={{emptyText: <Empty description={t('account.ssh_key_empty')}/>}}
                 />
             </div>
+
+            <MultiFactorAuthentication
+                open={!!pendingAuthenticationAction}
+                forceReauth
+                handleOk={handleAuthenticationOk}
+                handleCancel={() => setPendingAuthenticationAction(undefined)}
+            />
         </div>
     );
 };

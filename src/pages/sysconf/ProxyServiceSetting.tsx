@@ -3,7 +3,8 @@ import {useState} from "react";
 import {useSearchParams} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import SshdSetting from "@/pages/sysconf/SshdSetting";
-import DbProxySetting from "@/pages/sysconf/DbProxySetting";
+import MysqlProxySetting from "@/pages/sysconf/MysqlProxySetting";
+import PostgresProxySetting from "@/pages/sysconf/PostgresProxySetting";
 import RdpProxySetting from "@/pages/sysconf/RdpProxySetting";
 import {SettingProps} from "./SettingPage";
 import {maybe} from "@/utils/maybe.ts";
@@ -42,9 +43,14 @@ const ProxyServiceSetting = ({
                 children: <RdpProxySetting get={get} set={set}/>
             },
             {
-                label: t('db.proxy.setting'),
-                key: 'db-proxy',
-                children: <DbProxySetting get={get} set={set}/>
+                label: t('db.proxy.mysql_setting'),
+                key: 'db-proxy-mysql',
+                children: <MysqlProxySetting get={get} set={set}/>
+            },
+            {
+                label: t('db.proxy.pg_setting'),
+                key: 'db-proxy-pg',
+                children: <PostgresProxySetting get={get} set={set}/>
             },
         ]}
     />;

@@ -18,6 +18,7 @@ export interface AccessPolicyRule {
     groupId: string;
     name: string;
     ipGroup: string;
+    ipSetIds?: string[];
     priority: number;
     enabled: boolean;
     action: AccessPolicyAction;

@@ -94,6 +94,7 @@
     "batch_delete": "Batch Delete",
     "refresh": "Refresh",
     "retry": "Retry",
+    "filter": "Filter",
     "confirm": "Confirm",
     "test_connection": "Test Connection"
   },
@@ -140,7 +141,8 @@
     "database_asset_placeholder": "Asset name, username, tag, type",
     "database_access_work_order": "Go to SQL Work Orders",
     "website_placeholder": "Website name, tag, type",
-    "in_use": "In use",
+    "current_users": "Current users",
+    "status_detail": "Status details",
     "clear_search": "Clear search",
     "list_view": "List",
     "card_view": "Cards"
@@ -155,13 +157,13 @@
     "resource": {
       "label": "Resource Management",
       "submenus": {
-        "asset": "Assets",
+        "asset": "Host Assets",
         "database_asset": "Database Assets",
-        "credential": "Credentials",
+        "credential": "Access Credentials",
         "snippet": "Command Snippets",
         "storage": "Storage",
         "website": "Web Assets",
-        "ip_whitelist": "IP Whitelists",
+        "ip_set": "IP Address Sets",
         "certificate": "Certificate Management"
       }
     },
@@ -201,16 +203,17 @@
         "scheduled_task": "Scheduled Tasks",
         "tools": "Tools",
         "monitoring": "Monitoring",
-        "system_event": "System Events"
+        "system_event": "System Events",
+        "credential_rotation": "Credential Rotation"
       }
     },
     "identity": {
-      "label": "Identity",
+      "label": "Identity Management",
       "submenus": {
         "user": "Users",
         "department": "Departments",
         "role": "Roles",
-        "access_policy": "Access Control",
+        "access_policy": "Identity Access Policies",
         "login_locked": "Login Lock",
         "oidc_client": "OIDC Clients"
       }
@@ -220,9 +223,9 @@
       "submenus": {
         "command_filter": "Command Filter",
         "strategy": "Authorization Strategy",
-        "authorised_asset": "Authorized Assets",
-        "authorised_website": "Authorized Web Assets",
-        "authorised_database_asset": "Authorized Database Assets"
+        "authorised_asset": "Host Authorization",
+        "authorised_website": "Web Authorization",
+        "authorised_database_asset": "Database Authorization"
       }
     },
     "setting": {
@@ -434,7 +437,12 @@
       "reset_otp": {
         "action": "Reset 2FA",
         "confirm_title": "Confirm reset user 2FA?",
-        "confirm_content": "After reset, user can log in without 2FA."
+        "confirm_content": "After reset, the user can sign in without 2FA. The administrator must complete secondary authentication after confirmation."
+      },
+      "clear_passkeys": {
+        "action": "Clear Passkeys",
+        "confirm_title": "Clear all Passkeys for the user?",
+        "confirm_content": "This cannot be undone. The operation will be rejected if Passkey is the user's last sign-in method. The administrator must complete secondary authentication after confirmation."
       },
       "external_identity": {
         "title": "External Accounts",
@@ -459,7 +467,7 @@
       }
     },
     "options": {
-        "access_policy": "Access Control"
+      "access_policy": "Access Control"
     },
     "oidc_client": {
       "created_success": "OIDC client created successfully",
@@ -469,6 +477,7 @@
       "new_secret_tip": "⚠️ Please copy and save the new secret immediately; it won't be shown again after closing.",
       "redirect_uris": "Redirect URIs",
       "grant_types": "Grant Types",
+      "response_types": "Response Types",
       "scopes": "Scopes",
       "regenerate_secret": "Rotate Secret",
       "regenerate_secret_confirm": "Are you sure you want to rotate this client's secret? The old secret will be invalid immediately.",
@@ -484,6 +493,7 @@
       "redirect_uris_add": "Add redirect URI",
       "redirect_uri_required": "Please enter redirect URI",
       "grant_types_required": "Please select at least one grant type",
+      "response_types_required": "Please select at least one response type",
       "scopes_required": "Please select at least one scope",
       "access_control": "Access Control",
       "access_control_tip": "Control which users can use this OIDC client",
@@ -779,6 +789,7 @@
       "clear_remote_exec_confirm": "Clear all remote exec command records?"
     },
     "accessLog": {
+      "requestId": "Request ID",
       "uri": "Request URI",
       "statusCode": "Status Code",
       "clientStatusCode": "Client Status",
@@ -1075,6 +1086,19 @@
         "upload_transfer_active": "A ZMODEM transfer is already running.",
         "upload_no_files": "No files to upload.",
         "ssh_only": "ZMODEM is only supported for SSH terminals."
+      },
+      "auth": {
+        "title_username": "Username Required",
+        "title_password": "Password Required",
+        "title_passphrase": "Private Key Passphrase Required",
+        "title_keyboard_interactive": "Keyboard-Interactive Authentication",
+        "auth_required": "Target host requires authentication",
+        "username": "Username",
+        "password": "Password",
+        "passphrase": "Passphrase",
+        "answer": "Answer",
+        "cancel": "Cancel",
+        "connect": "Connect"
       }
     },
     "playback": {
@@ -1613,7 +1637,50 @@
     "detect_os_failed": "OS detection failed",
     "wol_send": "Send WOL",
     "wol_send_success": "WOL magic packet sent",
-    "wol_send_failed": "Failed to send WOL packet"
+    "wol_send_failed": "Failed to send WOL packet",
+    "rotation": {
+      "rotate": "Rotate Credentials",
+      "batch_title": "Batch Rotate Credentials",
+      "manual_warning": "Rotation changes the password/key on remote hosts and updates the stored credential. Please proceed with caution.",
+      "credential_confirm": "Rotate this credential?",
+      "credential_confirm_tip": "The password/key will be changed on all SSH assets referencing this credential, and the credential will be updated.",
+      "result_title": "Rotation finished ({{success}}/{{total}} succeeded)",
+      "type_label": "Rotation Type",
+      "type": {
+        "password": "Password",
+        "private_key": "Private Key",
+        "auto": "Auto (by account type)"
+      },
+      "scope": "Scope",
+      "pwd_length": "Password Length",
+      "pwd_length_tip": "Random password length, 8-64 characters",
+      "pwd_symbol": "Include Symbols",
+      "keep_old_key": "Keep Old Public Key",
+      "keep_old_key_tip": "When enabled, old public keys are kept on remote hosts (safer); when disabled, they will be removed automatically",
+      "policy_warning": "Rotation changes the account password or key on remote hosts. Make sure you keep an alternative way to log in.",
+      "cron_preset": "Presets",
+      "cron_presets": {
+        "daily": "Daily at {{time}}",
+        "monday": "Every Monday at {{time}}",
+        "monthly": "On the 1st of each month at {{time}}",
+        "every_six_hours": "Every 6 hours"
+      },
+      "logs_tab": "Rotation Logs",
+      "policies_tab": "Rotation Policies",
+      "status": {
+        "success": "Success",
+        "failed": "Failed"
+      },
+      "trigger": {
+        "manual": "Manual",
+        "scheduled": "Scheduled"
+      },
+      "trigger_label": "Trigger",
+      "operator": "Operator",
+      "message": "Message",
+      "scope_empty_tip": "Leave empty to rotate all SSH assets",
+      "scope_all": "All assets"
+    }
   },
   "group_tree": {
     "title": "Group",
@@ -1642,7 +1709,11 @@
     "test_failed": "Proxy connection test failed",
     "delete_referenced_title": "Proxy server is in use and cannot be deleted"
   },
-  "ip_whitelist": {
+  "ip_set": {
+    "policy_reference_tip": "Matching a manual IP or any referenced IP address set satisfies the IP condition. Geography and time conditions must also match.",
+    "manage": "Manage IP Address Sets",
+    "load_error": "Failed to load IP address sets. Please retry.",
+    "retry": "Retry",
     "source": "Source",
     "source_manual": "Manual",
     "source_url": "URL Synchronization",
@@ -1657,8 +1728,8 @@
     "refresh_minutes_tip": "The minimum refresh interval is 5 minutes.",
     "rules": "IP Rules",
     "rules_tip": "One IP, CIDR, or IP range per line.",
-    "reference": "Referenced IP Whitelists",
-    "reference_tip": "A request matching any referenced whitelist passes the IP rule.",
+    "reference": "Referenced IP Address Sets",
+    "reference_tip": "A request matching any referenced IP address set passes the IP rule.",
     "sync": "Synchronize",
     "last_synced_at": "Last Synchronized"
   },
@@ -2116,6 +2187,9 @@
       "public_addr_extra": "Address used in generated .rdp files. When empty, it is inferred from the listen address and current request.",
       "ticket_ttl": "Ticket TTL (seconds)",
       "ticket_ttl_extra": "Defaults to 300 seconds. A ticket is marked as used after successful resolution.",
+      "certificate": "Proxy Certificate",
+      "certificate_extra": "Leave empty to auto-generate a dedicated self-signed certificate, or select one from the certificate list.",
+      "certificate_auto": "Auto-generate certificate",
       "usage": "Usage",
       "usage_tip": "Users choose an RDP asset in the web UI to create a ticket. The RDP client connects to the proxy address, and the proxy resolves it to the real asset.",
       "ticket_flow": "Ticket Format",
@@ -2366,6 +2440,12 @@
     },
     "license": {
       "setting": "License",
+      "loading": "Loading license information...",
+      "load_error": {
+        "title": "Failed to load license information",
+        "description": "We can't determine which features your current license supports. Check your network connection and try again.",
+        "retry": "Reload"
+      },
       "machine_id": "Machine ID",
       "import": "Import License",
       "request": "Update License",
@@ -2565,7 +2645,9 @@
       "type_mysql": "MySQL",
       "type_pg": "PostgreSQL",
       "host": "Host",
-      "database": "Database"
+      "database": "Database",
+      "postgres_ssl_mode": "PostgreSQL Backend TLS Mode",
+      "postgres_ssl_mode_extra": "verify-ca and verify-full use system-trusted CAs. Certificate verification still uses the asset hostname when connected through a gateway."
     },
     "work_order": {
       "new": "New Work Order",
@@ -2586,10 +2668,13 @@
       }
     },
     "sql_log": {
+      "parameter_template_tip": "Prepared SQL template; original bound parameter values are not recorded.",
       "sql": "SQL",
       "duration_ms": "Duration (ms)",
       "rows_affected": "Rows Affected",
+      "db_type": "Database Type",
       "status": {
+        "unknown": "Outcome unknown",
         "blocked": "Blocked"
       },
       "source": {
@@ -2598,19 +2683,192 @@
       }
     },
     "proxy": {
-      "setting": "Database Proxy",
       "enabled": "Enable Database Proxy",
+      "mysql_setting": "MySQL Proxy",
+      "pg_setting": "PostgreSQL Proxy",
+      "mysql_enabled": "Enable MySQL Proxy",
+      "mysql_tls_enabled": "Enable TLS Encryption (Client to Proxy)",
+      "mysql_tls_enabled_tip": "Encrypts client connections to the MySQL proxy using the certificate selected below; a dedicated self-signed certificate is generated automatically when none is selected.",
+      "mysql_certificate": "Proxy Certificate",
+      "mysql_certificate_extra": "Leave empty to auto-generate a dedicated self-signed certificate, or select one from the certificate list.",
+      "mysql_certificate_auto": "Auto-generate certificate",
+      "pg_policy": "SQL policy",
+      "pg_policy_allow": "Allow SQL and audit",
+      "pg_policy_guarded": "Block writes and high-risk SQL",
+      "pg_policy_tip": "SQL filtering reduces accidental operations. Enforce read-only access with database account permissions. Auditing is asynchronous; monitor dropped records and write failures.",
+      "pg_reject_tip": "A policy rejection closes the connection and rolls back its active transaction.",
+      "pg_tls_mode": "Client TLS mode",
+      "pg_tls_mode_tip": "Controls encryption from clients to the proxy. Configure the proxy-to-database SSL mode on the database asset.",
+      "pg_tls_disabled": "Disable TLS (plaintext)",
+      "pg_tls_optional": "Optional TLS (plaintext allowed)",
+      "pg_tls_required": "Require TLS",
+      "pg_config_error": "Failed to load or save configuration. Please retry.",
+      "pg_certificate_error": "Failed to load certificates. Check that the certificate exists and retry.",
+      "pg_connection_unavailable": "The connection command for the active configuration appears when the proxy is running.",
+      "pg_connection_tls_tip": "The require mode encrypts traffic without verifying server identity. Use a trusted certificate and sslmode=verify-full for identity verification; import trust first for self-signed certificates.",
+      "pg_running": "Running",
+      "pg_stopped": "Stopped",
+      "pg_applying": "Applying configuration",
+      "pg_apply_error": "Configuration was saved but could not be applied. The current runtime state is shown above.",
+      "pg_enabled": "Enable PostgreSQL Proxy",
       "block_dml": "Block DML/DDL",
-      "block_dml_tip": "When enabled, only read-only SQL is allowed.",
+      "block_dml_tip": "Prevents accidental changes by blocking writes, locking reads, file exports and unapproved SET statements. Enforce full read-only access with database permissions. Multiple statements and the prepared statement protocol are unsupported.",
+      "mysql_tls_mode": "Client TLS mode",
+      "mysql_tls_disabled": "Disable TLS (plaintext)",
+      "mysql_tls_optional": "Optional TLS (plaintext allowed)",
+      "mysql_tls_required": "Require TLS",
+      "mysql_config_error": "Failed to load or save configuration. Please retry.",
+      "mysql_certificate_error": "Failed to load certificates. Check that the certificate exists and retry.",
+      "mysql_connection_unavailable": "The connection command for the active configuration appears when the proxy is running.",
+      "mysql_tls_mode_tip": "Controls client-to-MySQL-proxy connections only. Optional mode accepts plaintext; required mode rejects it.",
+      "mysql_connection_tls_tip": "REQUIRED enforces encryption only. To verify server identity, use a trusted certificate, --ssl-ca and --ssl-mode=VERIFY_IDENTITY.",
       "tip": "Enable proxy to allow client connections and execute SQL.",
+      "stats": {
+        "title": "Statistics",
+        "sessions": "Sessions",
+        "queries": "Queries",
+        "blocked": "Blocked",
+        "audit_drops": "Audit Drops",
+        "audit_errors": "Audit Errors"
+      },
       "usage_title": "Usage",
       "usage_tip": "Users connect to the proxy address from a database client, and the proxy forwards traffic to authorized database assets.",
       "usage_client": "Client Connection",
+      "pg_addr": "PG Listen Address",
+      "pg_tls_enabled": "Enable TLS Encryption (Client to Proxy)",
+      "pg_tls_enabled_tip": "Encrypts client connections to the PG proxy using the certificate selected below; a dedicated self-signed certificate is generated automatically when none is selected. Plaintext remains available when disabled.",
+      "pg_certificate": "Proxy Certificate",
+      "pg_certificate_extra": "Leave empty to auto-generate a dedicated self-signed certificate, or select one from the certificate list.",
       "public_addr": "Public Address",
       "public_addr_extra": "Address shown in the quick access entry for regular users. When empty, it is inferred from the listen address.",
       "password_tip_prefix": "Go to ",
       "password_tip_link": "Profile - Access Token",
-      "password_tip_suffix": " to generate a database password."
+      "password_tip_suffix": " to generate a database password.",
+      "usage_client_pg": "PG Client Connection"
+    }
+  },
+  "restricted_features": {
+    "credential_rotation": {
+      "title": "Credential rotation",
+      "description": "Centrally update SSH asset passwords and private keys to reduce the maintenance burden of long-lived credentials.",
+      "benefit_1": "Rotate credentials in batches or through scheduled policies.",
+      "benefit_2": "Handle assets sharing a credential together to reduce per-host changes.",
+      "benefit_3": "Review rotation results and failure reasons for follow-up."
+    },
+    "label": "Premium feature",
+    "license_note": "Your current license does not include this feature.",
+    "learn_more": "Explore plans and licensing",
+    "access_policy": {
+      "title": "Identity access policies",
+      "description": "Define access boundaries by person, source and time for teams with departmental or remote access requirements.",
+      "benefit_1": "Combine IP address sets, location and time conditions.",
+      "benefit_2": "Assign policies to users or departments to reduce repeated setup.",
+      "benefit_3": "Evaluate allow and reject rules by priority for consistent access decisions."
+    },
+    "agent_gateway": {
+      "title": "Agent gateways",
+      "description": "Deploy an Agent in the target network to provide a shared entry point for asset connections.",
+      "benefit_1": "Use Agent connection channels for assets in private networks.",
+      "benefit_2": "View gateway online status and versions for routine maintenance.",
+      "benefit_3": "Reuse a gateway across assets to simplify cross-network setup."
+    },
+    "gateway_group": {
+      "title": "Gateway groups",
+      "description": "Organize multiple gateways into reusable groups for environments with several connection entry points.",
+      "benefit_1": "Maintain group members centrally to reduce repeated asset configuration.",
+      "benefit_2": "Choose gateways by priority, latency or randomly to suit connection needs.",
+      "benefit_3": "Reuse groups across assets to make future gateway changes easier."
+    },
+    "authorization_strategy": {
+      "title": "Authorization strategies",
+      "description": "Control file operations and clipboard capabilities according to each team’s responsibilities.",
+      "benefit_1": "Manage file upload and download permissions separately.",
+      "benefit_2": "Set permissions for creating, editing, deleting and renaming files.",
+      "benefit_3": "Control copy and paste capabilities according to operational needs."
+    },
+    "command_filter": {
+      "title": "Command filters",
+      "description": "Define terminal command rules for operations that need restrictions on high-risk commands.",
+      "benefit_1": "Maintain command matching rules centrally.",
+      "benefit_2": "Apply command rules through resource authorization.",
+      "benefit_3": "Reduce the chance of accidentally executing high-risk commands."
+    },
+    "oidc": {
+      "title": "OIDC single sign-on",
+      "description": "Connect an existing OIDC identity provider so your team can sign in with a shared corporate identity.",
+      "benefit_1": "Reuse the corporate sign-in entry point to reduce account maintenance.",
+      "benefit_2": "Integrate identity providers through standard OIDC.",
+      "benefit_3": "Configure department assignment for users who sign in."
+    },
+    "ldap": {
+      "title": "LDAP directory authentication",
+      "description": "Authenticate users with information from your existing enterprise LDAP directory.",
+      "benefit_1": "Reuse directory accounts to reduce duplicate user maintenance.",
+      "benefit_2": "Limit eligible users with search scopes and filters.",
+      "benefit_3": "Map user attributes to match your directory structure."
+    },
+    "wechat_work": {
+      "title": "WeCom sign-in",
+      "description": "Let teams sign in through WeCom using their existing corporate identity.",
+      "benefit_1": "Simplify sign-in with a familiar identity provider.",
+      "benefit_2": "Configure corporate and application details centrally.",
+      "benefit_3": "Assign users to departments for platform permission management."
+    },
+    "branding": {
+      "title": "Custom branding",
+      "description": "Give your operations portal a recognizable identity with your organization’s name and logo.",
+      "benefit_1": "Use a custom system name and logo.",
+      "benefit_2": "Configure registration and copyright information.",
+      "benefit_3": "Keep branding consistent across sign-in and administration screens."
+    },
+    "session_sharing": {
+      "title": "Session sharing",
+      "description": "Share the current session’s access link to help collaborators see the same context.",
+      "benefit_1": "Share the current session instead of describing every step.",
+      "benefit_2": "Use a link to join a shared session for troubleshooting.",
+      "benefit_3": "Cancel sharing when the task is complete."
+    },
+    "website_geo": {
+      "title": "Website location rules",
+      "description": "Limit public access by country, province or city to define where a website can be reached from.",
+      "benefit_1": "Configure country, province and city conditions.",
+      "benefit_2": "Combine location conditions with existing IP rules.",
+      "benefit_3": "Maintain regional access requirements centrally."
+    },
+    "response_rewrite": {
+      "title": "Website response modification",
+      "description": "Configure response rules at the proxy layer for websites that need adapted return content.",
+      "benefit_1": "Maintain response modification rules in one place.",
+      "benefit_2": "Process responses at the proxy to reduce source application changes.",
+      "benefit_3": "Apply separate rules for each website."
+    },
+    "geodata": {
+      "title": "IP geolocation data",
+      "description": "Maintain the IP location data used by regional access rules and source analysis.",
+      "benefit_1": "View the state of the geolocation dataset.",
+      "benefit_2": "Upload and update data to maintain its version.",
+      "benefit_3": "Schedule automatic updates to reduce manual work."
+    },
+    "recording_conversion": {
+      "title": "Recording conversion policies",
+      "description": "Schedule session recording conversion to balance availability with server processing load.",
+      "benefit_1": "Convert recordings immediately or during idle hours.",
+      "benefit_2": "Set a time window for conversion work.",
+      "benefit_3": "Choose whether to retain original recordings."
+    },
+    "access_request": {
+      "title": "Access requests",
+      "description": "Route temporary asset access needs through an application and approval process.",
+      "benefit_1": "Provide users with a single asset access request entry point.",
+      "benefit_2": "Handle access needs through approval instead of offline coordination.",
+      "benefit_3": "Connect requests with resource access management for easier tracking."
+    },
+    "sql_work_order": {
+      "title": "SQL Work Order Approval",
+      "description": "Review and approve database changes before the platform executes SQL.",
+      "benefit_1": "Review SQL and the target database before execution.",
+      "benefit_2": "Execute approved changes through the platform to reduce manual handoffs.",
+      "benefit_3": "Keep requester, approver and execution results together for traceability."
     }
   }
 }

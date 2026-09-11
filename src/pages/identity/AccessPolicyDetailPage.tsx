@@ -45,7 +45,7 @@ const AccessPolicyDetailPage = () => {
 
     return (
         <div className="px-4">
-            <Disabled disabled={!hasPremiumFeatures}>
+            <Disabled feature="access_policy" disabled={!hasPremiumFeatures}>
             <Tabs activeKey={activeKey} onChange={handleTagChange} items={items}>
 
             </Tabs>

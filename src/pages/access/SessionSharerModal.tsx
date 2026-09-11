@@ -79,7 +79,7 @@ const SessionSharerModal = ({ open, onClose, sessionId }: Props) => {
       onCancel={onClose}
       footer={false}
     >
-      <Disabled disabled={!license.hasPremiumFeatures()}>
+      <Disabled feature="session_sharing" compact disabled={!license.hasPremiumFeatures()}>
         {sharer.ok ? (
           <div>
             <div className="bg-black p-4 rounded">

@@ -46,7 +46,7 @@ class SshGatewayApi extends Api<SSHGateway> {
     }
 
     decrypt = async (id: string, securityToken: string) => {
-        return await requests.get(`/${this.group}/${id}/decrypted?securityToken=${securityToken}`) as SSHGateway;
+        return await requests.get(`/${this.group}/${id}/decrypted`, {securityToken}) as SSHGateway;
     }
 
     deleteById = async (id: string) => {

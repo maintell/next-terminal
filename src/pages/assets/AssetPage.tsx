@@ -10,6 +10,8 @@ import {useMobile} from "@/hook/use-mobile";
 import {cn} from "@/lib/utils";
 import AssetBatchEditDrawer from "@/pages/assets/AssetBatchEditDrawer";
 import AssetPostDrawer from "@/pages/assets/AssetPostDrawer";
+import AssetRotateModal from "@/pages/assets/AssetRotateModal";
+import RotationResultModal from "@/pages/assets/RotationResultModal";
 import AssetTree from "@/pages/assets/AssetTree";
 import AssetTreeChoose from "@/pages/assets/AssetTreeChoose";
 import MultiFactorAuthentication from '@/pages/account/MultiFactorAuthentication';
@@ -37,6 +39,7 @@ import i18n from "i18next";
 import {PanelLeftCloseIcon, PanelLeftOpenIcon, RefreshCw} from "lucide-react";
 import {useTranslation} from "react-i18next";
 import {useNavigate} from "react-router-dom";
+import type {RotationResult} from "@/api/credential-rotation-api";
 
 const api = assetsApi;
 
@@ -69,6 +72,8 @@ const AssetPage = () => {
     let [selectedStatus, setSelectedStatus] = useState<string>('');
     let [groupChooserOpen, setGroupChooserOpen] = useState(false);
     let [batchEditorOpen, setBatchEditorOpen] = useState(false);
+    let [rotateOpen, setRotateOpen] = useState(false);
+    let [rotationResults, setRotationResults] = useState<RotationResult[]>([]);
     const [rdpMfaOpen, setRdpMfaOpen] = useState(false);
     const [pendingRdpAssetId, setPendingRdpAssetId] = useState('');
     let [params, setParams] = useState<PostParams>({
@@ -452,7 +457,7 @@ const AssetPage = () => {
 
     const renderAssetActions = (record: Asset, compact = false) => {
         const id = record.id;
-        const isRdpAsset = record.protocol?.toLowerCase() === 'rdp';
+        const isRdpAsset = record.protocol?.toLowerCase() === 'rdp' && queryAccessPreferences.data?.rdpProxyEnabled === true;
         const isCreatingRdpProxyTicket = createRdpProxyTicketMutation.isPending && createRdpProxyTicketMutation.variables?.assetId === id;
         return (
             <div className={cn('flex items-center gap-2', compact && 'gap-1')}>
@@ -627,6 +632,13 @@ const AssetPage = () => {
                     }}
                 >
                     {t('assets.conn_test')}
+                </NButton>
+                <NButton
+                    onClick={() => {
+                        setRotateOpen(true);
+                    }}
+                >
+                    {t('assets.rotation.rotate')}
                 </NButton>
                 <NButton
                     danger={true}
@@ -834,6 +846,22 @@ const AssetPage = () => {
                 setRdpMfaOpen(false);
                 setPendingRdpAssetId('');
             }}
+        />
+
+        <AssetRotateModal
+            open={rotateOpen}
+            handleCancel={() => setRotateOpen(false)}
+            assetIds={selectedRowKeys}
+            onSuccess={(results) => {
+                setRotationResults(results);
+                setSelectedRowKeys([]);
+            }}
+        />
+
+        <RotationResultModal
+            open={rotationResults.length > 0}
+            handleCancel={() => setRotationResults([])}
+            results={rotationResults}
         />
     </div>);
 }

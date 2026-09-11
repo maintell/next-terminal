@@ -1,6 +1,6 @@
 import '@/App.css';
 import {lazy, useEffect} from "react";
-import {createBrowserRouter, RouterProvider} from "react-router-dom";
+import {createBrowserRouter, Outlet, RouterProvider} from "react-router-dom";
 import '@/react-i18next/i18n'
 import ManagerLayout from '@/layout/ManagerLayout';
 import AccessPage from "@/pages/access/AccessPage";
@@ -8,6 +8,7 @@ import eventEmitter from "@/api/core/event-emitter";
 import {baseUrl} from "@/api/core/requests";
 import {useTranslation} from "react-i18next";
 import {App as AntdApp} from "antd";
+import {LicenseProvider} from "@/hook/LicenseContext";
 
 import TerminalPage from "@/pages/access/TerminalPage";
 import GuacamolePage from "@/pages/access/GuacamolePage";
@@ -40,6 +41,7 @@ const OidcClientPage = lazy(() => import("@/pages/identity/OidcClientPage"));
 const AssetsPage = lazy(() => import("@/pages/assets/AssetPage"));
 const DatabaseAssetPage = lazy(() => import("@/pages/assets/DatabaseAssetPage"));
 const CredentialPage = lazy(() => import("@/pages/assets/CredentialPage"));
+const CredentialRotationPage = lazy(() => import("@/pages/assets/CredentialRotationPage"));
 const CertificatePage = lazy(() => import("@/pages/assets/CertificatePage"));
 const SnippetPage = lazy(() => import("@/pages/assets/SnippetPage"));
 const StrategyPage = lazy(() => import("@/pages/authorised/StrategyPage"));
@@ -70,7 +72,7 @@ const NetworkProxyPage = lazy(() => import("@/pages/gateway/NetworkProxyPage"));
 const ErrorPage = lazy(() => import("@/components/ErrorPage"));
 const StoragePage = lazy(() => import("@/pages/assets/StoragePage"));
 const WebsitePage = lazy(() => import("@/pages/assets/WebsitePage"));
-const IPWhitelistPage = lazy(() => import("@/pages/assets/IPWhitelistPage"));
+const IPSetPage = lazy(() => import("@/pages/networkpolicy/IPSetPage"));
 const BrowserPage = lazy(() => import("@/pages/access/BrowserPage"));
 const FacadePage = lazy(() => import("@/pages/facade/AssetFacadePage.tsx"));
 const WebsiteFacadePage = lazy(() => import("@/pages/facade/WebsiteFacadePage"));
@@ -90,7 +92,7 @@ const AccessRequestUserPage = lazy(() => import("@/pages/facade/AccessRequestUse
 const GlobalAIPage = lazy(() => import("@/pages/ai/GlobalAIPage"));
 const AccessDeniedPage = lazy(() => import("@/pages/identity/AccessDeniedPage"));
 
-const router = createBrowserRouter([
+const routes = [
     {path: "/setup", element: <SetupPage/>},
     {path: "/access", element: <AccessPage/>},
     {path: "/login", element: <LoginPage/>},
@@ -145,10 +147,11 @@ const router = createBrowserRouter([
             {path: "/asset", element: <AssetsPage/>},
             {path: "/database-asset", element: <DatabaseAssetPage/>},
             {path: "/credential", element: <CredentialPage/>},
+            {path: "/credential-rotation", element: <CredentialRotationPage/>},
             {path: "/snippet", element: <SnippetPage/>},
             {path: "/storage", element: <StoragePage/>},
             {path: "/website", element: <WebsitePage/>},
-            {path: "/ip-whitelist", element: <IPWhitelistPage/>},
+            {path: "/ip-set", element: <IPSetPage/>},
             {path: "/certificate", element: <CertificatePage/>},
             {path: "/db-work-order", element: <DatabaseWorkOrderPage/>},
             {path: "/access-request", element: <AccessRequestPage/>},
@@ -185,6 +188,17 @@ const router = createBrowserRouter([
             {path: "/info", element: <InfoPage/>},
         ],
     }
+];
+
+const router = createBrowserRouter([
+    {
+        element: (
+            <LicenseProvider>
+                <Outlet/>
+            </LicenseProvider>
+        ),
+        children: routes,
+    },
 ]);
 
 
