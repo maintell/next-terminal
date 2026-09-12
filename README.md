@@ -5,6 +5,7 @@
 [![Website](https://img.shields.io/badge/Website-next--terminal.com-1063ff)](https://www.next-terminal.com)
 [![Docs](https://img.shields.io/badge/Docs-www.next--terminal.com-0ea5e9)](https://www.next-terminal.com/docs/)
 [![Demo](https://img.shields.io/badge/Demo-demo.next--terminal.com-10b981)](https://demo.next-terminal.com)
+[![Telegram](https://img.shields.io/badge/Telegram-@next__terminal-26A5E4?logo=telegram&logoColor=white)](https://t.me/next_terminal)
 
 English | [简体中文](./README-en.md)
 
@@ -46,7 +47,9 @@ If you discover any security vulnerabilities, please contact the maintainer:
 - **Docs**: https://www.next-terminal.com/docs/
 - **Support email (official)**: [support@next-terminal.com](mailto:support@next-terminal.com) — after-sales within 1 year of purchase, workdays 10:00–18:00; replies on the next workday outside these hours
 - **Issues / Bugs / Feature requests**: [GitHub Issues](https://github.com/next-terminal/next-terminal/issues) (public and searchable — your question helps others with the same issue)
-- **Community**: Telegram https://t.me/next_terminal · WeChat group — see https://www.next-terminal.com
+- **Community**: [Telegram](https://t.me/next_terminal) · WeChat group — scan below (the QR code is refreshed periodically; if it has expired, see https://www.next-terminal.com):
+
+  <img src="images/wechat-group.jpg" alt="Next Terminal WeChat group QR code" width="180">
 
 ### Sponsors
 
