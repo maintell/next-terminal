@@ -2674,6 +2674,7 @@
     }
   },
   "ai_assistant": {
+    "scroll_to_bottom": "滾動到底部",
     "title": "AI 助手",
     "model": "對話模型",
     "model_unavailable": "暫無模型",

@@ -30,8 +30,8 @@ import AccessGuacamole from '@/pages/access/AccessGuacamole';
 import {
     ACCESS_CONTENT_PANEL_ID,
     ACCESS_SIDEBAR_COLLAPSED_SIZE,
-    ACCESS_SIDEBAR_DEFAULT_SIZE,
-    ACCESS_SIDEBAR_MAX_SIZE,
+    ACCESS_SIDEBAR_DEFAULT_WIDTH,
+    ACCESS_SIDEBAR_MAX_WIDTH,
     ACCESS_SIDEBAR_PANEL_ID,
 } from '@/pages/access/constants';
 
@@ -79,17 +79,17 @@ const AccessPage = () => {
     const leftRef = useRef<ImperativePanelHandle>(null);
     const processedAssetParamRef = useRef('');
     const initialCollapsed = LocalStorage.get(STORAGE_KEYS.COLLAPSED_STATE, false) ?? false;
-    const savedPanelSizes = LocalStorage.get(STORAGE_KEYS.PANEL_SIZES, {
-        left: ACCESS_SIDEBAR_DEFAULT_SIZE,
-        right: 100 - ACCESS_SIDEBAR_DEFAULT_SIZE,
+    // 记录的侧栏宽度（像素）；旧版本存的是百分比数值（15~20），会被下面的钳制收敛到默认宽度
+    const savedPanelWidth = LocalStorage.get(STORAGE_KEYS.PANEL_SIZES, {
+        left: ACCESS_SIDEBAR_DEFAULT_WIDTH,
     });
-    const initialExpandedLeftPanelSize = Math.min(
-        ACCESS_SIDEBAR_MAX_SIZE,
-        Math.max(ACCESS_SIDEBAR_DEFAULT_SIZE, savedPanelSizes?.left || ACCESS_SIDEBAR_DEFAULT_SIZE)
+    const initialExpandedLeftWidth = Math.min(
+        ACCESS_SIDEBAR_MAX_WIDTH,
+        Math.max(ACCESS_SIDEBAR_DEFAULT_WIDTH, savedPanelWidth?.left || ACCESS_SIDEBAR_DEFAULT_WIDTH)
     );
-    const lastExpandedPanelSizeRef = useRef(initialExpandedLeftPanelSize);
-    const initialLeftPanelSizeRef = useRef(
-        initialCollapsed ? ACCESS_SIDEBAR_COLLAPSED_SIZE : initialExpandedLeftPanelSize
+    const lastExpandedWidthRef = useRef(initialExpandedLeftWidth);
+    const initialLeftWidthRef = useRef(
+        initialCollapsed ? ACCESS_SIDEBAR_COLLAPSED_SIZE : initialExpandedLeftWidth
     );
 
     // 标签页操作
@@ -120,11 +120,15 @@ const AccessPage = () => {
             return;
         }
 
+        // layout 中记录的是 flexGrow 比例值，仅用于判断折叠状态；
+        // 侧栏宽度以像素为准，通过面板的 imperative API 获取
         const collapsed = leftSize <= ACCESS_SIDEBAR_COLLAPSED_SIZE;
         if (!collapsed) {
-            lastExpandedPanelSizeRef.current = leftSize;
-            const panelSizes = {left: leftSize, right: rightSize};
-            LocalStorage.set(STORAGE_KEYS.PANEL_SIZES, panelSizes);
+            const leftWidth = leftRef.current?.getSize().inPixels;
+            if (leftWidth) {
+                lastExpandedWidthRef.current = leftWidth;
+                LocalStorage.set(STORAGE_KEYS.PANEL_SIZES, {left: Math.round(leftWidth)});
+            }
         }
 
         if (collapsed !== isCollapsed) {
@@ -267,7 +271,8 @@ const AccessPage = () => {
 
     const handleSidebarToggle = () => {
         if (isCollapsed) {
-            leftRef.current?.resize(`${lastExpandedPanelSizeRef.current}%`);
+            // resize 的数字参数按像素解释
+            leftRef.current?.resize(lastExpandedWidthRef.current);
             return;
         }
         leftRef.current?.collapse();
@@ -336,7 +341,7 @@ const AccessPage = () => {
                                 >
                                     <AccessSidebar
                                         isCollapsed={isCollapsed}
-                                        leftPanelSize={initialLeftPanelSizeRef.current}
+                                        leftWidth={initialLeftWidthRef.current}
                                         leftRef={leftRef}
                                         onNodeDoubleClick={handleNodeDoubleClick}
                                     />
@@ -346,7 +351,6 @@ const AccessPage = () => {
                                     <AccessTabContainer
                                         items={items}
                                         activeKey={activeKey}
-                                        leftPanelSize={initialLeftPanelSizeRef.current}
                                         onChange={setActiveKey}
                                         onRemove={removeTab}
                                         onDragEnd={onDragEnd}

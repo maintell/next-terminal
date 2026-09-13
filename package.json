@@ -48,10 +48,13 @@
     "react-countup": "^6.5.3",
     "react-dom": "^19.2.8",
     "react-i18next": "^17.0.12",
+    "react-markdown": "^10.1.0",
     "react-resizable-panels": "^4.12.3",
     "react-router-dom": "^7.18.2",
     "react-spinners": "^0.17.0",
+    "react-virtuoso": "^4.18.13",
     "recharts": "3.10.1",
+    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.6.0",
     "tailwindcss-animate": "^1.0.7",
     "watermark-js-plus": "^1.6.6"

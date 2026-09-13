@@ -2566,6 +2566,7 @@
     }
   },
   "ai_assistant": {
+    "scroll_to_bottom": "滚动到底部",
     "title": "AI 助手",
     "model": "对话模型",
     "model_unavailable": "暂无模型",

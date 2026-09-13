@@ -71,6 +71,7 @@ const RolePage = () => {
             dataIndex: 'type',
             valueType: 'radio',
             sorter: true,
+            hideInSearch: true,
             valueEnum: {
                 'default': {text: t('identity.role.types.default')},
                 'new': {text: t('identity.role.types.new')},
@@ -131,7 +132,6 @@ const RolePage = () => {
                         sortOrder: sortOrder,
                         sortField: sortField,
                         name: params.name,
-                        type: params.type,
                     }
                     let result = await api.getPaging(queryParams);
                     return {

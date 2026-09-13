@@ -10,17 +10,15 @@ import portalApi, {TreeDataNodeWithExtra} from '@/api/portal-api';
 import AssetTree from '@/pages/access/components/AssetTree';
 import {LocalStorage, STORAGE_KEYS} from '@/utils/storage';
 import {
-    ACCESS_SIDEBAR_COLLAPSED_MIN_WIDTH,
     ACCESS_SIDEBAR_COLLAPSED_SIZE,
-    ACCESS_SIDEBAR_DEFAULT_SIZE,
-    ACCESS_SIDEBAR_EXPANDED_MIN_WIDTH,
-    ACCESS_SIDEBAR_MAX_SIZE,
+    ACCESS_SIDEBAR_DEFAULT_WIDTH,
+    ACCESS_SIDEBAR_MAX_WIDTH,
     ACCESS_SIDEBAR_PANEL_ID,
 } from '@/pages/access/constants';
 
 interface AccessSidebarProps {
     isCollapsed: boolean;
-    leftPanelSize: number;
+    leftWidth: number;
     leftRef: React.RefObject<ImperativePanelHandle | null>;
     onNodeDoubleClick: (node: TreeDataNodeWithExtra) => void;
 }
@@ -32,7 +30,7 @@ interface AccessSidebarProps {
  */
 const AccessSidebar = ({
                                       isCollapsed,
-                                      leftPanelSize,
+                                      leftWidth,
                                       leftRef,
                                       onNodeDoubleClick,
                                   }: AccessSidebarProps) => {
@@ -81,17 +79,16 @@ const AccessSidebar = ({
     return (
         <ResizablePanel
             id={ACCESS_SIDEBAR_PANEL_ID}
-            defaultSize={leftPanelSize}
-            minSize={ACCESS_SIDEBAR_DEFAULT_SIZE}
-            maxSize={ACCESS_SIDEBAR_MAX_SIZE}
+            defaultSize={`${leftWidth}px`}
+            minSize={`${ACCESS_SIDEBAR_DEFAULT_WIDTH}px`}
+            maxSize={`${ACCESS_SIDEBAR_MAX_WIDTH}px`}
+            // 窗口大小变化时保持像素宽度不变，而不是按比例跟随缩放
+            groupResizeBehavior="preserve-pixel-size"
             collapsible={true}
             collapsedSize={ACCESS_SIDEBAR_COLLAPSED_SIZE}
             className={cn(
                 "flex h-full flex-col overflow-hidden bg-[#141414]",
             )}
-            style={{
-                minWidth: isCollapsed ? ACCESS_SIDEBAR_COLLAPSED_MIN_WIDTH : ACCESS_SIDEBAR_EXPANDED_MIN_WIDTH,
-            }}
             ref={leftRef}
         >
             {!isCollapsed && (

@@ -2674,6 +2674,7 @@
     }
   },
   "ai_assistant": {
+    "scroll_to_bottom": "最下部へスクロール",
     "title": "AI アシスタント",
     "model": "会話モデル",
     "model_unavailable": "利用可能なモデルなし",

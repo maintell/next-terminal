@@ -2566,6 +2566,7 @@
     }
   },
   "ai_assistant": {
+    "scroll_to_bottom": "Scroll to bottom",
     "title": "AI Assistant",
     "model": "Conversation model",
     "model_unavailable": "No model available",

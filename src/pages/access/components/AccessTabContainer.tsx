@@ -48,7 +48,6 @@ interface TabItem {
 interface AccessTabContainerProps {
     items: TabItem[];
     activeKey: string;
-    leftPanelSize: number;
     onChange: (key: string) => void;
     onRemove: (key: string) => void;
     onDragEnd: (event: DragEndEvent) => void;
@@ -69,7 +68,6 @@ interface AccessTabContainerProps {
 const AccessTabContainer = ({
                                            items,
                                            activeKey,
-                                           leftPanelSize,
                                            onChange,
                                            onRemove,
                                            onDragEnd,
@@ -86,7 +84,6 @@ const AccessTabContainer = ({
     return (
         <ResizablePanel
             id={ACCESS_CONTENT_PANEL_ID}
-            defaultSize={100 - leftPanelSize}
             className={'h-full min-h-0 overflow-hidden bg-[#1E1E1E] access-container'}
         >
             <Tabs

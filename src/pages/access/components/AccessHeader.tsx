@@ -4,7 +4,6 @@ import brandingApi from '@/api/branding-api';
 import {useTranslation} from 'react-i18next';
 import {useQuery} from '@tanstack/react-query';
 import {Separator} from '@/components/ui/separator';
-import {ACCESS_SIDEBAR_DEFAULT_SIZE} from '@/pages/access/constants';
 
 interface AccessHeaderProps {
     isSidebarCollapsed: boolean;
@@ -37,13 +36,10 @@ const AccessHeader = ({
 
     return (
         <div className={'flex h-10 shrink-0 items-center bg-[#313131] text-white'}>
-            <div
-                className={'flex h-full shrink-0 items-center gap-2 px-2'}
-                style={{width: `${ACCESS_SIDEBAR_DEFAULT_SIZE}%`}}
-            >
-                <a className={'flex min-w-0 flex-1 items-center gap-2 cursor-pointer'} href={'/'} target={'_blank'}>
+            <div className={'flex h-full shrink-0 items-center gap-2 px-2'}>
+                <a className={'flex min-w-0 items-center gap-2 cursor-pointer'} href={'/'} target={'_blank'}>
                     <img src={brandingApi.getLogo()} alt='logo' className={'h-6 w-6 rounded'}/>
-                    <div className={'truncate font-bold text-white'}>
+                    <div className={'max-w-56 truncate font-bold text-white'}>
                         {brandingQuery.data?.name}
                     </div>
                 </a>
@@ -64,26 +60,24 @@ const AccessHeader = ({
 
             <Separator orientation="vertical" className={'!h-5 bg-white/10'}/>
 
-            <div className={'flex min-w-0 flex-1 items-center px-3'}>
-                <div className={'flex items-center gap-1'}>
-                    <Tooltip title={t('access.settings.theme')} placement={'bottom'}>
-                        <button type="button" className={iconButtonClassName} onClick={onThemeClick}>
-                            <Palette className={'h-4 w-4'}/>
-                        </button>
-                    </Tooltip>
+            <div className={'flex shrink-0 items-center gap-1 px-3'}>
+                <Tooltip title={t('access.settings.theme')} placement={'bottom'}>
+                    <button type="button" className={iconButtonClassName} onClick={onThemeClick}>
+                        <Palette className={'h-4 w-4'}/>
+                    </button>
+                </Tooltip>
 
-                    <Tooltip title={t('menus.setting.label')} placement={'bottom'}>
-                        <button type="button" className={iconButtonClassName} onClick={onSettingClick}>
-                            <Settings className={'h-4 w-4'}/>
-                        </button>
-                    </Tooltip>
+                <Tooltip title={t('menus.setting.label')} placement={'bottom'}>
+                    <button type="button" className={iconButtonClassName} onClick={onSettingClick}>
+                        <Settings className={'h-4 w-4'}/>
+                    </button>
+                </Tooltip>
 
-                    <Tooltip title={t('access.batch.exec')} placement={'bottom'}>
-                        <button type="button" className={iconButtonClassName} onClick={onBatchSSHClick}>
-                            <TerminalIcon className={'h-4 w-4'}/>
-                        </button>
-                    </Tooltip>
-                </div>
+                <Tooltip title={t('access.batch.exec')} placement={'bottom'}>
+                    <button type="button" className={iconButtonClassName} onClick={onBatchSSHClick}>
+                        <TerminalIcon className={'h-4 w-4'}/>
+                    </button>
+                </Tooltip>
             </div>
         </div>
     );

@@ -1,4 +1,4 @@
-import {type CSSProperties, useEffect, useRef, useState} from 'react';
+import {type CSSProperties, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {
     App,
     Button,
@@ -17,6 +17,8 @@ import {
 import type {DrawerProps} from 'antd';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import copy from 'copy-to-clipboard';
+import {Virtuoso, type VirtuosoHandle} from 'react-virtuoso';
+import './AIAssistant.css';
 import {
     AlertTriangleIcon,
     ArrowUpIcon,
@@ -48,6 +50,7 @@ import aiApi, {
     type AIToolExecution,
 } from '@/api/ai-api';
 import {MarkdownRenderer} from '@/components/MarkdownRenderer';
+import {ScrollArea} from '@/components/ui/scroll-area';
 import {MOBILE_TOOL_DRAWER_STYLES} from '@/pages/access/terminal-tool-drawer';
 
 type ConnectionState = 'connecting' | 'open' | 'closed' | 'error';
@@ -112,7 +115,7 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
     const {message} = App.useApp();
     const queryClient = useQueryClient();
     const wsRef = useRef<WebSocket | null>(null);
-    const scrollRef = useRef<HTMLDivElement>(null);
+    const [scrollRequest, setScrollRequest] = useState(0);
     const [connection, setConnection] = useState<ConnectionState>('closed');
     const [conversationId, setConversationId] = useState('');
     const [input, setInput] = useState('');
@@ -146,6 +149,7 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
             setConversationId(conversation.id);
             setActiveModel(conversation.agentModel?.trim() || modelOptionsQuery.data?.model?.trim() || '');
             setItems(itemsFromHistory(conversation.messages || []));
+            setScrollRequest(value => value + 1);
             setUsage(usageFromConversation(conversation));
             setBusy(false);
             setEditingMessageId('');
@@ -207,11 +211,6 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
         };
     }, [open]);
 
-    useEffect(() => {
-        const element = scrollRef.current;
-        if (element) element.scrollTop = element.scrollHeight;
-    }, [items]);
-
     const sendMessage = (payload: AIInboundMessage) => {
         const ws = wsRef.current;
         if (!ws || ws.readyState !== WebSocket.OPEN) return false;
@@ -242,6 +241,7 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
             setConversationId(event.conversation.id);
             setActiveModel(current => event.conversation?.agentModel?.trim() || current);
             setItems(itemsFromHistory(event.conversation.messages || []));
+            setScrollRequest(value => value + 1);
             setUsage(usageFromConversation(event.conversation));
             setBusy(false);
             return;
@@ -250,6 +250,7 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
             setConversationId(event.conversation.id);
             setActiveModel(current => event.conversation?.agentModel?.trim() || current);
             setItems(itemsFromHistory(event.conversation.messages || []));
+            setScrollRequest(value => value + 1);
             setUsage(null);
             setBusy(true);
             setEditingMessageId('');
@@ -335,6 +336,7 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
             hostMentions: currentHostMentions(),
         });
         if (!sent) return;
+        setScrollRequest(value => value + 1);
         setItems(current => [...current, {id: clientMessageId, kind: 'user', text, status: 'queued', clientMessageId}]);
         setInput('');
         setBusy(true);
@@ -536,27 +538,25 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
     );
 
     const content = (
-        <div tabIndex={-1} className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden outline-none">
+        <div tabIndex={-1} className="ai-assistant flex h-full min-h-0 min-w-0 flex-col overflow-hidden outline-none">
             {!drawer ? (
                 <div className="shrink-0 border-b px-2.5 py-2 text-xs">
                     <div className="flex min-w-0 items-center justify-between gap-2">{assistantTitle}{assistantActions}</div>
                 </div>
             ) : null}
-            <div ref={scrollRef} className="h-0 min-h-0 flex-1 space-y-2 overflow-x-hidden overflow-y-auto overscroll-contain px-3 py-3 text-sm">
-                {items.length === 0 ? <div className="pt-10 text-center text-gray-400">{t('ai_assistant.empty')}</div> : (
-                    <MessageList
-                        items={items}
-                        onCopy={text => {
-                            if (copy(text)) message.success(t('common.copy_success'));
-                        }}
-                        onSendNow={item => sendMessage({type: 'send_now', clientMessageId: item.clientMessageId || item.id})}
-                        onRetry={retryUserMessage}
-                        onEdit={editUserMessage}
-                        actionsDisabled={busy}
-                    />
-                )}
-                {busy ? <LoadingBubble items={items}/> : null}
-            </div>
+            <MessageList
+                key={conversationId || 'new'}
+                items={items}
+                busy={busy}
+                scrollRequest={scrollRequest}
+                onCopy={text => {
+                    if (copy(text)) message.success(t('common.copy_success'));
+                }}
+                onSendNow={item => sendMessage({type: 'send_now', clientMessageId: item.clientMessageId || item.id})}
+                onRetry={retryUserMessage}
+                onEdit={editUserMessage}
+                actionsDisabled={busy}
+            />
 
             {pendingTool ? (
                 <div className="shrink-0 border-t bg-amber-50 px-3 py-2 dark:bg-amber-950/20">
@@ -670,46 +670,117 @@ const AIAssistant = ({open = true, drawer = false, drawerPlacement = 'right', dr
 
 const stopStreaming = (items: ChatItem[]) => items.map(item => item.kind === 'assistant' && item.streaming ? {...item, streaming: false} : item);
 
-const MessageList = ({items, actionsDisabled, onCopy, onSendNow, onRetry, onEdit}: {
-    items: ChatItem[];
+interface MessageActions {
     actionsDisabled: boolean;
     onCopy: (text: string) => void;
     onSendNow: (item: Extract<ChatItem, {kind: 'user'}>) => void;
     onRetry: (item: Extract<ChatItem, {kind: 'user'}>) => void;
     onEdit: (item: Extract<ChatItem, {kind: 'user'}>) => void;
+}
+
+interface MessageListContext extends MessageActions {
+    items: ChatItem[];
+    busy: boolean;
+    expanded: Map<string, boolean>;
+}
+
+const messageListComponents = {
+    Footer: ({context}: {context?: MessageListContext}) => <div className="px-3 pb-3">{context?.busy ? <LoadingBubble items={context.items}/> : null}</div>,
+};
+
+const MessageList = ({items, busy, scrollRequest, ...actions}: MessageActions & {items: ChatItem[]; busy: boolean; scrollRequest: number}) => {
+    const {t} = useTranslation();
+    const virtuosoRef = useRef<VirtuosoHandle>(null);
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const [atBottom, setAtBottom] = useState(true);
+    // ScrollArea(radix) 中真正滚动的元素是内部的 viewport，把它交给 Virtuoso 作为
+    // customScrollParent：滚动条由 ScrollArea 自绘，虚拟化仍由 Virtuoso 负责
+    const [scrollParent, setScrollParent] = useState<HTMLElement | null>(null);
+    // 虚拟行离开视口后会卸载，将展开状态保留在列表中。
+    const [expanded] = useState(() => new Map<string, boolean>());
+    useLayoutEffect(() => {
+        const viewport = scrollAreaRef.current?.querySelector<HTMLElement>('[data-radix-scroll-area-viewport]');
+        setScrollParent(viewport ?? null);
+    }, []);
+    useEffect(() => {
+        virtuosoRef.current?.scrollToIndex({index: 'LAST', align: 'end'});
+    }, [scrollRequest]);
+    useEffect(() => {
+        const ids = new Set(items.map(item => item.id));
+        for (const id of expanded.keys()) if (!ids.has(id)) expanded.delete(id);
+    }, [items, expanded]);
+    const context: MessageListContext = {...actions, items, busy, expanded};
+    return <div className="relative h-0 min-h-0 flex-1 overflow-hidden pt-3 text-sm">
+        {items.length === 0 ? <div className="px-3 pt-10 text-center text-gray-400">{t('ai_assistant.empty')}{busy ? <LoadingBubble items={items}/> : null}</div> : (
+            <ScrollArea ref={scrollAreaRef} className="h-full">
+                <Virtuoso
+                    ref={virtuosoRef}
+                    className="overflow-x-hidden"
+                    customScrollParent={scrollParent}
+                    data={items}
+                    context={context}
+                    computeItemKey={(_index, item) => item.kind === 'user' ? item.clientMessageId || item.id : item.id}
+                    itemContent={(_index, item, context) => <div className="px-3 pb-2"><MessageItem item={item} {...context}/></div>}
+                    components={messageListComponents}
+                    initialTopMostItemIndex={{index: items.length - 1, align: 'end'}}
+                    increaseViewportBy={{top: 400, bottom: 200}}
+                    followOutput="auto"
+                    atBottomThreshold={4}
+                    atBottomStateChange={setAtBottom}
+                />
+            </ScrollArea>
+        )}
+        {!atBottom && items.length > 0 ? <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2"><Button shape="circle" aria-label={t('ai_assistant.scroll_to_bottom')} title={t('ai_assistant.scroll_to_bottom')} icon={<ChevronDownIcon className="h-4 w-4"/>} onClick={() => virtuosoRef.current?.scrollToIndex({index: 'LAST', align: 'end'})}/></div> : null}
+    </div>;
+};
+
+const useMessageExpanded = (states: Map<string, boolean>, id: string, initial: boolean) => {
+    const [expanded, setExpanded] = useState(() => states.get(id) ?? initial);
+    useEffect(() => {
+        states.set(id, expanded);
+    }, [states, id, expanded]);
+    const toggle = () => {
+        states.set(id, !expanded);
+        setExpanded(!expanded);
+    };
+    return [expanded, toggle] as const;
+};
+
+const MessageItem = ({item, expanded, actionsDisabled, onCopy, onSendNow, onRetry, onEdit}: MessageActions & {
+    item: ChatItem;
+    expanded: Map<string, boolean>;
 }) => {
     const {t} = useTranslation();
-    return <>{items.map(item => {
-        if (item.kind === 'tool') return <ToolItem key={item.id} execution={item.execution} onCopy={onCopy}/>;
-        if (item.kind === 'retry') return <div key={item.id} className="rounded bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">{t('ai_assistant.retrying', {attempt: item.attempt, max: item.maxRetries, seconds: Math.ceil(item.delayMs / 1000), reason: item.reason})}</div>;
-        if (item.kind === 'error') return <div key={item.id} className="rounded bg-red-50 px-3 py-2 text-xs text-red-600 dark:bg-red-950/30 dark:text-red-400">{item.text}</div>;
-        if (item.kind === 'user') return (
-            <div key={item.id} className="flex min-w-0 justify-end">
-                <div className={`group/message relative min-w-0 max-w-[80%] whitespace-pre-wrap break-words rounded-lg px-3 py-2 pr-8 ${item.status ? 'border border-dashed border-blue-500/40 bg-blue-500/10' : 'bg-blue-500 text-white'}`}>
-                    <CopyButton onClick={() => onCopy(item.text)}/>
-                    {!item.status && item.persisted ? (
-                        <Tooltip title={t('actions.edit')}><button type="button" aria-label={t('actions.edit')} disabled={actionsDisabled} className="absolute right-7 top-1 z-10 flex h-6 w-6 items-center justify-center rounded text-current opacity-0 transition-opacity hover:bg-black/10 focus-visible:opacity-100 disabled:cursor-not-allowed group-hover/message:opacity-70" onClick={() => onEdit(item)}><PencilIcon className="h-3.5 w-3.5"/></button></Tooltip>
-                    ) : null}
-                    {item.text}
-                    {item.status ? (
-                        <div className="mt-1 flex items-center justify-between gap-2 text-[10px] font-medium text-gray-500">
-                            <span>{t(item.status === 'failed' ? 'ai_assistant.failed' : 'ai_assistant.queued')}</span>
-                            {item.status === 'queued' ? <button type="button" className="underline" onClick={() => onSendNow(item)}>{t('ai_assistant.send_now')}</button> : null}
-                            {item.status === 'failed' ? <button type="button" disabled={actionsDisabled} className="underline disabled:cursor-not-allowed disabled:opacity-50" onClick={() => onRetry(item)}>{t('actions.retry')}</button> : null}
-                        </div>
-                    ) : null}
-                </div>
+
+    if (item.kind === 'tool') return <ToolItem key={item.id} execution={item.execution} onCopy={onCopy} expandedStates={expanded} itemId={item.id}/>;
+    if (item.kind === 'retry') return <div key={item.id} className="rounded bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">{t('ai_assistant.retrying', {attempt: item.attempt, max: item.maxRetries, seconds: Math.ceil(item.delayMs / 1000), reason: item.reason})}</div>;
+    if (item.kind === 'error') return <div key={item.id} className="rounded bg-red-50 px-3 py-2 text-xs text-red-600 dark:bg-red-950/30 dark:text-red-400">{item.text}</div>;
+    if (item.kind === 'user') return (
+        <div key={item.id} className="flex min-w-0 justify-end">
+            <div className={`group/message relative min-w-0 max-w-[80%] whitespace-pre-wrap break-words rounded-lg px-3 py-2 pr-8 ${item.status ? 'border border-dashed border-blue-500/40 bg-blue-500/10' : 'bg-blue-500 text-white'}`}>
+                <CopyButton onClick={() => onCopy(item.text)}/>
+                {!item.status && item.persisted ? (
+                    <Tooltip title={t('actions.edit')}><button type="button" aria-label={t('actions.edit')} disabled={actionsDisabled} className="absolute right-7 top-1 z-10 flex h-6 w-6 items-center justify-center rounded text-current opacity-0 transition-opacity hover:bg-black/10 focus-visible:opacity-100 disabled:cursor-not-allowed group-hover/message:opacity-70" onClick={() => onEdit(item)}><PencilIcon className="h-3.5 w-3.5"/></button></Tooltip>
+                ) : null}
+                {item.text}
+                {item.status ? (
+                    <div className="mt-1 flex items-center justify-between gap-2 text-[10px] font-medium text-gray-500">
+                        <span>{t(item.status === 'failed' ? 'ai_assistant.failed' : 'ai_assistant.queued')}</span>
+                        {item.status === 'queued' ? <button type="button" className="underline" onClick={() => onSendNow(item)}>{t('ai_assistant.send_now')}</button> : null}
+                        {item.status === 'failed' ? <button type="button" disabled={actionsDisabled} className="underline disabled:cursor-not-allowed disabled:opacity-50" onClick={() => onRetry(item)}>{t('actions.retry')}</button> : null}
+                    </div>
+                ) : null}
             </div>
-        );
-        return (
-            <div key={item.id} className="group/message relative w-full max-w-full min-w-0 overflow-hidden break-words rounded-lg bg-[var(--ai-assistant-bubble-background)] px-3 py-2 pr-8 ring-1 ring-inset ring-[var(--ai-assistant-bubble-border)]">
-                <CopyButton onClick={() => onCopy(item.text || item.reasoning)}/>
-                {item.reasoning ? <ReasoningContent text={item.reasoning} streaming={item.streaming} onCopy={onCopy}/> : null}
-                {item.text ? <MarkdownRenderer text={item.text}/> : null}
-                {item.streaming ? <span className="ml-1 inline-block h-3.5 w-1.5 animate-pulse bg-current align-middle opacity-60"/> : null}
-            </div>
-        );
-    })}</>;
+        </div>
+    );
+    return (
+        <div key={item.id} className="group/message relative w-full max-w-full min-w-0 overflow-hidden break-words rounded-lg bg-[var(--ai-assistant-bubble-background)] px-3 py-2 pr-8 ring-1 ring-inset ring-[var(--ai-assistant-bubble-border)]">
+            <CopyButton onClick={() => onCopy(item.text || item.reasoning)}/>
+            {item.reasoning ? <ReasoningContent expandedStates={expanded} itemId={item.id} text={item.reasoning} streaming={item.streaming} onCopy={onCopy}/> : null}
+            {item.text ? <MarkdownRenderer text={item.text}/> : null}
+            {item.streaming ? <span className="ml-1 inline-block h-3.5 w-1.5 animate-pulse bg-current align-middle opacity-60"/> : null}
+        </div>
+    );
 };
 
 const CopyButton = ({onClick}: {onClick: () => void}) => {
@@ -717,18 +788,18 @@ const CopyButton = ({onClick}: {onClick: () => void}) => {
     return <Tooltip title={t('actions.copy')}><button type="button" aria-label={t('actions.copy')} className="absolute right-1 top-1 z-10 flex h-6 w-6 items-center justify-center rounded text-current opacity-0 transition-opacity hover:bg-black/10 focus-visible:opacity-100 group-hover/message:opacity-70 dark:hover:bg-white/10" onClick={onClick}><CopyIcon className="h-3.5 w-3.5"/></button></Tooltip>;
 };
 
-const ToolItem = ({execution, onCopy}: {execution: AIToolExecution; onCopy: (text: string) => void}) => {
+const ToolItem = ({execution, onCopy, expandedStates, itemId}: {execution: AIToolExecution; onCopy: (text: string) => void; expandedStates: Map<string, boolean>; itemId: string}) => {
     const {t} = useTranslation();
     const failed = ['failed', 'rejected', 'cancelled', 'timed_out', 'needs_revision'].includes(execution.state);
     const active = ['reviewing', 'running'].includes(execution.state);
-    const [expanded, setExpanded] = useState(failed || execution.state === 'awaiting_approval');
+    const [expanded, toggleExpanded] = useMessageExpanded(expandedStates, itemId, failed || execution.state === 'awaiting_approval');
     const label = formatToolExecution(execution);
     const result = execution.result;
     const icon = active ? <LoaderCircleIcon className="h-4 w-4 animate-spin"/> : failed ? <XCircleIcon className="h-4 w-4"/> : execution.state === 'succeeded' ? <CheckCircle2Icon className="h-4 w-4"/> : <TerminalIcon className="h-4 w-4"/>;
     const canExpand = Boolean(label || result || execution.fileDiff || execution.approvalReview?.rationale);
     return (
         <div className="overflow-hidden rounded-md border border-gray-200 bg-black/[0.02] dark:border-white/10 dark:bg-white/5">
-            <button type="button" disabled={!canExpand} className="flex w-full items-center gap-2 px-2.5 py-2 text-left text-xs outline-none transition-colors hover:bg-black/[0.035] disabled:cursor-default dark:hover:bg-white/[0.06]" onClick={() => setExpanded(value => !value)}>
+            <button type="button" disabled={!canExpand} className="flex w-full items-center gap-2 px-2.5 py-2 text-left text-xs outline-none transition-colors hover:bg-black/[0.035] disabled:cursor-default dark:hover:bg-white/[0.06]" onClick={toggleExpanded}>
                 <span className={`flex shrink-0 items-center gap-1 rounded-sm bg-black/[0.05] px-1.5 py-0.5 text-[10px] leading-none dark:bg-white/10 ${failed ? 'text-red-500' : execution.state === 'succeeded' ? 'text-emerald-600 dark:text-emerald-400' : execution.state === 'awaiting_approval' ? 'text-amber-600 dark:text-amber-400' : 'text-gray-500'}`}>
                     {icon}<span>{t(`ai_assistant.tool_state_${execution.state}`)}</span>
                 </span>
@@ -756,10 +827,10 @@ const LoadingBubble = ({items}: {items: ChatItem[]}) => {
     return <div className="flex justify-start"><div className="flex items-center gap-2 rounded-lg bg-[var(--ai-assistant-bubble-background)] px-3 py-2 text-xs text-gray-500 ring-1 ring-inset ring-[var(--ai-assistant-bubble-border)]"><span className="flex gap-1"><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.3s]"/><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]"/><span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current"/></span><span>{label}</span></div></div>;
 };
 
-const ReasoningContent = ({text, streaming, onCopy}: {text: string; streaming: boolean; onCopy: (text: string) => void}) => {
+const ReasoningContent = ({text, streaming, onCopy, expandedStates, itemId}: {text: string; streaming: boolean; onCopy: (text: string) => void; expandedStates: Map<string, boolean>; itemId: string}) => {
     const {t} = useTranslation();
-    const [expanded, setExpanded] = useState(streaming);
-    return <div className="mb-2 overflow-hidden rounded-md border border-gray-200 bg-white/45 dark:border-white/10 dark:bg-black/15"><div className="flex min-w-0 items-center gap-1.5 px-2 py-1.5 text-xs text-gray-500"><button type="button" className="flex min-w-0 flex-1 items-center gap-1.5 text-left outline-none" onClick={() => setExpanded(value => !value)}>{expanded ? <ChevronDownIcon className="h-3.5 w-3.5"/> : <ChevronRightIcon className="h-3.5 w-3.5"/>}<BrainIcon className="h-3.5 w-3.5"/><span className="truncate font-medium">{t('ai_assistant.reasoning')}</span>{streaming ? <LoaderCircleIcon className="h-3.5 w-3.5 animate-spin"/> : null}</button><Tooltip title={t('actions.copy')}><Button type="text" size="small" icon={<CopyIcon className="h-3.5 w-3.5"/>} onClick={() => onCopy(text)}/></Tooltip></div>{expanded ? <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words border-t border-gray-200 px-2 py-2 text-xs leading-relaxed text-gray-500 dark:border-white/10">{text}</pre> : null}</div>;
+    const [expanded, toggleExpanded] = useMessageExpanded(expandedStates, itemId, streaming);
+    return <div className="mb-2 overflow-hidden rounded-md border border-gray-200 bg-white/45 dark:border-white/10 dark:bg-black/15"><div className="flex min-w-0 items-center gap-1.5 px-2 py-1.5 text-xs text-gray-500"><button type="button" className="flex min-w-0 flex-1 items-center gap-1.5 text-left outline-none" onClick={toggleExpanded}>{expanded ? <ChevronDownIcon className="h-3.5 w-3.5"/> : <ChevronRightIcon className="h-3.5 w-3.5"/>}<BrainIcon className="h-3.5 w-3.5"/><span className="truncate font-medium">{t('ai_assistant.reasoning')}</span>{streaming ? <LoaderCircleIcon className="h-3.5 w-3.5 animate-spin"/> : null}</button><Tooltip title={t('actions.copy')}><Button type="text" size="small" icon={<CopyIcon className="h-3.5 w-3.5"/>} onClick={() => onCopy(text)}/></Tooltip></div>{expanded ? <pre className="max-h-56 overflow-auto whitespace-pre-wrap break-words border-t border-gray-200 px-2 py-2 text-xs leading-relaxed text-gray-500 dark:border-white/10">{text}</pre> : null}</div>;
 };
 
 const ToolTextBlock = ({title, text, muted, onCopy}: {title: string; text: string; muted?: boolean; onCopy: () => void}) => {
@@ -769,7 +840,7 @@ const ToolTextBlock = ({title, text, muted, onCopy}: {title: string; text: strin
 
 const HistoryModal = ({open, search, conversations, currentId, loading, loadingId, deletingId, clearing, hasConversations, onClose, onSearch, onLoad, onDelete, onClear}: {open: boolean; search: string; conversations: AIConversation[]; currentId: string; loading: boolean; loadingId: string; deletingId: string; clearing: boolean; hasConversations: boolean; onClose: () => void; onSearch: (value: string) => void; onLoad: (item: AIConversation) => void; onDelete: (id: string) => void; onClear: () => void}) => {
     const {t} = useTranslation();
-    return <Modal title={t('ai_assistant.history')} open={open} footer={null} width={620} destroyOnHidden onCancel={onClose}><div className="mb-3 flex items-center gap-2"><Input.Search allowClear value={search} placeholder={t('ai_assistant.history_search')} onChange={event => onSearch(event.target.value)}/><Popconfirm title={t('ai_assistant.clear_confirm')} onConfirm={onClear}><Button danger loading={clearing} disabled={!hasConversations} icon={<Trash2Icon className="h-4 w-4"/>}>{t('actions.clear')}</Button></Popconfirm></div><div className="max-h-[55vh] overflow-y-auto">{loading ? <div className="flex justify-center py-8"><Spin/></div> : conversations.length === 0 ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('ai_assistant.no_history')}/> : conversations.map(item => <div key={item.id} className="flex cursor-pointer items-center gap-3 border-b border-gray-100 px-2 py-3 last:border-b-0 dark:border-white/10" onClick={() => onLoad(item)}><div className="min-w-0 flex-1"><Typography.Text ellipsis className={item.id === currentId ? 'text-blue-500' : undefined}>{item.title || t('ai_assistant.new_chat')}</Typography.Text><div className="text-xs text-gray-500">{new Date(item.updatedAt).toLocaleString()}</div></div>{loadingId === item.id ? <Spin size="small"/> : null}<Popconfirm title={t('ai_assistant.delete_confirm')} onConfirm={() => onDelete(item.id)}><Button danger type="text" size="small" loading={deletingId === item.id} icon={<Trash2Icon className="h-4 w-4"/>} onClick={event => event.stopPropagation()}/></Popconfirm></div>)}</div></Modal>;
+    return <Modal title={t('ai_assistant.history')} open={open} footer={null} width={620} destroyOnHidden onCancel={onClose}><div className="mb-3 flex items-center gap-2"><Input.Search allowClear value={search} placeholder={t('ai_assistant.history_search')} onChange={event => onSearch(event.target.value)}/><Popconfirm title={t('ai_assistant.clear_confirm')} onConfirm={onClear}><Button danger loading={clearing} disabled={!hasConversations} icon={<Trash2Icon className="h-4 w-4"/>}>{t('actions.clear')}</Button></Popconfirm></div><div className="ai-assistant max-h-[55vh] overflow-y-auto">{loading ? <div className="flex justify-center py-8"><Spin/></div> : conversations.length === 0 ? <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('ai_assistant.no_history')}/> : conversations.map(item => <div key={item.id} className="flex cursor-pointer items-center gap-3 border-b border-gray-100 px-2 py-3 last:border-b-0 dark:border-white/10" onClick={() => onLoad(item)}><div className="min-w-0 flex-1"><Typography.Text ellipsis className={item.id === currentId ? 'text-blue-500' : undefined}>{item.title || t('ai_assistant.new_chat')}</Typography.Text><div className="text-xs text-gray-500">{new Date(item.updatedAt).toLocaleString()}</div></div>{loadingId === item.id ? <Spin size="small"/> : null}<Popconfirm title={t('ai_assistant.delete_confirm')} onConfirm={() => onDelete(item.id)}><Button danger type="text" size="small" loading={deletingId === item.id} icon={<Trash2Icon className="h-4 w-4"/>} onClick={event => event.stopPropagation()}/></Popconfirm></div>)}</div></Modal>;
 };
 
 const itemsFromHistory = (messages: AIMessage[]): ChatItem[] => messages.flatMap((message): ChatItem[] => {
