@@ -372,7 +372,7 @@ const LoginPage = () => {
             >
                 <div className={'h-screen w-screen relative flex items-center justify-center'}>
                     <div className={'w-96 md:border rounded-lg p-8'}>
-                        <div className={'font-medium mb-4 text-lg'}>{brandingQuery.data?.name}</div>
+                        <div className={'font-medium mb-4 text-lg text-foreground'}>{brandingQuery.data?.name}</div>
                         {renderLoginForm()}
                     </div>
 

@@ -107,6 +107,8 @@ export class GuacamoleRuntime {
         this.client = client;
 
         tunnel.onstatechange = (state: number) => this.handlers.onTunnelStateChange?.(state);
+        // WebSocket 连接失败和超时由 Tunnel 报错，不会触发 Client 的协议错误回调。
+        tunnel.onerror = (status: Guacamole.Status) => this.handlers.onError?.(status);
         client.onstatechange = (state: number) => this.handlers.onStateChange?.(state);
         client.onerror = (status: Guacamole.Status) => this.handlers.onError?.(status);
         client.onrequired = (parameters: string[]) => this.handlers.onRequired?.([...parameters]);
@@ -233,6 +235,7 @@ export class GuacamoleRuntime {
         this.sinkElement?.removeEventListener('paste', this.preventPasteDefault);
         if (this.tunnel) {
             this.tunnel.onstatechange = null;
+            this.tunnel.onerror = null;
         }
         this.client?.disconnect();
         this.client = null;
@@ -269,7 +272,8 @@ export class GuacamoleRuntime {
                 return false;
             }
             client.sendKeyEvent(pressed ? 1 : 0, keysym);
-            return !(pressed && keysym === 65288);
+            // 按键已交给远端处理；返回 false 阻止 F5、Ctrl+S 等触发浏览器默认行为。
+            return false;
         };
         keyboard.onkeydown = (keysym: number) => handleKeyEvent(true, keysym);
         keyboard.onkeyup = (keysym: number) => handleKeyEvent(false, keysym);
@@ -296,6 +300,9 @@ export class GuacamoleRuntime {
         this.keyboard = keyboard;
         this.mouse = mouse;
         this.touch = touch;
+        if (this.active) {
+            this.focus();
+        }
     }
 
     private scheduleResize() {

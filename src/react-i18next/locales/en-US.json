@@ -2662,11 +2662,14 @@
       "reject_reason": "Please enter rejection reason",
       "status": {
         "pending": "Pending",
-        "approved": "Approved",
+        "approved": "Executing",
         "rejected": "Rejected",
         "executed": "Executed",
-        "failed": "Failed"
-      }
+        "failed": "Failed",
+        "unknown": "Needs verification"
+      },
+      "database_username": "Database execution account",
+      "id": "Work order ID"
     },
     "sql_log": {
       "parameter_template_tip": "Prepared SQL template; original bound parameter values are not recorded.",

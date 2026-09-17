@@ -12,8 +12,7 @@ export interface DatabaseWorkOrder {
     requesterName: string;
     approverId: string;
     approverName: string;
-    executorId: string;
-    executorName: string;
+    databaseUsername: string;
     status: string;
     reason: string;
     rowsAffected: number;

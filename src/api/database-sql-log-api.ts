@@ -4,6 +4,12 @@ import requests from "./core/requests";
 
 export interface DatabaseSQLLog {
     id: string;
+    workOrderId?: string;
+    requesterId?: string;
+    requesterName?: string;
+    approverId?: string;
+    approverName?: string;
+    databaseUsername?: string;
     assetId: string;
     assetName: string;
     database: string;

@@ -2587,11 +2587,14 @@
       "reject_reason": "却下理由を入力してください",
       "status": {
         "pending": "承認待ち",
-        "approved": "承認済み",
+        "approved": "実行中",
         "rejected": "却下",
         "executed": "実行済み",
-        "failed": "実行失敗"
-      }
+        "failed": "実行失敗",
+        "unknown": "結果の確認が必要"
+      },
+      "database_username": "実行データベースアカウント",
+      "id": "作業依頼 ID"
     },
     "sql_log": {
       "parameter_template_tip": "プリペアド SQL のテンプレートです。バインドしたパラメーターの元の値は記録されません。",

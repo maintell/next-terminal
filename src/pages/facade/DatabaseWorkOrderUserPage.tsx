@@ -49,9 +49,10 @@ const DatabaseWorkOrderUserPageContent = () => {
             rejected: {color: 'red', label: t('db.work_order.status.rejected')},
             executed: {color: 'green', label: t('db.work_order.status.executed')},
             failed: {color: 'red', label: t('db.work_order.status.failed')},
+            unknown: {color: 'orange', label: t('db.work_order.status.unknown')},
         };
         const item = map[status] || {color: 'default', label: status};
-        if ((status === 'failed' || status === 'rejected') && error) {
+        if ((status === 'failed' || status === 'rejected' || status === 'unknown') && error) {
             return (
                 <Tooltip title={error}>
                     <Tag color={item.color}>{item.label}</Tag>
@@ -67,6 +68,13 @@ const DatabaseWorkOrderUserPageContent = () => {
             valueType: 'indexBorder',
             width: 48,
             hideInTable: isMobile,
+        },
+        {
+            title: t('db.work_order.id'),
+            dataIndex: 'id',
+            render: (value: string) => <Text copyable>{value}</Text>,
+            width: 180,
+            hideInSearch: true,
         },
         {
             title: t('menus.resource.submenus.database_asset'),
@@ -119,6 +127,7 @@ const DatabaseWorkOrderUserPageContent = () => {
                 rejected: {text: t('db.work_order.status.rejected')},
                 executed: {text: t('db.work_order.status.executed')},
                 failed: {text: t('db.work_order.status.failed')},
+                unknown: {text: t('db.work_order.status.unknown')},
             },
             render: (_, record) => statusTag(record.status, record.errorMessage || record.reason),
             width: 120,
@@ -134,6 +143,13 @@ const DatabaseWorkOrderUserPageContent = () => {
             dataIndex: 'approverName',
             hideInSearch: true,
             width: 120,
+        },
+        {
+            title: t('db.work_order.database_username'),
+            dataIndex: 'databaseUsername',
+            render: (value: string) => value || '-',
+            width: 150,
+            hideInSearch: true,
         },
         {
             title: t('general.created_at'),

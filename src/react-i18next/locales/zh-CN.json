@@ -2662,11 +2662,14 @@
       "reject_reason": "请输入拒绝原因",
       "status": {
         "pending": "待审批",
-        "approved": "已通过",
+        "approved": "执行中",
         "rejected": "已拒绝",
         "executed": "已执行",
-        "failed": "执行失败"
-      }
+        "failed": "执行失败",
+        "unknown": "结果待核实"
+      },
+      "database_username": "执行数据库账号",
+      "id": "工单 ID"
     },
     "sql_log": {
       "parameter_template_tip": "此处为预处理 SQL 模板，未记录绑定参数原值。",

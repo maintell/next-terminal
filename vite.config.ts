@@ -35,17 +35,11 @@ export default defineConfig(({mode}) => {
             ...(isProd ? [
                 VitePWA({
                     registerType: 'autoUpdate',
-                    workbox: {
-                        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB
-                        navigateFallbackDenylist: [/^\/api\//], // 阻止 /api 被 fallback 到 index.html
-                        runtimeCaching: [
-                            {
-                                urlPattern: ({url}) => !url.pathname.startsWith('/api/'),
-                                handler: 'NetworkOnly', // 不缓存，直接请求网络
-                            },
-                        ],
-                    },
-                    includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+                    // 发布注销脚本，替换已安装的旧 Service Worker，避免预缓存持续提供旧页面。
+                    // 保留 manifest，用于应用名称、图标和独立窗口显示。
+                    selfDestroying: true,
+                    // 新页面不再注册；旧注册仍会通过原来的 /sw.js 地址获取注销脚本。
+                    injectRegister: false,
                     manifest: {
                         name: '{{.SystemName}}',
                         description: '',

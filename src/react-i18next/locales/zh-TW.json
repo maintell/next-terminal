@@ -2587,11 +2587,14 @@
       "reject_reason": "請輸入拒絕原因",
       "status": {
         "pending": "待審批",
-        "approved": "已通過",
+        "approved": "執行中",
         "rejected": "已拒絕",
         "executed": "已執行",
-        "failed": "執行失敗"
-      }
+        "failed": "執行失敗",
+        "unknown": "結果待核實"
+      },
+      "database_username": "執行資料庫帳號",
+      "id": "工單 ID"
     },
     "sql_log": {
       "parameter_template_tip": "此處為預處理 SQL 範本，未記錄綁定參數原值。",

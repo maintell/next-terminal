@@ -105,9 +105,10 @@ const DatabaseWorkOrderPageContent = () => {
             rejected: {color: 'red', label: t('db.work_order.status.rejected')},
             executed: {color: 'green', label: t('db.work_order.status.executed')},
             failed: {color: 'red', label: t('db.work_order.status.failed')},
+            unknown: {color: 'orange', label: t('db.work_order.status.unknown')},
         };
         const item = map[status] || {color: 'default', label: status};
-        if ((status === 'failed' || status === 'rejected') && message) {
+        if ((status === 'failed' || status === 'rejected' || status === 'unknown') && message) {
             return (
                 <Tooltip title={message}>
                     <Tag color={item.color}>{item.label}</Tag>
@@ -135,9 +136,16 @@ const DatabaseWorkOrderPageContent = () => {
         {value: 'rejected', label: t('db.work_order.status.rejected')},
         {value: 'executed', label: t('db.work_order.status.executed')},
         {value: 'failed', label: t('db.work_order.status.failed')},
+        {value: 'unknown', label: t('db.work_order.status.unknown')},
     ];
 
     const columns: TableProps<DatabaseWorkOrder>['columns'] = [
+        {
+            title: t('db.work_order.id'),
+            dataIndex: 'id',
+            render: (value: string) => <Text copyable>{value}</Text>,
+            width: 180,
+        },
         {
             title: t('menus.resource.submenus.database_asset'),
             dataIndex: 'assetName',
@@ -199,6 +207,12 @@ const DatabaseWorkOrderPageContent = () => {
             width: 120,
         },
         {
+            title: t('db.work_order.database_username'),
+            dataIndex: 'databaseUsername',
+            render: (value: string) => value || '-',
+            width: 150,
+        },
+        {
             title: t('general.created_at'),
             dataIndex: 'createdAt',
             sorter: true,
@@ -238,7 +252,7 @@ const DatabaseWorkOrderPageContent = () => {
                         </NButton>
                     );
                 }
-                if (record.status !== 'approved') {
+                if (record.status !== 'approved' && record.status !== 'unknown') {
                     actions.push(
                         <Popconfirm
                             key="delete-confirm"

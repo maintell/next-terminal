@@ -141,6 +141,31 @@ const DatabaseSQLLogPage = () => {
             width: 80,
         },
         {
+            title: t('db.work_order.id'),
+            dataIndex: 'workOrderId',
+            render: (value) => value || '-',
+            width: 180,
+            ellipsis: true,
+        },
+        {
+            title: t('db.work_order.requester'),
+            dataIndex: 'requesterName',
+            hideInSearch: true,
+            render: (value) => value || '-',
+        },
+        {
+            title: t('db.work_order.approver'),
+            dataIndex: 'approverName',
+            hideInSearch: true,
+            render: (value) => value || '-',
+        },
+        {
+            title: t('db.work_order.database_username'),
+            dataIndex: 'databaseUsername',
+            hideInSearch: true,
+            render: (value) => value || '-',
+        },
+        {
             title: t('general.status'),
             dataIndex: 'status',
             valueEnum: {
@@ -211,6 +236,7 @@ const DatabaseSQLLogPage = () => {
                         sortField: sortField,
                         assetId: params.assetId,
                         userId: params.userId,
+                        workOrderId: params.workOrderId,
                         status: params.status,
                         source: params.source,
                         dbType: params.dbType,
